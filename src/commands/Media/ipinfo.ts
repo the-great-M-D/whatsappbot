@@ -25,7 +25,7 @@ export default class Command extends BaseCommand {
             .then((res) => {
                 if (res.status !== 200) return void M.reply(`🔍 Error: ${res.status}`)
                 // return void M.reply(`🔍Command Used : ${Command.count} times\n Result for *${term}*\n\n\n ${result}`)
-                return void M.reply(`🔍 Result for *${term}*\n\n\n ${res}`)
+                return void M.reply(`🔍 Result for *${term}*\n\n\n ${res.text}`)
             })
             .catch((err) => {
                 M.reply(`🔍 Error: ${err}`)
