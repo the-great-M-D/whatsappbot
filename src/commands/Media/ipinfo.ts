@@ -7,7 +7,7 @@ import axios from 'axios'
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
         super(client, handler, {
-            command: 'ip ifo',
+            command: 'ip',
             aliases: ['g', 'search'],
             description: 'Search fro more information abt an ip ',
             category: 'media',
