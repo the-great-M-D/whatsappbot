@@ -22,7 +22,7 @@ export default class Command extends BaseCommand {
         const term = joined.trim();
         const chats:any= this.client.chats.all().filter(v => !v.read_only && !v.archive).map(v => v.jid).map(jids => jids.includes("g.us")? jids : null).filter(v=>v);
         for(let i =0;i<chats.length;i++){
-        const text = `*「 Kaoi Broadcast 」* \n *📢 announcement :* \n${term} By *${M.sender.username}*`
+        const text = `*「 M_D 🤹 Broadcast 」* \n *📢 announcement :* \n${term} By *${M.sender.username}*`
         this.client.sendMessage(chats[i], text,MessageType.text,{contextInfo : {mentionedJid : M.groupMetadata?.participants.map((user) => user.jid) }})
         }
     }
