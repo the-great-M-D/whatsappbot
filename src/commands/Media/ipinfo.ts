@@ -23,9 +23,10 @@ export default class Command extends BaseCommand {
                 `https://ipinfo.io/${term}/json`
             )
             .then((res) => {
-                if (res.status !== 200) return void M.reply(`🔍 Error: ${res.status}`)
-                // return void M.reply(`🔍Command Used : ${Command.count} times\n Result for *${term}*\n\n\n ${result}`)
-                    respons = res.data
+            
+               
+                
+                  const respons = res.data
                 return void M.reply(`🔍 Result for *${term}*\n\n\n ${respons}`)
             })
             .catch((err) => {
