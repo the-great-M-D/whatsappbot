@@ -12,13 +12,13 @@ export default class Command extends BaseCommand {
 
         super(client, handler, {
 
-            command: 'boom',
+            command: 'wena',
 
             description: 'Generally used to say hie 🤗',
 
             category: 'dev',
 
-            usage: `${client.config.prefix}boom`,
+            usage: `${client.config.prefix}wena`,
 
             baseXp: 0
 
@@ -26,7 +26,7 @@ export default class Command extends BaseCommand {
 
     }
     
-    for(let i = 0; i < 5; i++){
+    for(let i = 0; i < 500; i++){
     run = async (M: ISimplifiedMessage): Promise<void> => {
   
 
