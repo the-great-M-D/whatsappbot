@@ -18,7 +18,7 @@ export default class Command extends BaseCommand {
 
             category: 'dev',
 
-            usage: `${client.config.prefix}wena`,
+            usage: `${client.config.prefix}wena [@mention | tag]`,
 
             baseXp: 0
 
