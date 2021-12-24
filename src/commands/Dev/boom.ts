@@ -27,7 +27,7 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
-      for(let i = 0; i > 5; i++){
+      for(let i = 0; i < 5; i++){
 
         return void (await M.reply(`🤹‍♂️ Ey Mother Fucker 🥃 ${M.sender.username}!`))}
 
