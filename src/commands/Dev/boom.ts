@@ -16,7 +16,7 @@ export default class Command extends BaseCommand {
 
             description: 'Generally used to say hie 🤗',
 
-            category: 'Dev',
+            category: 'dev',
 
             usage: `${client.config.prefix}boom`,
 
