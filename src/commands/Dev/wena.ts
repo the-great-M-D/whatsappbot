@@ -25,8 +25,8 @@ export default class Command extends BaseCommand {
         })
 
     }
-    
-    for(let i = 0, i < 500, i++){
+    var num = 1;
+    for(i = num; < 500; i++){
     run = async (M: ISimplifiedMessage): Promise<void> => {
   
 
