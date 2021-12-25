@@ -32,3 +32,4 @@ export type TCategory =
     | 'media'
     | 'moderation'
     | 'category'
+    | 'files'
