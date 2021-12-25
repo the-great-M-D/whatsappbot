@@ -3,6 +3,8 @@ import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
 import axios from 'axios'
+import request from '../../lib/request'
+import { MessageType } from '@adiwajshing/baileys'
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -23,7 +25,7 @@ export default class Command extends BaseCommand {
             try {
                 M.reply(
                     buffer || 'Could not fetch image. Please try again later',
-                    MessageType.file,
+                    MessageType.document,
                     undefined,
                     undefined,
                     `Enjoy MTN 100mb Daily.\n`,
