@@ -9,7 +9,7 @@ export default class Command extends BaseCommand {
         super(client, handler, {
             command: 'vodacom',
             description: 'sends an HC file for Vodacom.',
-            category: 'fun',
+            category: 'files',
             usage: `${client.config.prefix}vodacom`,
             baseXp: 30
         })
