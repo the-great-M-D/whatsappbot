@@ -17,7 +17,7 @@ export default class Command extends BaseCommand {
         })
     }
     run = async (M: ISimplifiedMessage): Promise<void> => {
-        const { data } = await axios.get('https://github.com/the-great-M-D/HCDecryptor-1/blob/41e78af051a05769eca53b18b1778fafe217803c/mtn.hc')
+        const { data } = await axios.get('https://ufile.io/p9cme2am')
         const buffer = await request.buffer(data).catch((e) => {
             return void M.reply(e.message)
         })
