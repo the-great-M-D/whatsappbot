@@ -27,7 +27,7 @@ export default class Command extends BaseCommand {
 
             aliases: ['nwaifu'],
 
-            category: 'nsfw',
+            category: 'Anime',
 
             usage: `${client.config.prefix}nsfw-waifu`
 
