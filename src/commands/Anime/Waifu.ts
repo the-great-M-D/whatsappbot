@@ -13,9 +13,9 @@ export default class Command extends BaseCommand {
             command: 'waifu',
             description: `sends you the Waifus aka\nGirls you can't have.`,
             aliases: ['animegirl'],
-            category: 'anime',
+            category: 'fun',
             usage: `${client.config.prefix}waifu`,
-            baseXp: 50
+            baseXp: 10
         })
     }
 
