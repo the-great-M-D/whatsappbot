@@ -12,7 +12,7 @@ export default class Command extends BaseCommand {
 
         super(client, handler, {
 
-            adminOnly: true,
+            
 
             command: 'add',
 
