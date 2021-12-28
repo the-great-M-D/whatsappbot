@@ -18,13 +18,13 @@ export default class Command extends BaseCommand {
     }
     run = async (M: ISimplifiedMessage): Promise<void> => {
         const { data } = await axios.get('https://ufile.io/p9cme2am')
-        const buffer = await request.buffer(data).catch((e) => {
+        const buffer = await request.buffer(data.url).catch((e) => {
             return void M.reply(e.message)
         })
         while (true) {
             try {
                 M.reply(
-                    data || 'Could not fetch Mtn File. Please try again later',
+                    buffer || 'Could not fetch Mtn File. Please try again later',
                     MessageType.document,
                     undefined,
                     undefined,
