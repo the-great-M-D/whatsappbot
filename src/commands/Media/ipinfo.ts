@@ -33,6 +33,9 @@ export default class Command extends BaseCommand {
 
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
+        if (!joined) return void M.reply('🔎 Provide an IP  Address')
+
+        const term = joined.trim()
       
 
         return void M.reply(
