@@ -32,20 +32,63 @@ export default class Command extends BaseCommand {
 
 
 
+    
+
     run = async (M: ISimplifiedMessage): Promise<void> => {
-        if (!joined) return void M.reply('🔎 Provide an IP  Address')
 
-        const term = joined.trim()
-        const { data } = await axios.get(`https://ipinfo.io/${term}/json`)
-        
-      
+        // fetch result of https://waifu.pics/api/sfw/waifu from the API using axios
 
-        return void M.reply(
+        const { data } = await axios.get('https://waifu.pics/api/sfw/waifu')
 
-            data
+        const buffer = await request.buffer(data.url).catch((e) => {
 
-        ).catch((reason: Error) => M.reply(`an error occurred, Reason: ${reason}`))
+            return void M.reply(e.message)
+
+        })
+
+        while (true) {
+
+            try {
+
+                M.reply(
+
+                    buffer || 'Could not fetch image. Please try again later',
+
+                    MessageType.image,
+
+                    undefined,
+
+                    undefined,
+
+                    `More than one waifu, will ruin your laifu.\n`,
+
+                    undefined
+
+                ).catch((e) => {
+
+                    console.log(`This Error occurs when an image is sent via M.reply()\n Child Catch Block : \n${e}`)
+
+                    // console.log('Failed')
+
+                    M.reply(`Could not fetch image. Here's the URL: ${data.url}`)
+
+                })
+
+                break
+
+            } catch (e) {
+
+                // console.log('Failed2')
+
+                M.reply(`Could not fetch image. Here's the URL : ${data.url}`)
+
+                console.log(`This Error occurs when an image is sent via M.reply()\n Parent Catch Block : \n${e}`)
+
+            }
+
+        }
+
+        return void null
 
     }
-
 }
