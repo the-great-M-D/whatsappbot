@@ -36,11 +36,13 @@ export default class Command extends BaseCommand {
         if (!joined) return void M.reply('🔎 Provide an IP  Address')
 
         const term = joined.trim()
+        const { data } = await axios.get(`https://ipinfo.io/${term}/json`)
+        
       
 
         return void M.reply(
 
-            `🤹 Telkom Is Blocked Try Again Later 😭\n`
+            data
 
         ).catch((reason: Error) => M.reply(`an error occurred, Reason: ${reason}`))
 
