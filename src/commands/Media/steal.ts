@@ -35,7 +35,7 @@ export default class Command extends BaseCommand {
 		if (M.quoted?.message?.message?.stickerMessage)
 			buffer = await this.client.downloadMediaMessage(M.quoted.message);
 		if (!buffer)
-			return void M.reply(`Provide a sticker to format, Baka!`);
+			return void M.reply(`Provide a sticker to format, ✌️😁`);
 			const pack = parsedArgs.joined.split("|");
 			if (!pack[1])
 				return void M.reply(
