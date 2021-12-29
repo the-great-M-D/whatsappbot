@@ -11,7 +11,7 @@ export default class Command extends BaseCommand {
             aliases: ['del'],
             category: 'general',
             usage: `${client.config.prefix}delete`,
-            adminOnly: true,
+            adminOnly: false,
             baseXp: 0
         })
     }
