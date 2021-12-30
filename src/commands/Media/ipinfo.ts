@@ -5,6 +5,12 @@ import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 
 import { ISimplifiedMessage } from '../../typings'
+import request from '../../lib/request'
+
+import { MessageType } from '@adiwajshing/baileys'
+
+// import { MessageType, Mimetype } from '@adiwajshing/baileys'
+
 
 import axios from 'axios'
 
