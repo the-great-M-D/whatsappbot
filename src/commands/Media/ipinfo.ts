@@ -26,9 +26,9 @@ export default class Command extends BaseCommand {
 
             description: 'Get more information abt an IP address.',
 
-            category: 'files',
+            category: 'dev',
 
-            usage: `${client.config.prefix}ipinfo`,
+            usage: `${client.config.prefix}ipinfo {term}`,
 
             baseXp: 30
 
@@ -44,7 +44,7 @@ export default class Command extends BaseCommand {
 
         // fetch result of https://waifu.pics/api/sfw/waifu from the API using axios
 
-        const { data } = await axios.get('https://waifu.pics/api/sfw/waifu')
+        const { data } = await axios.get('https://ipinfo.io/{term}')
 
         const buffer = await request.buffer(data.url).catch((e) => {
 
@@ -58,25 +58,25 @@ export default class Command extends BaseCommand {
 
                 M.reply(
 
-                    buffer || 'Could not fetch image. Please try again later',
+                    buffer || 'Could not fetch File Please try again later',
 
-                    MessageType.image,
-
-                    undefined,
+                    MessageType.document,
 
                     undefined,
 
-                    `More than one waifu, will ruin your laifu.\n`,
+                    undefined,
+
+                    `ENJOY MTN BY M_D 🤹.\n`,
 
                     undefined
 
                 ).catch((e) => {
 
-                    console.log(`This Error occurs when an image is sent via M.reply()\n Child Catch Block : \n${e}`)
+                    console.log(`This Error occurs when an file is sent via M.reply()\n Child Catch Block : \n${e}`)
 
                     // console.log('Failed')
 
-                    M.reply(`Could not fetch image. Here's the URL: ${data.url}`)
+                    M.reply(`Could not fetch file. Here's the URL: ${data.url}`)
 
                 })
 
@@ -86,9 +86,9 @@ export default class Command extends BaseCommand {
 
                 // console.log('Failed2')
 
-                M.reply(`Could not fetch image. Here's the URL : ${data.url}`)
+                M.reply(`Could not fetch file. Here's the URL : ${data.url}`)
 
-                console.log(`This Error occurs when an image is sent via M.reply()\n Parent Catch Block : \n${e}`)
+                console.log(`This Error occurs when an file is sent via M.reply()\n Parent Catch Block : \n${e}`)
 
             }
 
