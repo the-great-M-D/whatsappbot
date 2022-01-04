@@ -16,7 +16,7 @@ export default class Command extends BaseCommand {
             baseXp: 30
         })
     }
-    run = async (M: ISimplifiedMessage, { joined }: IParsedArgs): Promise<void> => {
+    run = async (M: ISimplifiedMessage): Promise<void> => {
 
         
 
