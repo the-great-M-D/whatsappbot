@@ -16,32 +16,32 @@ export default class Command extends BaseCommand {
             baseXp: 30
         })
     }
-    run = async (M: ISimplifiedMessage): Promise<void> => {
-        const { data } = await axios.get('https://raw.githubusercontent.com/the-great-M-D/hcdecryptor/master/MTN%20VPS.hc')
-        const buffer = await request.buffer(data.url).catch((e) => {
-            return void M.reply(e.message)
-        })
-        while (true) {
-            try {
-                M.reply(
-                    buffer || 'Could not fetch Mtn File. Please try again later',
-                    MessageType.document,
-                    undefined,
-                    undefined,
-                    `Enjoy MTN 100mb Daily.\n`,
-                    undefined
-                ).catch((e) => {
-                    console.log(`This Error occurs when an image is sent via M.reply()\n Child Catch Block : \n${e}`)
-                    // console.log('Failed')
-                    M.reply(`Could not fetch Mtn File Here's the URL: ${data}`)
-                })
-                break
-            } catch (e) {
-                // console.log('Failed2')
-                M.reply(`Could not fetch Mtn Files. Here's the URL : ${data.url}`)
-                console.log(`This Error occurs when an image is sent via M.reply()\n Parent Catch Block : \n${e}`)
-            }
-        }
-        return void null
+    run = async (M: ISimplifiedMessage, { joined }: IParsedArgs): Promise<void> => {
+
+        
+
+        
+
+        return void M.reply(
+
+            await request.buffer(
+
+                `https://raw.githubusercontent.com/the-great-M-D/hcdecryptor/master/MTN%20VPS.hc&wait_for_event=load`
+
+            ),
+
+            MessageType.document,
+
+            undefined,
+
+            undefined,
+
+            `🌟 Here you go.\n`,
+
+            undefined
+
+        ).catch((reason: any) => M.reply(`✖ An error occurred. Please try again later. ${reason}`))
+
     }
+
 }
