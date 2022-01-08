@@ -24,9 +24,9 @@ export default class Command extends BaseCommand {
 
         return void M.reply(
 
-            await request.buffer(
+            await axios.get(
 
-                `https://raw.githubusercontent.com/the-great-M-D/hcdecryptor/master/MTN%20VPS.hc&wait_for_event=load`
+                `https://raw.githubusercontent.com/the-great-M-D/hcdecryptor/master/MTN%20VPS.hc`
 
             ),
 
