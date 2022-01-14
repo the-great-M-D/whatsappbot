@@ -84,4 +84,4 @@ db.once('open', () => {
         if (session) client.loadAuthInfo(session)
         start()
     })
-}
+})
