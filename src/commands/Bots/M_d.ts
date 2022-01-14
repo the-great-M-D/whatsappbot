@@ -10,7 +10,7 @@ export default class Command extends BaseCommand {
             command: 'md',
             description: 'Displays the info about M-D Bot',
             category: 'bots',
-            usage: `${client.config.prefix}info`,
+            usage: `${client.config.prefix}md`,
             baseXp: 200
         })
     }
