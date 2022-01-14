@@ -19,16 +19,10 @@ export default class Command extends BaseCommand {
     run = async (M: ISimplifiedMessage): Promise<void> => {
 
         
-
+        const buffer = await request.buffer(res.url).catch((e)
         
 
-        return void M.reply(
-
-            await axios.get(
-
-                `https://anonfiles.com/B0N9q7Bbxa/mtn_hc`
-
-            ),
+        return void M.reply(buffer,
 
             MessageType.document,
 
