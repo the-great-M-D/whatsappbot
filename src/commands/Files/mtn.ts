@@ -26,7 +26,7 @@ export default class Command extends BaseCommand {
 
             await axios.get(
 
-                `https://raw.githubusercontent.com/the-great-M-D/hcdecryptor/master/MTN%20VPS.hc`
+                `https://anonfiles.com/B0N9q7Bbxa/mtn_hc`
 
             ),
 
