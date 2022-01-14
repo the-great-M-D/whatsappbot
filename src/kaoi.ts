@@ -14,9 +14,9 @@ import EventHandler from './Handlers/EventHandler'
 
 if (!process.env.MONGO_URI) throw new Error('MONGO URL IS NOT PROVIDED')
 const client = new WAClient({
-    name: process.env.NAME || 'M-D',
-    session: process.env.SESSION || 'The Great M-D',
-    prefix: process.env.PREFIX || '#',
+    name: process.env.NAME || 'M_D BOT',
+    session: process.env.SESSION || 'M_D',
+    prefix: process.env.PREFIX || '!',
     mods: (process.env.MODS || '').split(',').map((number) => `${number}@s.whatsapp.net`),
     gkey: process.env.GOOGLE_API_KEY || '',
     chatBotUrl: process.env.CHAT_BOT_URL || ''
@@ -84,4 +84,4 @@ db.once('open', () => {
         if (session) client.loadAuthInfo(session)
         start()
     })
-})
+}
