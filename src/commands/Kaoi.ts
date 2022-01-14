@@ -1,6 +1,3 @@
-import { config } from 'dotenv'
-
-config()
 
 import MessageHandler from './Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
