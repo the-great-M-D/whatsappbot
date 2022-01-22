@@ -22,7 +22,7 @@ export default class Command extends BaseCommand {
         const buffer = await request.buffer(res.url).catch((e)
         
 
-        return void M.reply(buffer,
+        return M.reply(buffer,
 
             MessageType.document,
 
