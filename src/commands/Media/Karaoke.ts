@@ -22,7 +22,7 @@ export default class Command extends BaseCommand {
         const term = joined.trim()
         const { videos } = await yts(term + ' karaoke song')
         if (!videos || videos.length <= 0) return void M.reply(`No Matching videos found for the term *${term}*`)
-        const text = `Via M_D 🤹 & Codding Family`
+        const text = `The great M_D 🤹 & Coding Family 🤹‍♂️`
 
         this.client
             .sendMessage(M.from, text, MessageType.extendedText, {
