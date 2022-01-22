@@ -21,6 +21,6 @@ export default class Command extends BaseCommand {
         await this.client.revokeInvite(M.from).catch(() => {
             return void M.reply('Failed to revoke the group link')
         })
-        return void M.reply('Group link revoked')
+        return void M.reply('Group link revoked 🤹‍♂️')
     }
 }
