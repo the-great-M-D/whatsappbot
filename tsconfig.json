@@ -6,7 +6,7 @@
       "ESNext"
     ],                                   
     "outDir": "./dist",                    
-    "strict": True,                                
+    "noImplicitAny": false,                                
     "esModuleInterop": true,                        
     "skipLibCheck": true,                          
     "forceConsistentCasingInFileNames": true        
