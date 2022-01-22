@@ -29,7 +29,7 @@ export default class Command extends BaseCommand {
                     categories[info.config.category].push(info)
                 }
             }
-            let text = `🤹 *M_D's Command List* 🤹\n\n *Prefix* !\n\n*Support Group* Coding Famliy 🤹\n\n `
+            let text = `🤹 *M_D's Command List* 🤹\n\n *Prefix* !\n\n*Support Group*\n The Coding Famliy 🤹\n\n `
             const keys = Object.keys(categories).sort((a, b) => a.localeCompare(b))
             for (const key of keys)
                 text += `${this.emojis[keys.indexOf(key)]} *${this.client.util.capitalize(key)}*\n❐ \`\`\`${categories[
