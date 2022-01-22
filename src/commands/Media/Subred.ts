@@ -44,7 +44,7 @@ export default class Command extends BaseCommand {
                     MessageType.image,
                     undefined,
                     undefined,
-                    `🖌️ *Title: ${res.title}*\n*👨‍🎨 Author: ${res.author}*\n*🎏 Subreddit: ${res.subreddit}*\n🌐 *Post: ${res.postLink}*`,
+                    `🖌️ *Title: ${res.title}*\n🤹‍♂️ Author: ${res.author}*\n*🎏 Subreddit: ${res.subreddit}*\n🌐 *Post: ${res.postLink}*`,
                     // thumbnail && res.spoiler ? thumbnail : undefined
                     undefined
                 )
