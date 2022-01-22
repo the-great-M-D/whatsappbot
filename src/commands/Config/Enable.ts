@@ -28,7 +28,7 @@ export default class Command extends BaseCommand {
                 return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* failed to enable`)
             })
             this.client.features.set('chatbot', true)
-            return void M.reply(`🟩 *${this.client.util.capitalize(feature)}* is now active`)
+            return void M.reply(`🟩 *${this.client.util.capitalize(feature)}* is now active M_D Bot 🤹‍♂️`)
         }
         if (!command) return void (await M.reply(`No command found`))
         if (!(await this.client.DB.disabledcommands.findOne({ command: command.config.command })))
