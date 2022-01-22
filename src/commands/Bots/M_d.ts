@@ -17,7 +17,7 @@ export default class Command extends BaseCommand {
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
         return void M.reply(
-            `🤹 *M_D*🤹\n\n🍀 *Description:* The Great M_D WhatsApp Bot \n\n🤹 *Prefix:* Use ! \n\n🤹 *Example:* !help \n\n🌐 *URL:* https://https://github.com/the-great-M-D \n`
+            `🤹 *M_D Bot*🤹\n\n🍀 *Description:* The Great M_D WhatsApp Bot \n\n🤹 *Prefix:* Use ! \n\n🤹 *Example:* !help \n\n🌐 *URL:* https://https://github.com/the-great-M-D \n*🧑‍💻 Group:* https://chat.whatsapp.com/Feu778o8LHhKswRVZXsuvO 🤹\n`
         ).catch((reason: Error) => M.reply(`an error occurred, Reason: ${reason}`))
     }
 }
