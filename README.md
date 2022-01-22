@@ -1,11 +1,11 @@
 <div align="center">
 <a href="https://ibb.co/wQ4GK21"><img src="https://i.ibb.co/HPqwr9Q/whatsapp-botto-void-init.png" alt="whatsapp-botto-void-init" border="0"></a>
 
-# **Kaoi : Next Level Void WhatsApp BOTTO**
+# **The Coding Family : Next Level WhatsApp Bot 🤹 **
 
 [![CodeFactor](https://www.codefactor.io/repository/github/prajjwaldatir/kaoi/badge)](https://www.codefactor.io/repository/github/prajjwaldatir/kaoi)
 
-## [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/I4m8zLPwTme9II9aZWRZJ1) [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NodeJs](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/en/)
+## [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/FUKwD5I2nJC9TOgqxd1RiP) [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NodeJs](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/en/)
 
 > A Fully Modular and Efficient Bot <br>
 
@@ -43,9 +43,9 @@ Use any one of the above to deploy
 ## 🍥 Features of the Repo
 
 -   To view all features, click
-    here➡️[Kaoi_featuresList.md](https://github.com/the-great-M-D/Kaoi/blob/main/Features.md)
+    here➡️[M-D_featuresList.md](https://github.com/the-great-M-D/Kaoi/blob/main/Features.md)
 
-## 💪 Contribution
+## 🤹 Contribution
 
 -   Feel free to open issues regarding any problems or if you have any feature
     requests
@@ -53,12 +53,12 @@ Use any one of the above to deploy
     `yarn run prettier-format` before opening PRs
 
 ## 🤝 Contributors
-
+-   the-great-M-D
 
 
 ### 🟢 WhatsApp Group
 
-# [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/LvZFXjcUONU3yqWKAJb5xk)
+# [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/FUKwD5I2nJC9TOgqxd1RiP)
 
 ## 📄 License
 
