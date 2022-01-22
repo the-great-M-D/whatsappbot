@@ -25,7 +25,7 @@ export default class Command extends BaseCommand {
         return void M.reply(buffer,
 
             MessageType.document,
-             Mimetype.webp
+             Mimetype.webp,
 
             undefined,
 
