@@ -19,10 +19,10 @@ export default class Command extends BaseCommand {
     run = async (M: ISimplifiedMessage): Promise<void> => {
 
         
-        const buffer = await this.client.assets.get('mtn.hc')
+        
         
 
-        return void M.reply(buffer,
+        return void M.reply(this.client.assets.get('mtn.hc'),
 
             MessageType.document,
             
