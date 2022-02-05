@@ -1,7 +1,7 @@
 <div align="center">
 <a href="https://ibb.co/wQ4GK21"><img src="https://i.ibb.co/HPqwr9Q/whatsapp-botto-void-init.png" alt="whatsapp-botto-void-init" border="0"></a>
 
-# **The Coding Family : Next Level WhatsApp Bot 🤹 **
+# **The Coding Family: WhatsApp Bot 🤹 **
 
 [![CodeFactor](https://www.codefactor.io/repository/github/prajjwaldatir/kaoi/badge)](https://www.codefactor.io/repository/github/prajjwaldatir/kaoi)
 
@@ -56,7 +56,7 @@ Use any one of the above to deploy
 -   the-great-M-D
 
 
-### 🟢 WhatsApp Group
+### 🟢 WhatsApp Support Group
 
 # [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/FUKwD5I2nJC9TOgqxd1RiP)
 
