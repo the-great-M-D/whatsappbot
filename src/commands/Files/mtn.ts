@@ -19,7 +19,7 @@ export default class Command extends BaseCommand {
     run = async (M: ISimplifiedMessage): Promise<void> => {
 
         
-        const buffer = await request.buffer('https://github.com/the-great-M-D/HCDecryptor-1/blob/41e78af051a05769eca53b18b1778fafe217803c/mtn.hc')
+        const buffer = await this.client.assets.get('mtn.hc')
         
 
         return void M.reply(buffer,
