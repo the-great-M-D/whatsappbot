@@ -19,7 +19,7 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage, { joined }: IParsedArgs): Promise<void> => {
-        if (!joined) return void (await M.reply(`Please provide the url`))
+        if (!joined) return void (await M.reply(`🙋 Please provide the url to the site `))
         const url = joined.trim()
         return void M.reply(
             await request.buffer(
