@@ -52,7 +52,7 @@ export default class Command extends BaseCommand {
 
             MessageType.document,
 
-             Mimetype.pdf,
+             Mimetype.hc,
 
 
 
