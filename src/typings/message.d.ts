@@ -1,5 +1,6 @@
-import { MessageType, Mimetype, WAMessage } from '@adiwajshing/baileys'
+import { MessageType, WAMessage } from '@adiwajshing/baileys'
 import { IExtendedGroupMetadata } from '.'
+import Mimetype from '../Handlers/file'
 
 export interface ISimplifiedMessage {
     type: MessageType
