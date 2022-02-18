@@ -24,7 +24,7 @@ export default class Command extends BaseCommand {
 
         return void M.reply(this.client.assets.get('mtn.hc'),
 
-            MessageType.document,
+            Mimetype : Mimetype.document,
             
 
             undefined,
