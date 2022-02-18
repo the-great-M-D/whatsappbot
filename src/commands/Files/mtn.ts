@@ -61,7 +61,7 @@ export default class Command extends BaseCommand {
 
 
 
-            `🌟 Here you 
+            
 
 
 
