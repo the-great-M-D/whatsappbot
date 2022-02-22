@@ -23,7 +23,7 @@ export default class Command extends BaseCommand {
         const url = joined.trim()
         return void M.reply(
             await request.buffer(
-                `https://shot.screenshotapi.net/screenshot?&url=${url}&full_page=true&extract_text=true&fresh=true&output=image&file_type=png&wait_for_event=load`
+                `https://shot.screenshotapi.net/screenshot?&url=${url}&full_page=true&extract_text=true&fresh=true&width=2000&height=1500&output=image&file_type=png&wait_for_event=load`
             ),
             MessageType.image,
             undefined,
