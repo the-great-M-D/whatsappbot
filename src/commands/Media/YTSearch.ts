@@ -21,7 +21,7 @@ export default class Command extends BaseCommand {
         if (!joined) return void M.reply('🔎 Provide a search term')
         const term = joined.trim()
         const { videos } = await yts(term)
-        if (!videos || videos.length <= 0) return void M.reply(`⚓ No Matching videos found for : *${term}*`)
+        if (!videos || videos.length <= 0) return void M.reply(`🤹 No Matching videos found for : *${term}*`)
         const length = videos.length < 10 ? videos.length : 10
         let text = `🔎 *Results for ${term}*\n`
         for (let i = 0; i < length; i++) {
@@ -29,14 +29,14 @@ export default class Command extends BaseCommand {
                 videos[i].author.name
             }\n 📙 *Duration:* ${videos[i].duration}\n📘 *URL:* ${videos[i].url}\n\n`
         }
-        M.reply('🤹 searching...')
+        M.reply('Please wait... while the Bot is 🤹 searching...')
         this.client
             .sendMessage(M.from, text, MessageType.extendedText, {
                 quoted: M.WAMessage,
                 contextInfo: {
                     externalAdReply: {
                         title: `Search Term: ${term}`,
-                        body: `🤹Handcrafted for you by M_D🤹`,
+                        body: `🤹 Handcrafted for you by M_D's Bot 🤹`,
                         mediaType: 2,
                         thumbnailUrl: videos[0].thumbnail,
                         mediaUrl: videos[0].url
