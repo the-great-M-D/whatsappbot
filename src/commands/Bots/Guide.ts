@@ -31,7 +31,7 @@ export default class Command extends BaseCommand {
         text +=
             '🔗 How to get the MongoDB URL : https://github.com/the-great-M-D/Kaoi-Guides/blob/main/Mongo-Atlas-guide.md\n'
         text += '🔗 App sleeping? : https://www.youtube.com/watch?v=B9SvhFWKloM\n'
-        text += '\n_Thank You for using the Bot. Help others setup WhatsApp Bot by contribution to Kaoi Guides_'
+        text += '\n_Thank You for using the Bot. Help others setup WhatsApp Bot by contribution to 🤹  M_D 🤹 Guides_'
         return void M.reply(text).catch((reason: Error) => M.reply(`an error occurred, Reason: ${reason}`))
     }
 }
