@@ -40,7 +40,7 @@ console.log(number) ;
 
         if (!M.groupMetadata?.admins?.includes(this.client.user.jid))
 
-            return void M.reply(`❌ Failed to ${this.config.command} Make me admin first, baka!`)
+            return void M.reply(`❌ Failed to ${this.config.command} Make me admin first, !!!!!`)
 
         if (!number.length) return void M.reply(`Please write the user's number you want to ${this.config.command}`)
 
