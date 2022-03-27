@@ -38,7 +38,7 @@ export default class Command extends BaseCommand {
 
         
 
-        if (!joined) return void M.reply('Provide the keywords you wanna search, Baka!')
+        if (!joined) return void M.reply('Provide the keywords you wanna search, 🤹 !')
 
         const term = joined.trim()
 
