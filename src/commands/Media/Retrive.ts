@@ -32,7 +32,7 @@ export default class Command extends BaseCommand {
             ],
             undefined,
             undefined,
-            'Abracadabra, 🤹 Open sesame, this message is now public property... M_D's Bot 🤹'
+            'Abracadabra, 🤹 Open sesame, this message is now public property... M_D"s Bot 🤹'
         )
     }
 }
