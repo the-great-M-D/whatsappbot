@@ -1,5 +1,3 @@
-import { WAGroupMetadata } from '@whiskeysockets/baileys'
-
 export * from './message'
 export * from './command'
 export * from './mongo'
@@ -18,8 +16,26 @@ export interface IParsedArgs {
     joined: string
 }
 
-export interface IExtendedGroupMetadata extends WAGroupMetadata {
+export interface IGroupParticipant {
+    jid: string
+    isAdmin?: boolean
+    isSuperAdmin?: boolean
+    admin?: 'admin' | 'superadmin' | null
+}
+
+export interface IExtendedGroupMetadata {
+    id: string
+    subject: string
+    owner?: string
+    desc?: string
+    participants: IGroupParticipant[]
+    announce?: boolean
+    restrict?: boolean
     admins?: string[]
+    inviteCode?: string
+    subjectTime?: number
+    creation?: number
+    ephemeralDuration?: number
 }
 
 export interface ISession {

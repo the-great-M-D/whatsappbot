@@ -32,7 +32,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run build && node dist/kaoi.js"
+args = "node dist/kaoi.js"
 waitForPort = 5000
 
 [[ports]]

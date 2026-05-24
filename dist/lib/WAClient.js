@@ -41,6 +41,7 @@ const pino_1 = __importDefault(require("pino"));
 const events_1 = __importDefault(require("events"));
 const Utils_1 = __importDefault(require("./Utils"));
 const DatabaseHandler_1 = __importDefault(require("../Handlers/DatabaseHandler"));
+const Message_1 = require("./Message");
 exports.toggleableGroupActions = ['announce', 'not_announce', 'locked', 'unlocked'];
 class WAClient extends events_1.default {
     constructor(config) {
@@ -87,10 +88,8 @@ class WAClient extends events_1.default {
             const cleaned = phone.replace(/\D/g, '');
             if (!cleaned)
                 throw new Error('Invalid phone number');
-            // Stop any existing connection and wipe old session
             this.stopSocket();
             yield this.clearAuth();
-            // Start fresh connection and request code
             const code = yield new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (30s). Please try again.')), 30000);
                 this.once('pair-code', (c) => { clearTimeout(timeout); resolve(c); });
@@ -113,7 +112,6 @@ class WAClient extends events_1.default {
                 printQRInTerminal: false
             });
             this.sock.ev.on('creds.update', saveCreds);
-            // If phone provided and not yet registered, request pairing code after socket init
             if (pairingPhone && !isRegistered) {
                 setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                     try {
@@ -151,20 +149,47 @@ class WAClient extends events_1.default {
                     setTimeout(() => this.connect(), 5000);
                 }
             });
-            this.sock.ev.on('messages.upsert', ({ messages }) => {
+            this.sock.ev.on('messages.upsert', ({ messages }) => __awaiter(this, void 0, void 0, function* () {
                 const msg = messages[0];
-                if (!msg.message)
+                if (!(msg === null || msg === void 0 ? void 0 : msg.message))
                     return;
-                this.emit('new-message', msg);
-            });
+                const simplified = yield (0, Message_1.buildSimplifiedMessage)(msg, this);
+                if (simplified)
+                    this.emit('new-message', simplified);
+            }));
             this.sock.ev.on('group-participants.update', (data) => {
                 this.emit('group-participants-update', data);
             });
-            if (this.sock.ws) {
-                this.sock.ws.on('CB:call', (json) => {
-                    this.emit('CB:Call', json);
-                });
-            }
+            this.sock.ev.on('contacts.upsert', (contacts) => {
+                for (const contact of contacts) {
+                    if (contact.id)
+                        this.contacts[contact.id] = contact;
+                }
+            });
+            this.sock.ev.on('contacts.update', (contacts) => {
+                for (const contact of contacts) {
+                    if (contact.id) {
+                        this.contacts[contact.id] = Object.assign(Object.assign({}, this.contacts[contact.id]), contact);
+                    }
+                }
+            });
+            this.sock.ev.on('chats.upsert', (chats) => {
+                for (const chat of chats) {
+                    if (chat.id)
+                        this.chats[chat.id] = chat;
+                }
+            });
+            this.sock.ev.on('chats.update', (chats) => {
+                for (const chat of chats) {
+                    if (chat.id)
+                        this.chats[chat.id] = Object.assign(Object.assign({}, this.chats[chat.id]), chat);
+                }
+            });
+            this.sock.ev.on('call', (calls) => {
+                for (const call of calls) {
+                    this.emit('CB:Call', call);
+                }
+            });
         });
     }
     sendMessage(jid, content, type, options) {
@@ -172,16 +197,15 @@ class WAClient extends events_1.default {
             if (type === undefined || typeof type === 'object') {
                 return this.sock.sendMessage(jid, content);
             }
-            // Handle old MessageType-style calls
             const typeStr = String(type);
             if (typeStr === 'text' || typeStr === 'extendedText') {
-                return this.sock.sendMessage(jid, Object.assign({ text: content }, ((options === null || options === void 0 ? void 0 : options.contextInfo) ? { contextInfo: options.contextInfo } : {})));
+                return this.sock.sendMessage(jid, Object.assign({ text: typeof content === 'string' ? content : JSON.stringify(content) }, ((options === null || options === void 0 ? void 0 : options.contextInfo) ? { mentions: options.contextInfo.mentionedJid || [] } : {})));
             }
             if (typeStr === 'image') {
-                return this.sock.sendMessage(jid, Object.assign({ image: Buffer.isBuffer(content) ? content : Buffer.from(content), caption: (options === null || options === void 0 ? void 0 : options.caption) || '' }, ((options === null || options === void 0 ? void 0 : options.contextInfo) ? { contextInfo: options.contextInfo } : {})));
+                return this.sock.sendMessage(jid, Object.assign({ image: Buffer.isBuffer(content) ? content : Buffer.from(content), caption: (options === null || options === void 0 ? void 0 : options.caption) || '' }, ((options === null || options === void 0 ? void 0 : options.contextInfo) ? { mentions: options.contextInfo.mentionedJid || [] } : {})));
             }
             if (typeStr === 'video') {
-                return this.sock.sendMessage(jid, Object.assign({ video: Buffer.isBuffer(content) ? content : Buffer.from(content), caption: (options === null || options === void 0 ? void 0 : options.caption) || '' }, ((options === null || options === void 0 ? void 0 : options.contextInfo) ? { contextInfo: options.contextInfo } : {})));
+                return this.sock.sendMessage(jid, Object.assign({ video: Buffer.isBuffer(content) ? content : Buffer.from(content), caption: (options === null || options === void 0 ? void 0 : options.caption) || '' }, ((options === null || options === void 0 ? void 0 : options.contextInfo) ? { mentions: options.contextInfo.mentionedJid || [] } : {})));
             }
             if (typeStr === 'audio') {
                 return this.sock.sendMessage(jid, {
@@ -206,31 +230,22 @@ class WAClient extends events_1.default {
     }
     rejectCall(caller, callID) {
         return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.sock.rejectCall(callID, caller);
+            }
+            catch ( /* ignore */_a) { /* ignore */ }
             yield this.sendMessage(caller, { text: '❌ Calls are not allowed' });
         });
     }
     generateMessageTag() {
         return `${Math.floor(Math.random() * 1000)}.--${Date.now()}`;
     }
-    sendWA(payload) {
-        var _a, _b;
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                if ((_b = (_a = this.sock) === null || _a === void 0 ? void 0 : _a.ws) === null || _b === void 0 ? void 0 : _b.send) {
-                    this.sock.ws.send(payload);
-                }
-            }
-            catch (_c) {
-                // ignore
-            }
-        });
-    }
-    saveAuthInfo(session) {
+    saveAuthInfo(_session) {
         return __awaiter(this, void 0, void 0, function* () {
             // handled by Baileys useMultiFileAuthState
         });
     }
-    getAuthInfo(session) {
+    getAuthInfo(_session) {
         return __awaiter(this, void 0, void 0, function* () {
             return true;
         });
@@ -266,8 +281,7 @@ class WAClient extends events_1.default {
     groupInviteCode(jid) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const code = yield this.sock.groupInviteCode(jid);
-                return code;
+                return yield this.sock.groupInviteCode(jid);
             }
             catch (_a) {
                 return null;
@@ -319,9 +333,7 @@ class WAClient extends events_1.default {
             try {
                 yield this.sock.groupLeave(jid);
             }
-            catch (_a) {
-                // ignore
-            }
+            catch ( /* ignore */_a) { /* ignore */ }
         });
     }
     acceptInvite(code) {
@@ -344,11 +356,10 @@ class WAClient extends events_1.default {
             }
         });
     }
-    groupSettingChange(jid, setting, revert = false) {
+    groupSettingChange(jid, setting) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const action = revert ? 'not_announce' : setting;
-                return yield this.sock.groupSettingUpdate(jid, action);
+                return yield this.sock.groupSettingUpdate(jid, setting);
             }
             catch (_a) {
                 return null;
@@ -378,7 +389,7 @@ class WAClient extends events_1.default {
     deleteMessage(jid, message) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield this.sock.sendMessage(jid, { delete: message.key });
+                return yield this.sock.sendMessage(jid, { delete: message.key || message });
             }
             catch (_a) {
                 return null;
@@ -414,7 +425,7 @@ class WAClient extends events_1.default {
         });
     }
     getContact(jid) {
-        return this.contacts[jid] || { notify: jid.split('@')[0] };
+        return this.contacts[jid] || { notify: jid.split('@')[0], id: jid };
     }
     fetch(url) {
         return __awaiter(this, void 0, void 0, function* () {

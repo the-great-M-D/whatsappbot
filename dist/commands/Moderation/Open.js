@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -28,9 +27,9 @@ class Command extends BaseCommand_1.default {
             var _a, _b;
             if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.user.jid)))
                 return void M.reply("I can't open the group without being an admin");
-            if (M.groupMetadata.announce === 'false')
+            if (!M.groupMetadata.announce)
                 return void M.reply('Group is already open');
-            this.client.groupSettingChange(M.groupMetadata.id, baileys_1.GroupSettingChange.messageSend, false);
+            this.client.groupSettingChange(M.groupMetadata.id, 'not_announcement');
         });
     }
 }
