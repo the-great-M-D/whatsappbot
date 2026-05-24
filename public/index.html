@@ -162,7 +162,7 @@
 
         function startCountdown() {
             clearInterval(countdownTimer)
-            countdown = 5
+            countdown = 15
             document.getElementById('refresh-label').innerHTML = 'Refreshing in <span id="countdown">' + countdown + '</span>s'
             countdownTimer = setInterval(() => {
                 countdown--

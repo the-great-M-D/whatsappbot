@@ -20,14 +20,14 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 24px;
+    padding: 16px;
 }
 
 .card {
     background: #1a1d27;
     border: 1px solid #2a2d3a;
     border-radius: 20px;
-    padding: 40px 36px;
+    padding: 36px 32px;
     width: 100%;
     max-width: 420px;
     display: flex;
@@ -35,6 +35,48 @@ body {
     align-items: center;
     gap: 16px;
     box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 480px) {
+    .dashboard {
+        padding: 12px;
+        align-items: flex-start;
+        min-height: 100vh;
+    }
+
+    .card {
+        padding: 28px 20px;
+        border-radius: 16px;
+        gap: 14px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    .logo svg {
+        width: 48px;
+        height: 48px;
+    }
+
+    .phone-input-row {
+        flex-direction: column;
+    }
+
+    .phone-input-row button,
+    #pair-btn {
+        width: 100%;
+        padding: 13px;
+        font-size: 15px;
+    }
+
+    .code-chunk {
+        font-size: 22px;
+    }
+
+    #code-display {
+        padding: 16px 12px;
+    }
 }
 
 .logo svg {
