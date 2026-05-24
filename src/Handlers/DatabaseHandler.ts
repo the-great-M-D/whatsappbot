@@ -1,14 +1,17 @@
 import { IDBModels } from '../typings'
-import UserModel from '../lib/Mongo/Models/User'
-import GroupModel from '../lib/Mongo/Models/Group'
-import SessionModel from '../lib/Mongo/Models/Session'
-import DisabledCommandsModel from '../lib/Mongo/Models/DisabledCommands'
-import IFeatureModel from '../lib/Mongo/Models/Features'
+
+const makeStub = (name: string) => ({
+    findOne: async () => null,
+    find: async () => [],
+    create: async (data: any) => ({ ...data, save: async () => null }),
+    deleteOne: async () => null,
+    updateOne: async () => null,
+})
 
 export default class DatabaseHandler implements IDBModels {
-    user = UserModel
-    group = GroupModel
-    session = SessionModel
-    disabledcommands = DisabledCommandsModel
-    feature = IFeatureModel
+    user = makeStub('user') as any
+    group = makeStub('group') as any
+    session = makeStub('session') as any
+    disabledcommands = makeStub('disabledcommands') as any
+    feature = makeStub('feature') as any
 }

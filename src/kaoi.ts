@@ -5,14 +5,12 @@ config()
 import MessageHandler from './Handlers/MessageHandler'
 import WAClient from './lib/WAClient'
 import Server from './lib/Server'
-import mongoose from 'mongoose'
 import chalk from 'chalk'
 import cron from 'node-cron'
 import CallHandler from './Handlers/CallHandler'
 import AssetHandler from './Handlers/AssetHandler'
 import EventHandler from './Handlers/EventHandler'
 
-if (!process.env.MONGO_URI) throw new Error('MONGO URL IS NOT PROVIDED')
 const client = new WAClient({
     name: process.env.NAME || 'M_D BOT',
     session: process.env.SESSION || 'M_D',
@@ -30,8 +28,6 @@ const eventHandler = new EventHandler(client)
 messageHandler.loadCommands()
 assetHandler.loadAssets()
 messageHandler.loadFeatures()
-
-const db = mongoose.connection
 
 new Server(Number(process.env.PORT) || 4040, client)
 
@@ -72,24 +68,5 @@ const start = async () => {
     await client.connect()
 }
 
-mongoose.set('bufferCommands', false)
-
-mongoose
-    .connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-        bufferCommands: false
-    })
-    .then(() => {
-        client.log(chalk.green('Connected to Database!'))
-        client.getAuthInfo(client.config.session).then((session) => {
-            if (session) client.loadAuthInfo(session)
-            start()
-        })
-    })
-    .catch((err) => {
-        client.log(chalk.red(`Database connection failed: ${err.message}`), true)
-        client.log(chalk.yellow('Starting without database — some features may not work'), true)
-        start()
-    })
+client.log(chalk.yellow('Running without database — XP, bans and group configs will not persist'))
+start()
