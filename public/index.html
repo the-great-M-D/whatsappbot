@@ -53,17 +53,10 @@
 
             </div>
 
-            <div id="refresh-bar">
-                <span id="refresh-label">Checking status...</span>
-            </div>
         </div>
     </div>
 
     <script>
-        let pollTimer = null
-        let countdownTimer = null
-        let countdown = 5
-
         async function requestPairCode() {
             const input = document.getElementById('phone-input')
             const btn = document.getElementById('pair-btn')
@@ -156,23 +149,6 @@
             } catch (e) {
                 console.error('Poll error:', e)
             }
-
-            startCountdown()
-        }
-
-        function startCountdown() {
-            clearInterval(countdownTimer)
-            countdown = 15
-            document.getElementById('refresh-label').innerHTML = 'Refreshing in <span id="countdown">' + countdown + '</span>s'
-            countdownTimer = setInterval(() => {
-                countdown--
-                const el = document.getElementById('countdown')
-                if (el) el.textContent = countdown
-                if (countdown <= 0) {
-                    clearInterval(countdownTimer)
-                    poll()
-                }
-            }, 1000)
         }
 
         document.getElementById('phone-input').addEventListener('keydown', (e) => {
