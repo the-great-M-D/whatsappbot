@@ -9,20 +9,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const makeStub = (name) => ({
+const makeStub = () => ({
     findOne: () => __awaiter(void 0, void 0, void 0, function* () { return null; }),
     find: () => __awaiter(void 0, void 0, void 0, function* () { return []; }),
     create: (data) => __awaiter(void 0, void 0, void 0, function* () { return (Object.assign(Object.assign({}, data), { save: () => __awaiter(void 0, void 0, void 0, function* () { return null; }) })); }),
     deleteOne: () => __awaiter(void 0, void 0, void 0, function* () { return null; }),
     updateOne: () => __awaiter(void 0, void 0, void 0, function* () { return null; }),
 });
+const makeGroupStub = () => ({
+    findOne: () => __awaiter(void 0, void 0, void 0, function* () { return null; }),
+    find: () => __awaiter(void 0, void 0, void 0, function* () { return []; }),
+    create: (data) => __awaiter(void 0, void 0, void 0, function* () {
+        return (Object.assign(Object.assign({ cmd: true, events: false, nsfw: false, safe: false, mod: false, invitelink: false }, data), { save: () => __awaiter(void 0, void 0, void 0, function* () { return null; }) }));
+    }),
+    deleteOne: () => __awaiter(void 0, void 0, void 0, function* () { return null; }),
+    updateOne: () => __awaiter(void 0, void 0, void 0, function* () { return null; }),
+});
 class DatabaseHandler {
     constructor() {
-        this.user = makeStub('user');
-        this.group = makeStub('group');
-        this.session = makeStub('session');
-        this.disabledcommands = makeStub('disabledcommands');
-        this.feature = makeStub('feature');
+        this.user = makeStub();
+        this.group = makeGroupStub();
+        this.session = makeStub();
+        this.disabledcommands = makeStub();
+        this.feature = makeStub();
     }
 }
 exports.default = DatabaseHandler;
