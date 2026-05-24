@@ -13,11 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const canvas_1 = __importDefault(require("canvas"));
-const gifencoder_1 = __importDefault(require("gifencoder"));
-const wa_sticker_formatter_1 = require("wa-sticker-formatter");
-const baileys_1 = require("@adiwajshing/baileys");
-// import { MessageType, Mimetype } from '@adiwajshing/baileys'
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -29,13 +24,21 @@ class Command extends BaseCommand_1.default {
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d, _e, _f;
+            let Canvas, GIFEncoder;
+            try {
+                Canvas = require('canvas');
+                GIFEncoder = require('gifencoder');
+            }
+            catch (_g) {
+                return void M.reply('❌ This command is not available in this environment (canvas not supported).');
+            }
             const getImage = (image, timeout = 15) => __awaiter(this, void 0, void 0, function* () {
-                const img = yield canvas_1.default.loadImage(image);
-                const GIF = new gifencoder_1.default(256, 310);
+                const img = yield Canvas.loadImage(image);
+                const GIF = new GIFEncoder(256, 310);
                 GIF.start();
                 GIF.setRepeat(0);
                 GIF.setDelay(timeout);
-                const canvas = canvas_1.default.createCanvas(256, 310);
+                const canvas = Canvas.createCanvas(256, 310);
                 const ctx = canvas.getContext(`2d`);
                 const BR = 20;
                 const LR = 10;
@@ -44,7 +47,7 @@ class Command extends BaseCommand_1.default {
                     ctx.drawImage(img, Math.floor(Math.random() * BR) - BR, Math.floor(Math.random() * BR) - BR, 256 + BR, 310 - 54 + BR);
                     ctx.fillStyle = `#FF000033`;
                     ctx.fillRect(0, 0, 256, 310);
-                    ctx.drawImage(yield canvas_1.default.loadImage(this.client.assets.get('triggered') || Buffer.from('')), Math.floor(Math.random() * LR) - LR, 310 - 54 + Math.floor(Math.random() * LR) - LR, 256 + LR, 54 + LR);
+                    ctx.drawImage(yield Canvas.loadImage(this.client.assets.get('triggered') || Buffer.from('')), Math.floor(Math.random() * LR) - LR, 310 - 54 + Math.floor(Math.random() * LR) - LR, 256 + LR, 54 + LR);
                     GIF.addFrame(ctx);
                 }
                 GIF.finish();
@@ -60,7 +63,8 @@ class Command extends BaseCommand_1.default {
                             : M.mentioned
                                 ? this.client.getProfilePicture(M.mentioned[0])
                                 : this.client.getProfilePicture(M.sender.jid));
-                const sticker = new wa_sticker_formatter_1.Sticker(yield getImage(image), {
+                const { Sticker } = require('wa-sticker-formatter');
+                const sticker = new Sticker(yield getImage(image), {
                     pack: `Triggered`,
                     author: M.sender.username || `Kaoi`,
                     type: 'full',
@@ -68,11 +72,11 @@ class Command extends BaseCommand_1.default {
                 });
                 if (!sticker)
                     return void M.reply(`I couldn't find an image to trigger.`);
-                return void (yield M.reply(yield sticker.build(), baileys_1.MessageType.sticker, baileys_1.Mimetype.webp));
+                return void (yield M.reply(yield sticker.build(), 'sticker'));
             }
             catch (err) {
                 console.log(err);
-                M.reply(`Couldn't fetch the required Image.\n*Error* : ${err}`);
+                M.reply(`Couldn't fetch the required Image.\n*Error* : ${(err === null || err === void 0 ? void 0 : err.message) || err}`);
             }
         });
     }
