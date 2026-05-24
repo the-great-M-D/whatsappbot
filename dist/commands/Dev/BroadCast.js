@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -26,12 +25,11 @@ class Command extends BaseCommand_1.default {
             baseXp: 0
         });
         this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
-            var _a;
             const term = joined.trim();
-            const chats = this.client.chats.all().filter(v => !v.read_only && !v.archive).map(v => v.jid).map(jids => jids.includes("g.us") ? jids : null).filter(v => v);
+            const chats = Object.keys(this.client.chats).filter((jid) => jid.includes('g.us'));
             for (let i = 0; i < chats.length; i++) {
                 const text = `*「 M_D's 🤹 Bot 」* \n 🤹‍♂️ Prefix  : !* \n${term} By *${M.sender.username}*\n 🤹‍♂️ ft the Coding Family 🤹‍♂️`;
-                this.client.sendMessage(chats[i], text, baileys_1.MessageType.text, { contextInfo: { mentionedJid: (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.participants.map((user) => user.jid) } });
+                yield this.client.sendMessage(chats[i], { text });
             }
         });
     }

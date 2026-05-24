@@ -1,4 +1,3 @@
-import { GroupSettingChange } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -19,8 +18,8 @@ export default class Command extends BaseCommand {
     run = async (M: ISimplifiedMessage): Promise<void> => {
         if (!M.groupMetadata?.admins?.includes(this.client.user.jid))
             return void M.reply("I can't open the group without being an admin")
-        if (M.groupMetadata.announce === 'false') return void M.reply('Group is already open')
+        if (!M.groupMetadata.announce) return void M.reply('Group is already open')
 
-        this.client.groupSettingChange(M.groupMetadata.id, GroupSettingChange.messageSend, false)
+        this.client.groupSettingChange((M.groupMetadata as any).id, 'not_announcement')
     }
 }

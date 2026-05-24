@@ -56,13 +56,13 @@ const start = () => __awaiter(void 0, void 0, void 0, function* () {
             }));
         }
     }));
-    client.on('CB:Call', (json) => __awaiter(void 0, void 0, void 0, function* () {
-        const isOffer = json[1]['type'] == 'offer';
-        const number = `${json[1]['from'].split('@')[0]}@s.whatsapp.net`;
-        if (!isOffer)
-            return void null;
-        client.log(`${chalk_1.default.blue('CALL')} From ${client.contacts[number].notify || number}`);
-        yield callHandler.rejectCall(number, json[1].id);
+    client.on('CB:Call', (call) => __awaiter(void 0, void 0, void 0, function* () {
+        var _e;
+        if (call.status !== 'offer')
+            return;
+        const number = call.from;
+        client.log(`${chalk_1.default.blue('CALL')} From ${((_e = client.contacts[number]) === null || _e === void 0 ? void 0 : _e.notify) || number}`);
+        yield callHandler.rejectCall(number, call.id);
     }));
     client.on('new-message', messageHandler.handleMessage);
     client.on('group-participants-update', eventHandler.handle);

@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const chalk_1 = __importDefault(require("chalk"));
 const request_1 = __importDefault(require("../lib/request"));
 class EventHandler {
@@ -32,20 +31,21 @@ class EventHandler {
                 : event.action === 'remove'
                     ? `*@${event.participants[0].split('@')[0]}* has left the chat 👋`
                     : `*@${event.participants[0].split('@')[0]}* got ${this.client.util.capitalize(event.action)}d${event.actor ? ` by *@${event.actor.split('@')[0]}*` : ''}`;
-            const contextInfo = {
-                mentionedJid: event.actor ? [...event.participants, event.actor] : event.participants
-            };
+            const mentions = event.actor ? [...event.participants, event.actor] : event.participants;
             if (add) {
-                let image = (yield this.client.getProfilePicture(event.jid)) || this.client.assets.get('404.png');
+                let image = (yield this.client.getProfilePicture(event.jid)) || undefined;
+                if (!image)
+                    image = this.client.assets.get('404');
                 if (typeof image === 'string')
                     image = yield request_1.default.buffer(image);
                 if (image)
-                    return void (yield this.client.sendMessage(event.jid, image, baileys_1.MessageType.image, {
+                    return void (yield this.client.sock.sendMessage(event.jid, {
+                        image: image,
                         caption: text,
-                        contextInfo
+                        mentions
                     }));
             }
-            return void this.client.sendMessage(event.jid, text, baileys_1.MessageType.extendedText, { contextInfo });
+            return void this.client.sock.sendMessage(event.jid, { text, mentions });
         });
     }
 }

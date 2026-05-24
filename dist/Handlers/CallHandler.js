@@ -9,37 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 class CallHandler {
     constructor(client) {
         this.client = client;
         this.rejectCall = (caller, callID) => __awaiter(this, void 0, void 0, function* () {
-            const tag = this.client.generateMessageTag();
-            const json = [
-                'action',
-                'call',
-                [
-                    'call',
-                    {
-                        from: this.client.user.jid,
-                        to: caller,
-                        id: tag
-                    },
-                    [
-                        [
-                            'reject',
-                            {
-                                'call-id': callID,
-                                'call-creator': caller,
-                                count: '0'
-                            },
-                            null
-                        ]
-                    ]
-                ]
-            ];
-            yield this.client.sendWA(`${tag},${JSON.stringify(json)}`);
-            yield this.client.sendMessage(caller, `The great 0ne Will Be Intouch With You Shortly`, baileys_1.MessageType.text);
+            try {
+                yield this.client.sock.rejectCall(callID, caller);
+            }
+            catch ( /* ignore */_a) { /* ignore */ }
+            yield this.client.sendMessage(caller, { text: 'The great 0ne Will Be Intouch With You Shortly' });
         });
     }
 }
