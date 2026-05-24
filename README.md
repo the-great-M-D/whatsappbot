@@ -1,7 +1,7 @@
 <div align="center">
 <a href="https://ibb.co/wQ4GK21"><img src="https://i.ibb.co/HPqwr9Q/whatsapp-botto-void-init.png" alt="whatsapp-botto-void-init" border="0"></a>
 
-# * WhatsApp Bot 🤹 *
+#  WhatsApp Bot
 
 [![CodeFactor](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/badge/main)](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/overview/main)
 
