@@ -36,10 +36,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const baileys_1 = require("@adiwajshing/baileys");
 const events_1 = __importDefault(require("events"));
 const chess_node_1 = __importStar(require("chess-node"));
-const chess_image_generator_ts_1 = __importDefault(require("chess-image-generator-ts"));
+let CIG = null;
+try {
+    CIG = require('chess-image-generator-ts');
+}
+catch (_a) {
+    // canvas not available, chess image generation disabled
+}
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -84,19 +89,20 @@ class Command extends BaseCommand_1.default {
                 this.games.set(M.from, undefined);
                 this.ongoing.delete(M.from);
                 if (!w)
-                    return void this.client.sendMessage(M.from, 'Match Ended in a Draw!', baileys_1.MessageType.text);
+                    return void this.client.sendMessage(M.from, { text: 'Match Ended in a Draw!' });
                 yield this.client.setXp(w, 500, 1000);
                 if (w)
-                    return void this.client.sendMessage(M.from, this.client.assets.get('chess-win') || '', baileys_1.MessageType.video, {
+                    return void this.client.sendMessage(M.from, {
+                        video: this.client.assets.get('chess-win') || Buffer.from(''),
                         caption: `@${w.split('@')[0]} Won! 🎊`,
-                        mimetype: baileys_1.Mimetype.gif,
-                        contextInfo: { mentionedJid: [w] }
+                        gifPlayback: true,
+                        mentions: [w]
                     });
             });
             const print = (msg) => {
                 if (msg === 'Invalid Move' || msg === 'Not your turn')
                     return void M.reply(msg);
-                this.client.sendMessage(M.from, msg, baileys_1.MessageType.text);
+                this.client.sendMessage(M.from, { text: msg });
                 if (msg.includes('stalemate'))
                     return void end();
                 if (msg.includes('wins')) {
@@ -104,11 +110,28 @@ class Command extends BaseCommand_1.default {
                     return void end(winner);
                 }
             };
+            const sendBoard = (game, replyFn) => __awaiter(this, void 0, void 0, function* () {
+                if (!CIG)
+                    return void M.reply('Chess board image unavailable (canvas not supported)');
+                const cig = new CIG();
+                cig.loadArray(this.parseBoard(game.board.getPieces(game.white, game.black)));
+                let sent = false;
+                while (!sent) {
+                    try {
+                        const data = yield cig.generateBuffer();
+                        yield replyFn(data);
+                        sent = true;
+                    }
+                    catch (_a) {
+                        continue;
+                    }
+                }
+            });
             if (!args || !args[0])
-                return void M.reply(this.client.assets.get('chess-notation') || '', baileys_1.MessageType.image, undefined, undefined, `♟️ *Chess Commands* ♟️\n\n🎗️ *${this.client.config.prefix}chess challenge* - Challenges the mentioned or quoted person to a chess match\n\n🎀 *${this.client.config.prefix}chess accept* - Accpets the challenge if anyone had challenged you\n\n🔰 *${this.client.config.prefix}chess reject* - Rejects the incomming challenge\n\n💝 *${this.client.config.prefix}chess move [fromTile | 'castle'] [toTile]* - Make a move in the match (refer to the image)\n\n🎋 *${this.client.config.prefix}chess ff* - forfits the match`);
+                return void M.reply(`♟️ *Chess Commands* ♟️\n\n🎗️ *${this.client.config.prefix}chess challenge* - Challenges the mentioned or quoted person to a chess match\n\n🎀 *${this.client.config.prefix}chess accept* - Accepts the challenge if anyone had challenged you\n\n🔰 *${this.client.config.prefix}chess reject* - Rejects the incoming challenge\n\n💝 *${this.client.config.prefix}chess move [fromTile | 'castle'] [toTile]* - Make a move in the match\n\n🎋 *${this.client.config.prefix}chess ff* - forfeits the match`);
             switch (args[0].toLowerCase()) {
                 case 'c':
-                case 'challenge':
+                case 'challenge': {
                     const challengee = M.quoted && M.mentioned.length === 0 ? M.quoted.sender : M.mentioned[0] || null;
                     if (!challengee || challengee === M.sender.jid)
                         return void M.reply(`Mention the person you want to challenge`);
@@ -117,41 +140,31 @@ class Command extends BaseCommand_1.default {
                     if (challengee === this.client.user.jid)
                         return void M.reply(`Challenge someone else`);
                     this.challenges.set(M.from, { challenger: M.sender.jid, challengee });
-                    return void M.reply(`@${M.sender.jid.split('@')[0]} has Challenged @${challengee.split('@')[0]} to a chess match. Use *${this.client.config.prefix}chess accept* to start the challenge`, baileys_1.MessageType.text, undefined, [challengee || '', M.sender.jid]);
+                    return void M.reply(`@${M.sender.jid.split('@')[0]} has Challenged @${challengee.split('@')[0]} to a chess match. Use *${this.client.config.prefix}chess accept* to start the challenge`);
+                }
                 case 'a':
-                case 'accept':
+                case 'accept': {
                     const challenge = this.challenges.get(M.from);
                     if ((challenge === null || challenge === void 0 ? void 0 : challenge.challengee) !== M.sender.jid)
                         return void M.reply('No one challenged you to a chess match');
                     this.ongoing.add(M.from);
                     const game = new chess_node_1.default(new events_1.default(), M.from);
-                    yield M.reply(`*Chess Game Started!*\n\n⬜ *White:* @${challenge.challenger.split('@')[0]}\n⬛ *Black:* @${challenge.challengee.split('@')[0]}`, baileys_1.MessageType.text, undefined, Object.values(challenge));
+                    yield M.reply(`*Chess Game Started!*\n\n⬜ *White:* @${challenge.challenger.split('@')[0]}\n⬛ *Black:* @${challenge.challengee.split('@')[0]}`);
                     game.start(print, challenge.challenger, challenge.challengee, () => __awaiter(this, void 0, void 0, function* () {
-                        const cig = new chess_image_generator_ts_1.default();
-                        cig.loadArray(this.parseBoard(game.board.getPieces(game.white, game.black)));
-                        let sent = false;
-                        while (!sent) {
-                            try {
-                                yield cig
-                                    .generateBuffer()
-                                    .then((data) => __awaiter(this, void 0, void 0, function* () { return yield this.client.sendMessage(M.from, data, baileys_1.MessageType.image); }));
-                                sent = true;
-                            }
-                            catch (err) {
-                                continue;
-                            }
-                        }
+                        yield sendBoard(game, (data) => this.client.sendMessage(M.from, { image: data }));
                     }));
                     return void this.games.set(M.from, game);
-                case 'reject':
+                }
+                case 'reject': {
                     const ch = this.challenges.get(M.from);
                     if ((ch === null || ch === void 0 ? void 0 : ch.challengee) !== M.sender.jid && (ch === null || ch === void 0 ? void 0 : ch.challenger) !== M.sender.jid)
                         return void M.reply('No one challenged you to a chess match');
                     this.challenges.set(M.from, undefined);
                     return void M.reply(ch.challenger === M.sender.jid
                         ? `You rejected your challenge`
-                        : `You Rejected @${ch.challenger.split('@')[0]}'s Challenge`, baileys_1.MessageType.text, undefined, [ch.challengee || '', M.sender.jid]);
-                case 'move':
+                        : `You Rejected @${ch.challenger.split('@')[0]}'s Challenge`);
+                }
+                case 'move': {
                     const g = this.games.get(M.from);
                     if (!g)
                         return void M.reply('No Chess sessions are currently going on');
@@ -160,66 +173,37 @@ class Command extends BaseCommand_1.default {
                     if (args[1] == 'castle') {
                         const to = args[2];
                         if (to.length != 2 || !(typeof to[0] == 'string') || isNaN(parseInt(to[1])))
-                            return void M.reply("A move's fromTile and toTile must be of the from 'XZ', where X is a letter A-H, and Z is a number 1-8.");
-                        const move = {
-                            piece: (0, chess_node_1.genRealMove)(to)
-                        };
-                        return void g.eventEmitter.emit(M.from, move, print, M.sender.jid, () => () => __awaiter(this, void 0, void 0, function* () {
-                            const cig = new chess_image_generator_ts_1.default();
-                            cig.loadArray(this.parseBoard(g.board.getPieces(g.white, g.black)));
-                            let sent = false;
-                            while (!sent) {
-                                try {
-                                    yield cig.generateBuffer().then((data) => __awaiter(this, void 0, void 0, function* () { return yield M.reply(data, baileys_1.MessageType.image); }));
-                                    sent = true;
-                                }
-                                catch (err) {
-                                    continue;
-                                }
-                            }
+                            return void M.reply("A move's fromTile and toTile must be of the form 'XZ', where X is a letter A-H, and Z is a number 1-8.");
+                        const move = { piece: (0, chess_node_1.genRealMove)(to) };
+                        return void g.eventEmitter.emit(M.from, move, print, M.sender.jid, () => __awaiter(this, void 0, void 0, function* () {
+                            yield sendBoard(g, (data) => M.reply(data, 'image'));
                         }));
                     }
                     const from = args[1];
                     const to = args[2];
-                    if (from.length != 2 ||
-                        !(typeof from[0] == 'string') ||
-                        isNaN(parseInt(from[1])) ||
-                        to.length != 2 ||
-                        !(typeof to[0] == 'string') ||
-                        isNaN(parseInt(to[1])))
-                        return void M.reply("A move's fromTile and toTile must be of the from 'XZ', where X is a letter A-H, and Z is a number 1-8.");
+                    if (from.length != 2 || !(typeof from[0] == 'string') || isNaN(parseInt(from[1])) ||
+                        to.length != 2 || !(typeof to[0] == 'string') || isNaN(parseInt(to[1])))
+                        return void M.reply("A move's fromTile and toTile must be of the form 'XZ', where X is a letter A-H, and Z is a number 1-8.");
                     const toMove = (0, chess_node_1.genRealMove)(to);
                     const fromMove = (0, chess_node_1.genRealMove)(from);
                     if (toMove == null || fromMove == null)
-                        return void M.reply("A move's fromTile and toTile must be of the from 'XZ', where X is a letter A-H, and Z is a number 1-8.");
-                    const move = {
-                        from: fromMove,
-                        to: toMove
-                    };
+                        return void M.reply("A move's fromTile and toTile must be of the form 'XZ', where X is a letter A-H, and Z is a number 1-8.");
+                    const move = { from: fromMove, to: toMove };
                     return void g.eventEmitter.emit(M.from, move, print, M.sender.jid, () => __awaiter(this, void 0, void 0, function* () {
-                        const cig = new chess_image_generator_ts_1.default();
-                        cig.loadArray(this.parseBoard(g.board.getPieces(g.white, g.black)));
-                        let sent = false;
-                        while (!sent) {
-                            try {
-                                yield cig.generateBuffer().then((data) => __awaiter(this, void 0, void 0, function* () { return yield M.reply(data, baileys_1.MessageType.image); }));
-                                sent = true;
-                            }
-                            catch (err) {
-                                continue;
-                            }
-                        }
+                        yield sendBoard(g, (data) => M.reply(data, 'image'));
                     }));
-                case 'ff':
+                }
+                case 'ff': {
                     const ga = this.challenges.get(M.from);
                     if (!ga)
                         return void M.reply('No games are currently ongoing');
                     const players = Object.values(ga);
                     if (players.includes(M.sender.jid)) {
-                        yield M.reply('You forfited!');
+                        yield M.reply('You forfeited!');
                         return void end(players.filter((player) => M.sender.jid !== player)[0]);
                     }
                     return void M.reply('You are not participating in any games');
+                }
                 default:
                     return void M.reply(`Invalid Usage Format. Use *${this.client.config.prefix}chess* for more info`);
             }

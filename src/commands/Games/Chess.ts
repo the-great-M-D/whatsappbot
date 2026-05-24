@@ -2,10 +2,15 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
-import { MessageType, Mimetype } from '@adiwajshing/baileys'
 import EventEmitter from 'events'
 import Game, { genRealMove } from 'chess-node'
-import CIG from 'chess-image-generator-ts'
+
+let CIG: any = null
+try {
+    CIG = require('chess-image-generator-ts')
+} catch {
+    // canvas not available, chess image generation disabled
+}
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -52,40 +57,52 @@ export default class Command extends BaseCommand {
             this.challenges.set(M.from, undefined)
             this.games.set(M.from, undefined)
             this.ongoing.delete(M.from)
-            if (!w) return void this.client.sendMessage(M.from, 'Match Ended in a Draw!', MessageType.text)
+            if (!w) return void this.client.sendMessage(M.from, { text: 'Match Ended in a Draw!' })
             await this.client.setXp(w, 500, 1000)
             if (w)
                 return void this.client.sendMessage(
                     M.from,
-                    this.client.assets.get('chess-win') || '',
-                    MessageType.video,
                     {
+                        video: this.client.assets.get('chess-win') || Buffer.from(''),
                         caption: `@${w.split('@')[0]} Won! 🎊`,
-                        mimetype: Mimetype.gif,
-                        contextInfo: { mentionedJid: [w] }
+                        gifPlayback: true,
+                        mentions: [w]
                     }
                 )
         }
         const print = (msg: string) => {
             if (msg === 'Invalid Move' || msg === 'Not your turn') return void M.reply(msg)
-            this.client.sendMessage(M.from, msg, MessageType.text)
+            this.client.sendMessage(M.from, { text: msg })
             if (msg.includes('stalemate')) return void end()
             if (msg.includes('wins')) {
                 const winner = msg.includes('Black wins') ? 'Black' : 'White'
                 return void end(winner)
             }
         }
+
+        const sendBoard = async (game: Game, replyFn: (data: Buffer) => Promise<any>) => {
+            if (!CIG) return void M.reply('Chess board image unavailable (canvas not supported)')
+            const cig = new CIG()
+            cig.loadArray(this.parseBoard(game.board.getPieces(game.white, game.black)))
+            let sent = false
+            while (!sent) {
+                try {
+                    const data = await cig.generateBuffer()
+                    await replyFn(data)
+                    sent = true
+                } catch {
+                    continue
+                }
+            }
+        }
+
         if (!args || !args[0])
             return void M.reply(
-                this.client.assets.get('chess-notation') || '',
-                MessageType.image,
-                undefined,
-                undefined,
-                `♟️ *Chess Commands* ♟️\n\n🎗️ *${this.client.config.prefix}chess challenge* - Challenges the mentioned or quoted person to a chess match\n\n🎀 *${this.client.config.prefix}chess accept* - Accpets the challenge if anyone had challenged you\n\n🔰 *${this.client.config.prefix}chess reject* - Rejects the incomming challenge\n\n💝 *${this.client.config.prefix}chess move [fromTile | 'castle'] [toTile]* - Make a move in the match (refer to the image)\n\n🎋 *${this.client.config.prefix}chess ff* - forfits the match`
+                `♟️ *Chess Commands* ♟️\n\n🎗️ *${this.client.config.prefix}chess challenge* - Challenges the mentioned or quoted person to a chess match\n\n🎀 *${this.client.config.prefix}chess accept* - Accepts the challenge if anyone had challenged you\n\n🔰 *${this.client.config.prefix}chess reject* - Rejects the incoming challenge\n\n💝 *${this.client.config.prefix}chess move [fromTile | 'castle'] [toTile]* - Make a move in the match\n\n🎋 *${this.client.config.prefix}chess ff* - forfeits the match`
             )
         switch (args[0].toLowerCase()) {
             case 'c':
-            case 'challenge':
+            case 'challenge': {
                 const challengee = M.quoted && M.mentioned.length === 0 ? M.quoted.sender : M.mentioned[0] || null
                 if (!challengee || challengee === M.sender.jid)
                     return void M.reply(`Mention the person you want to challenge`)
@@ -96,13 +113,11 @@ export default class Command extends BaseCommand {
                 return void M.reply(
                     `@${M.sender.jid.split('@')[0]} has Challenged @${
                         challengee.split('@')[0]
-                    } to a chess match. Use *${this.client.config.prefix}chess accept* to start the challenge`,
-                    MessageType.text,
-                    undefined,
-                    [challengee || '', M.sender.jid]
+                    } to a chess match. Use *${this.client.config.prefix}chess accept* to start the challenge`
                 )
+            }
             case 'a':
-            case 'accept':
+            case 'accept': {
                 const challenge = this.challenges.get(M.from)
                 if (challenge?.challengee !== M.sender.jid)
                     return void M.reply('No one challenged you to a chess match')
@@ -111,28 +126,14 @@ export default class Command extends BaseCommand {
                 await M.reply(
                     `*Chess Game Started!*\n\n⬜ *White:* @${challenge.challenger.split('@')[0]}\n⬛ *Black:* @${
                         challenge.challengee.split('@')[0]
-                    }`,
-                    MessageType.text,
-                    undefined,
-                    Object.values(challenge)
+                    }`
                 )
                 game.start(print, challenge.challenger, challenge.challengee, async () => {
-                    const cig = new CIG()
-                    cig.loadArray(this.parseBoard(game.board.getPieces(game.white, game.black)))
-                    let sent = false
-                    while (!sent) {
-                        try {
-                            await cig
-                                .generateBuffer()
-                                .then(async (data) => await this.client.sendMessage(M.from, data, MessageType.image))
-                            sent = true
-                        } catch (err) {
-                            continue
-                        }
-                    }
+                    await sendBoard(game, (data) => this.client.sendMessage(M.from, { image: data }))
                 })
                 return void this.games.set(M.from, game)
-            case 'reject':
+            }
+            case 'reject': {
                 const ch = this.challenges.get(M.from)
                 if (ch?.challengee !== M.sender.jid && ch?.challenger !== M.sender.jid)
                     return void M.reply('No one challenged you to a chess match')
@@ -140,12 +141,10 @@ export default class Command extends BaseCommand {
                 return void M.reply(
                     ch.challenger === M.sender.jid
                         ? `You rejected your challenge`
-                        : `You Rejected @${ch.challenger.split('@')[0]}'s Challenge`,
-                    MessageType.text,
-                    undefined,
-                    [ch.challengee || '', M.sender.jid]
+                        : `You Rejected @${ch.challenger.split('@')[0]}'s Challenge`
                 )
-            case 'move':
+            }
+            case 'move': {
                 const g = this.games.get(M.from)
                 if (!g) return void M.reply('No Chess sessions are currently going on')
                 if (args.length > 3 || args.length < 2)
@@ -156,70 +155,43 @@ export default class Command extends BaseCommand {
                     const to = args[2]
                     if (to.length != 2 || !(typeof to[0] == 'string') || isNaN(parseInt(to[1])))
                         return void M.reply(
-                            "A move's fromTile and toTile must be of the from 'XZ', where X is a letter A-H, and Z is a number 1-8."
+                            "A move's fromTile and toTile must be of the form 'XZ', where X is a letter A-H, and Z is a number 1-8."
                         )
-                    const move = {
-                        piece: genRealMove(to)
-                    }
-                    return void g.eventEmitter.emit(M.from, move, print, M.sender.jid, () => async () => {
-                        const cig = new CIG()
-                        cig.loadArray(this.parseBoard(g.board.getPieces(g.white, g.black)))
-                        let sent = false
-                        while (!sent) {
-                            try {
-                                await cig.generateBuffer().then(async (data) => await M.reply(data, MessageType.image))
-                                sent = true
-                            } catch (err) {
-                                continue
-                            }
-                        }
+                    const move = { piece: genRealMove(to) }
+                    return void g.eventEmitter.emit(M.from, move, print, M.sender.jid, async () => {
+                        await sendBoard(g, (data) => M.reply(data, 'image' as any))
                     })
                 }
                 const from = args[1]
                 const to = args[2]
                 if (
-                    from.length != 2 ||
-                    !(typeof from[0] == 'string') ||
-                    isNaN(parseInt(from[1])) ||
-                    to.length != 2 ||
-                    !(typeof to[0] == 'string') ||
-                    isNaN(parseInt(to[1]))
+                    from.length != 2 || !(typeof from[0] == 'string') || isNaN(parseInt(from[1])) ||
+                    to.length != 2 || !(typeof to[0] == 'string') || isNaN(parseInt(to[1]))
                 )
                     return void M.reply(
-                        "A move's fromTile and toTile must be of the from 'XZ', where X is a letter A-H, and Z is a number 1-8."
+                        "A move's fromTile and toTile must be of the form 'XZ', where X is a letter A-H, and Z is a number 1-8."
                     )
                 const toMove = genRealMove(to)
                 const fromMove = genRealMove(from)
                 if (toMove == null || fromMove == null)
                     return void M.reply(
-                        "A move's fromTile and toTile must be of the from 'XZ', where X is a letter A-H, and Z is a number 1-8."
+                        "A move's fromTile and toTile must be of the form 'XZ', where X is a letter A-H, and Z is a number 1-8."
                     )
-                const move = {
-                    from: fromMove,
-                    to: toMove
-                }
+                const move = { from: fromMove, to: toMove }
                 return void g.eventEmitter.emit(M.from, move, print, M.sender.jid, async () => {
-                    const cig = new CIG()
-                    cig.loadArray(this.parseBoard(g.board.getPieces(g.white, g.black)))
-                    let sent = false
-                    while (!sent) {
-                        try {
-                            await cig.generateBuffer().then(async (data) => await M.reply(data, MessageType.image))
-                            sent = true
-                        } catch (err) {
-                            continue
-                        }
-                    }
+                    await sendBoard(g, (data) => M.reply(data, 'image' as any))
                 })
-            case 'ff':
+            }
+            case 'ff': {
                 const ga = this.challenges.get(M.from)
                 if (!ga) return void M.reply('No games are currently ongoing')
                 const players = Object.values(ga)
                 if (players.includes(M.sender.jid)) {
-                    await M.reply('You forfited!')
+                    await M.reply('You forfeited!')
                     return void end(players.filter((player) => M.sender.jid !== player)[0])
                 }
                 return void M.reply('You are not participating in any games')
+            }
             default:
                 return void M.reply(`Invalid Usage Format. Use *${this.client.config.prefix}chess* for more info`)
         }

@@ -3,7 +3,8 @@
     "target": "ES6",                                
     "module": "commonjs",                           
     "lib": [
-      "ESNext"
+      "ESNext",
+      "DOM"
     ],                                   
     "outDir": "./dist",
     "rootDir": "./src",
