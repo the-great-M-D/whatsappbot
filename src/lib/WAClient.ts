@@ -24,6 +24,7 @@ export default class WAClient extends EventEmitter {
     public contacts: Record<string, any> = {}
     public chats: Record<string, any> = {}
     public QR: Buffer | null = null
+    public QRText: string | null = null
     public state: string = 'close'
 
     constructor(config: any) {
@@ -50,6 +51,7 @@ export default class WAClient extends EventEmitter {
 
         this.sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }: any) => {
             if (qr) {
+                this.QRText = qr
                 try {
                     // eslint-disable-next-line @typescript-eslint/no-var-requires
                     const qrImage = require('qr-image')

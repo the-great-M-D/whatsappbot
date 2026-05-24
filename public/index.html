@@ -32,6 +32,13 @@
                 <div id="qr-image-wrap" style="display:none">
                     <img id="qr-img" src="" alt="WhatsApp QR Code" />
                     <p class="qr-hint">Open WhatsApp → Linked Devices → Link a Device</p>
+                    <div id="pair-code-section" style="display:none; width:100%">
+                        <div class="pair-divider"><span>or use pairing code</span></div>
+                        <div class="pair-code-box">
+                            <code id="pair-code-text"></code>
+                            <button id="copy-btn" onclick="copyCode()">Copy</button>
+                        </div>
+                    </div>
                 </div>
                 <div id="qr-connected" style="display:none" class="connected-state">
                     <div class="check-circle">✓</div>
@@ -49,6 +56,15 @@
     <script>
         let countdown = 5
         let timer
+
+        function copyCode() {
+            const code = document.getElementById('pair-code-text').textContent
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copy-btn')
+                btn.textContent = 'Copied!'
+                setTimeout(() => btn.textContent = 'Copy', 2000)
+            })
+        }
 
         async function poll() {
             try {
@@ -81,6 +97,16 @@
                     qrLoading.style.display = 'none'
                     qrImageWrap.style.display = 'block'
                     qrImg.src = '/api/qr?t=' + Date.now()
+
+                    // Fetch and show the raw pairing code text
+                    try {
+                        const qrTextRes = await fetch('/api/qr-text')
+                        const qrTextData = await qrTextRes.json()
+                        if (qrTextData.qrText) {
+                            document.getElementById('pair-code-text').textContent = qrTextData.qrText
+                            document.getElementById('pair-code-section').style.display = 'block'
+                        }
+                    } catch (e) { /* ignore */ }
                 } else {
                     qrLoading.style.display = 'flex'
                     qrImageWrap.style.display = 'none'

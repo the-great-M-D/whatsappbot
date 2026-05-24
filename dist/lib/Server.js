@@ -40,6 +40,13 @@ class Server extends events_1.EventEmitter {
             res.contentType('image/png');
             return void res.send(this.client.QR);
         });
+        this.app.get('/api/qr-text', (req, res) => {
+            if (this.client.state === 'open')
+                return void res.json({ connected: true });
+            if (!this.client.QRText)
+                return void res.json({ pending: true });
+            res.json({ qrText: this.client.QRText });
+        });
         this.app.use('/wa', this.WARouter);
         this.WARouter.use(this.auth);
         this.WARouter.get('/qr', (req, res) => {

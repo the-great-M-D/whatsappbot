@@ -53,6 +53,7 @@ class WAClient extends events_1.default {
         this.contacts = {};
         this.chats = {};
         this.QR = null;
+        this.QRText = null;
         this.state = 'close';
         this.config = config;
     }
@@ -72,6 +73,7 @@ class WAClient extends events_1.default {
             this.sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
                 var _a, _b;
                 if (qr) {
+                    this.QRText = qr;
                     try {
                         // eslint-disable-next-line @typescript-eslint/no-var-requires
                         const qrImage = require('qr-image');
