@@ -1,4 +1,4 @@
-import { MessageType, WAParticipantAction } from '@adiwajshing/baileys'
+import { WAParticipantAction } from '../lib/Types'
 import chalk from 'chalk'
 import request from '../lib/request'
 import WAClient from '../lib/WAClient'
@@ -27,19 +27,20 @@ export default class EventHandler {
             : `*@${event.participants[0].split('@')[0]}* got ${this.client.util.capitalize(event.action)}d${
                   event.actor ? ` by *@${event.actor.split('@')[0]}*` : ''
               }`
-        const contextInfo = {
-            mentionedJid: event.actor ? [...event.participants, event.actor] : event.participants
-        }
+        const mentions = event.actor ? [...event.participants, event.actor] : event.participants
         if (add) {
-            let image = (await this.client.getProfilePicture(event.jid)) || this.client.assets.get('404.png')
+            let image: string | Buffer | undefined =
+                (await this.client.getProfilePicture(event.jid)) || undefined
+            if (!image) image = this.client.assets.get('404')
             if (typeof image === 'string') image = await request.buffer(image)
             if (image)
-                return void (await this.client.sendMessage(event.jid, image, MessageType.image, {
+                return void (await this.client.sock.sendMessage(event.jid, {
+                    image: image as Buffer,
                     caption: text,
-                    contextInfo
+                    mentions
                 }))
         }
-        return void this.client.sendMessage(event.jid, text, MessageType.extendedText, { contextInfo })
+        return void this.client.sock.sendMessage(event.jid, { text, mentions })
     }
 }
 

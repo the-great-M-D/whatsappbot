@@ -48,12 +48,11 @@ const start = async () => {
         }
     })
 
-    client.on('CB:Call', async (json) => {
-        const isOffer = json[1]['type'] == 'offer'
-        const number = `${(json[1]['from'] as string).split('@')[0]}@s.whatsapp.net`
-        if (!isOffer) return void null
-        client.log(`${chalk.blue('CALL')} From ${client.contacts[number].notify || number}`)
-        await callHandler.rejectCall(number, json[1].id)
+    client.on('CB:Call', async (call: any) => {
+        if (call.status !== 'offer') return
+        const number = call.from
+        client.log(`${chalk.blue('CALL')} From ${client.contacts[number]?.notify || number}`)
+        await callHandler.rejectCall(number, call.id)
     })
 
     client.on('new-message', messageHandler.handleMessage)

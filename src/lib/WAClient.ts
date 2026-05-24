@@ -1,6 +1,5 @@
 import makeWASocket, {
     useMultiFileAuthState,
-    DisconnectReason,
     fetchLatestBaileysVersion,
     downloadMediaMessage
 } from '@whiskeysockets/baileys'
@@ -9,6 +8,7 @@ import P from 'pino'
 import EventEmitter from 'events'
 import Utils from './Utils'
 import DatabaseHandler from '../Handlers/DatabaseHandler'
+import { buildSimplifiedMessage } from './Message'
 import { IGroupModel, IUserModel } from '../typings'
 
 export const toggleableGroupActions = ['announce', 'not_announce', 'locked', 'unlocked'] as const
@@ -59,11 +59,9 @@ export default class WAClient extends EventEmitter {
         const cleaned = phone.replace(/\D/g, '')
         if (!cleaned) throw new Error('Invalid phone number')
 
-        // Stop any existing connection and wipe old session
         this.stopSocket()
         await this.clearAuth()
 
-        // Start fresh connection and request code
         const code = await new Promise<string>((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (30s). Please try again.')), 30000)
             this.once('pair-code', (c: string) => { clearTimeout(timeout); resolve(c) })
@@ -89,7 +87,6 @@ export default class WAClient extends EventEmitter {
 
         this.sock.ev.on('creds.update', saveCreds)
 
-        // If phone provided and not yet registered, request pairing code after socket init
         if (pairingPhone && !isRegistered) {
             setTimeout(async () => {
                 try {
@@ -128,47 +125,73 @@ export default class WAClient extends EventEmitter {
             }
         })
 
-        this.sock.ev.on('messages.upsert', ({ messages }: any) => {
+        this.sock.ev.on('messages.upsert', async ({ messages }: any) => {
             const msg = messages[0]
-            if (!msg.message) return
-            this.emit('new-message', msg)
+            if (!msg?.message) return
+            const simplified = await buildSimplifiedMessage(msg, this)
+            if (simplified) this.emit('new-message', simplified)
         })
 
         this.sock.ev.on('group-participants.update', (data: any) => {
             this.emit('group-participants-update', data)
         })
 
-        if (this.sock.ws) {
-            this.sock.ws.on('CB:call', (json: any) => {
-                this.emit('CB:Call', json)
-            })
-        }
+        this.sock.ev.on('contacts.upsert', (contacts: any[]) => {
+            for (const contact of contacts) {
+                if (contact.id) this.contacts[contact.id] = contact
+            }
+        })
+
+        this.sock.ev.on('contacts.update', (contacts: any[]) => {
+            for (const contact of contacts) {
+                if (contact.id) {
+                    this.contacts[contact.id] = { ...this.contacts[contact.id], ...contact }
+                }
+            }
+        })
+
+        this.sock.ev.on('chats.upsert', (chats: any[]) => {
+            for (const chat of chats) {
+                if (chat.id) this.chats[chat.id] = chat
+            }
+        })
+
+        this.sock.ev.on('chats.update', (chats: any[]) => {
+            for (const chat of chats) {
+                if (chat.id) this.chats[chat.id] = { ...this.chats[chat.id], ...chat }
+            }
+        })
+
+        this.sock.ev.on('call', (calls: any[]) => {
+            for (const call of calls) {
+                this.emit('CB:Call', call)
+            }
+        })
     }
 
     async sendMessage(jid: string, content: any, type?: any, options?: any): Promise<any> {
         if (type === undefined || typeof type === 'object') {
             return this.sock.sendMessage(jid, content)
         }
-        // Handle old MessageType-style calls
         const typeStr = String(type)
         if (typeStr === 'text' || typeStr === 'extendedText') {
             return this.sock.sendMessage(jid, {
-                text: content,
-                ...(options?.contextInfo ? { contextInfo: options.contextInfo } : {})
+                text: typeof content === 'string' ? content : JSON.stringify(content),
+                ...(options?.contextInfo ? { mentions: options.contextInfo.mentionedJid || [] } : {})
             })
         }
         if (typeStr === 'image') {
             return this.sock.sendMessage(jid, {
                 image: Buffer.isBuffer(content) ? content : Buffer.from(content),
                 caption: options?.caption || '',
-                ...(options?.contextInfo ? { contextInfo: options.contextInfo } : {})
+                ...(options?.contextInfo ? { mentions: options.contextInfo.mentionedJid || [] } : {})
             })
         }
         if (typeStr === 'video') {
             return this.sock.sendMessage(jid, {
                 video: Buffer.isBuffer(content) ? content : Buffer.from(content),
                 caption: options?.caption || '',
-                ...(options?.contextInfo ? { contextInfo: options.contextInfo } : {})
+                ...(options?.contextInfo ? { mentions: options.contextInfo.mentionedJid || [] } : {})
             })
         }
         if (typeStr === 'audio') {
@@ -193,6 +216,9 @@ export default class WAClient extends EventEmitter {
     }
 
     async rejectCall(caller: string, callID: string): Promise<void> {
+        try {
+            await this.sock.rejectCall(callID, caller)
+        } catch { /* ignore */ }
         await this.sendMessage(caller, { text: '❌ Calls are not allowed' })
     }
 
@@ -200,21 +226,11 @@ export default class WAClient extends EventEmitter {
         return `${Math.floor(Math.random() * 1000)}.--${Date.now()}`
     }
 
-    async sendWA(payload: string): Promise<void> {
-        try {
-            if (this.sock?.ws?.send) {
-                this.sock.ws.send(payload)
-            }
-        } catch {
-            // ignore
-        }
-    }
-
-    async saveAuthInfo(session: string): Promise<void> {
+    async saveAuthInfo(_session: string): Promise<void> {
         // handled by Baileys useMultiFileAuthState
     }
 
-    async getAuthInfo(session: string): Promise<any> {
+    async getAuthInfo(_session: string): Promise<any> {
         return true
     }
 
@@ -244,8 +260,7 @@ export default class WAClient extends EventEmitter {
 
     async groupInviteCode(jid: string): Promise<string | null> {
         try {
-            const code = await this.sock.groupInviteCode(jid)
-            return code
+            return await this.sock.groupInviteCode(jid)
         } catch {
             return null
         }
@@ -286,9 +301,7 @@ export default class WAClient extends EventEmitter {
     async groupLeave(jid: string): Promise<void> {
         try {
             await this.sock.groupLeave(jid)
-        } catch {
-            // ignore
-        }
+        } catch { /* ignore */ }
     }
 
     async acceptInvite(code: string): Promise<any> {
@@ -307,10 +320,9 @@ export default class WAClient extends EventEmitter {
         }
     }
 
-    async groupSettingChange(jid: string, setting: string, revert = false): Promise<any> {
+    async groupSettingChange(jid: string, setting: string): Promise<any> {
         try {
-            const action = revert ? 'not_announce' : setting
-            return await this.sock.groupSettingUpdate(jid, action as any)
+            return await this.sock.groupSettingUpdate(jid, setting as any)
         } catch {
             return null
         }
@@ -334,7 +346,7 @@ export default class WAClient extends EventEmitter {
 
     async deleteMessage(jid: string, message: any): Promise<any> {
         try {
-            return await this.sock.sendMessage(jid, { delete: message.key })
+            return await this.sock.sendMessage(jid, { delete: message.key || message })
         } catch {
             return null
         }
@@ -363,7 +375,7 @@ export default class WAClient extends EventEmitter {
     }
 
     getContact(jid: string): any {
-        return this.contacts[jid] || { notify: jid.split('@')[0] }
+        return this.contacts[jid] || { notify: jid.split('@')[0], id: jid }
     }
 
     async fetch(url: string): Promise<any> {
