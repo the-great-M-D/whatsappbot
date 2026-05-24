@@ -366,9 +366,13 @@ export default class WAClient extends EventEmitter {
     }
 
     async setFeatures(): Promise<void> {
-        const features = await this.DB.feature.find()
-        for (const feature of features) {
-            this.features.set(feature.feature, feature.state)
+        try {
+            const features = await this.DB.feature.find()
+            for (const feature of features) {
+                this.features.set(feature.feature, feature.state)
+            }
+        } catch (err: any) {
+            this.log(`Features could not be loaded from database: ${err.message}`, true)
         }
     }
 }

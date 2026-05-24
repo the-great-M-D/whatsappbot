@@ -426,9 +426,14 @@ class WAClient extends events_1.default {
     }
     setFeatures() {
         return __awaiter(this, void 0, void 0, function* () {
-            const features = yield this.DB.feature.find();
-            for (const feature of features) {
-                this.features.set(feature.feature, feature.state);
+            try {
+                const features = yield this.DB.feature.find();
+                for (const feature of features) {
+                    this.features.set(feature.feature, feature.state);
+                }
+            }
+            catch (err) {
+                this.log(`Features could not be loaded from database: ${err.message}`, true);
             }
         });
     }

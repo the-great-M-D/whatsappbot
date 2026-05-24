@@ -70,16 +70,24 @@ const start = () => __awaiter(void 0, void 0, void 0, function* () {
     client.on('group-participants-update', eventHandler.handle);
     yield client.connect();
 });
-mongoose_1.default.connect(encodeURI(process.env.MONGO_URI), {
+mongoose_1.default.set('bufferCommands', false);
+mongoose_1.default
+    .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useCreateIndex: true
-});
-db.once('open', () => {
+    useCreateIndex: true,
+    bufferCommands: false
+})
+    .then(() => {
     client.log(chalk_1.default.green('Connected to Database!'));
     client.getAuthInfo(client.config.session).then((session) => {
         if (session)
             client.loadAuthInfo(session);
         start();
     });
+})
+    .catch((err) => {
+    client.log(chalk_1.default.red(`Database connection failed: ${err.message}`), true);
+    client.log(chalk_1.default.yellow('Starting without database — some features may not work'), true);
+    start();
 });

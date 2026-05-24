@@ -72,16 +72,24 @@ const start = async () => {
     await client.connect()
 }
 
-mongoose.connect(encodeURI(process.env.MONGO_URI), {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true
-})
+mongoose.set('bufferCommands', false)
 
-db.once('open', () => {
-    client.log(chalk.green('Connected to Database!'))
-    client.getAuthInfo(client.config.session).then((session) => {
-        if (session) client.loadAuthInfo(session)
+mongoose
+    .connect(process.env.MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useCreateIndex: true,
+        bufferCommands: false
+    })
+    .then(() => {
+        client.log(chalk.green('Connected to Database!'))
+        client.getAuthInfo(client.config.session).then((session) => {
+            if (session) client.loadAuthInfo(session)
+            start()
+        })
+    })
+    .catch((err) => {
+        client.log(chalk.red(`Database connection failed: ${err.message}`), true)
+        client.log(chalk.yellow('Starting without database — some features may not work'), true)
         start()
     })
-})
