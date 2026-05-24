@@ -29,6 +29,7 @@ export default class WAClient extends EventEmitter {
     public pairCodePhone: string | null = null
     public state: string = 'close'
     public registered: boolean = false
+    private intentionalStop: boolean = false
 
     constructor(config: any) {
         super()
@@ -40,6 +41,7 @@ export default class WAClient extends EventEmitter {
     }
 
     private stopSocket() {
+        this.intentionalStop = true
         if (this.sock) {
             try { this.sock.end(undefined) } catch { /* ignore */ }
             this.sock = null
@@ -73,6 +75,7 @@ export default class WAClient extends EventEmitter {
     }
 
     async connect(pairingPhone?: string) {
+        this.intentionalStop = false
         const { state, saveCreds } = await useMultiFileAuthState(`auth/${this.config.session}`)
         const { version } = await fetchLatestBaileysVersion()
         const isRegistered = !!(state.creds as any).registered
@@ -115,6 +118,10 @@ export default class WAClient extends EventEmitter {
 
             if (connection === 'close') {
                 this.state = 'close'
+                if (this.intentionalStop) {
+                    this.intentionalStop = false
+                    return
+                }
                 const statusCode = (lastDisconnect?.error as any)?.output?.statusCode
                 this.log(`Connection closed (${statusCode ?? 'unknown'}), reconnecting in 5s...`)
                 setTimeout(() => this.connect(), 5000)
