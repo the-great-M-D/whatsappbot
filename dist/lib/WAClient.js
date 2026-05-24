@@ -140,14 +140,8 @@ class WAClient extends events_1.default {
                 if (connection === 'close') {
                     this.state = 'close';
                     const statusCode = (_d = (_c = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _c === void 0 ? void 0 : _c.output) === null || _d === void 0 ? void 0 : _d.statusCode;
-                    if (statusCode === baileys_1.DisconnectReason.loggedOut || statusCode === 403) {
-                        this.log(`Session ended (${statusCode}). Clearing auth for fresh start.`, true);
-                        this.clearAuth();
-                    }
-                    else {
-                        this.log(`Connection closed (${statusCode !== null && statusCode !== void 0 ? statusCode : 'unknown'}), reconnecting in 5s...`);
-                        setTimeout(() => this.connect(), 5000);
-                    }
+                    this.log(`Connection closed (${statusCode !== null && statusCode !== void 0 ? statusCode : 'unknown'}), reconnecting in 5s...`);
+                    setTimeout(() => this.connect(), 5000);
                 }
             });
             this.sock.ev.on('messages.upsert', ({ messages }) => {
