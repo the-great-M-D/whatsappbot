@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -26,14 +25,13 @@ class Command extends BaseCommand_1.default {
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
-            // check if Bot is the admin
             if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.user.jid)))
                 return void M.reply(`I'm not an admin of this group.`);
             if ((yield this.client.getGroupData(M.from)).invitelink) {
                 const code = yield this.client.groupInviteCode(M.from).catch(() => {
                     return void M.reply('Could not get the invite link');
                 });
-                yield this.client.sendMessage(M.sender.jid, `*Invite link:* https://chat.whatsapp.com/${code}`, baileys_1.MessageType.text);
+                yield this.client.sendMessage(M.sender.jid, { text: `*Invite link:* https://chat.whatsapp.com/${code}` });
                 return void M.reply('Sent you the Group Link in personal message');
             }
             else {

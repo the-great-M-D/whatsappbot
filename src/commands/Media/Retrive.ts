@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MessageType, proto, WAMessage } from '@adiwajshing/baileys'
+import { proto } from '@whiskeysockets/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -18,18 +18,18 @@ export default class Command extends BaseCommand {
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
         if (!M.quoted) return void (await M.reply(`Quote the "viewOnceMessage" you want to retrieve`))
+        const quotedMsg = M.quoted.message?.message as proto.IMessage
         if (
-            !(M?.quoted?.message?.message as proto.Message)?.viewOnceMessage?.message?.videoMessage &&
-            !(M.quoted.message?.message as proto.Message).viewOnceMessage?.message?.imageMessage
+            !quotedMsg?.viewOnceMessage?.message?.videoMessage &&
+            !quotedMsg?.viewOnceMessage?.message?.imageMessage
         )
             return void M.reply('Quote the "viewOnceMessage" that you want to retrieve')
+        const isImage = !!quotedMsg.viewOnceMessage?.message?.imageMessage
         return void M.reply(
             await this.client.downloadMediaMessage(
-                (M.quoted.message?.message as proto.Message).viewOnceMessage as WAMessage
+                quotedMsg.viewOnceMessage as any
             ),
-            MessageType[
-                (M.quoted.message?.message as proto.Message).viewOnceMessage?.message?.imageMessage ? 'image' : 'video'
-            ],
+            isImage ? 'image' : 'video',
             undefined,
             undefined,
             'Abracadabra, 🤹 Open sesame, this message is now public property... M_D"s Bot 🤹'

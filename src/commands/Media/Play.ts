@@ -1,4 +1,3 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -26,9 +25,10 @@ export default class Command extends BaseCommand {
         const audio = new YT(videos[0].url, 'audio')
         if (!audio.url) return
         M.reply('🤹 Please while wait... while your track is being sent 🤹‍♂️...')
-        this.client
-            .sendMessage(M.from, await audio.getBuffer(), MessageType.audio, {
-                quoted: M.WAMessage,
+        this.client.sock
+            .sendMessage(M.from, {
+                audio: await audio.getBuffer(),
+                mimetype: 'audio/mp4',
                 contextInfo: {
                     externalAdReply: {
                         title: videos[0].title.substr(0, 30),
@@ -38,7 +38,7 @@ export default class Command extends BaseCommand {
                         mediaUrl: audio.url
                     }
                 }
-            })
+            }, { quoted: M.WAMessage })
             .catch((reason: Error) => M.reply(`❌ an error occurred, Reason: ${reason}`))
     }
 }

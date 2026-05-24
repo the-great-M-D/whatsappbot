@@ -1,4 +1,3 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -18,10 +17,10 @@ export default class Command extends BaseCommand {
             baseXp: 20
         })
     }
+
     run = async (M: ISimplifiedMessage, { joined }: IParsedArgs): Promise<void> => {
         if (!joined) return void M.reply('🔎 Provide a search term')
         const term = joined.trim()
-        // get song from yts
         const { videos } = await yts(term + ' lyrics song')
         if (!videos || videos.length <= 0) return void M.reply(`🤹‍♂️ No Matching videos found for the term *${term}*`)
 
@@ -30,8 +29,9 @@ export default class Command extends BaseCommand {
         if (song.error || !song.data) return void M.reply(`❌ Could Not find any Matching songs: *${term}*`)
         const { error, data } = await getLyrics(song.data)
         if (error || !data) return void M.reply(`❌ Could Not find any Matching Lyrics: *${song.data.title}*`)
-        this.client
-            .sendMessage(M.from, `*Lyrics of: ${term}*\n\n ${data}`, MessageType.text, {
+        this.client.sock
+            .sendMessage(M.from, {
+                text: `*Lyrics of: ${term}*\n\n ${data}`,
                 contextInfo: {
                     externalAdReply: {
                         title: `${song.data.artist.name} - ${song.data.title}`,

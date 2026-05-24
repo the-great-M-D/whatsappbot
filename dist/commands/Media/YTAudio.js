@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const YT_1 = __importDefault(require("../../lib/YT"));
 class Command extends BaseCommand_1.default {
@@ -32,7 +31,7 @@ class Command extends BaseCommand_1.default {
             if (!audio.validateURL())
                 return void M.reply(`⚓ Provide a Valid YT URL`);
             M.reply('🤹Please wait .. while your Audio is being sent to You 🤹‍♂️ ...');
-            M.reply(yield audio.getBuffer(), baileys_1.MessageType.audio).catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+            M.reply(yield audio.getBuffer(), 'audio').catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
         });
     }
 }

@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const redditFetcher_1 = __importDefault(require("../../lib/redditFetcher"));
 const request_1 = __importDefault(require("../../lib/request"));
@@ -47,9 +46,7 @@ class Command extends BaseCommand_1.default {
             });
             while (true) {
                 try {
-                    M.reply(buffer || notFound || `Could not fetch image. Please try again later`, baileys_1.MessageType.image, undefined, undefined, `🖌️ *Title: ${res.title}*\n🤹‍♂️ Author: ${res.author}*\n*🎏 Subreddit: ${res.subreddit}*\n🌐 *Post: ${res.postLink}*`, 
-                    // thumbnail && res.spoiler ? thumbnail : undefined
-                    undefined);
+                    M.reply(buffer || notFound || `Could not fetch image. Please try again later`, 'image', undefined, undefined, `🖌️ *Title: ${res.title}*\n🤹‍♂️ Author: ${res.author}*\n*🎏 Subreddit: ${res.subreddit}*\n🌐 *Post: ${res.postLink}*`);
                     break;
                 }
                 catch (e) {

@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const YT_1 = __importDefault(require("../../lib/YT"));
 class Command extends BaseCommand_1.default {
@@ -35,7 +34,7 @@ class Command extends BaseCommand_1.default {
             M.reply('🤹 please wait while video is being Downloaded ... it will be sent when ready thanx 🤹‍♂️ ... ✌️');
             if (Number(videoDetails.lengthSeconds) > 1800)
                 return void M.reply('✌️ Only Admins can download videos longer than 30 minutes');
-            M.reply(yield video.getBuffer(), baileys_1.MessageType.video).catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+            M.reply(yield video.getBuffer(), 'video').catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
         });
     }
 }

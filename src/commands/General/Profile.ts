@@ -1,4 +1,3 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import request from '../../lib/request'
@@ -39,7 +38,7 @@ export default class Command extends BaseCommand {
                 pfp ||
                     'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Kawaii_robot_power_clipart.svg/640px-Kawaii_robot_power_clipart.svg.png'
             ),
-            MessageType.image,
+            'image',
             undefined,
             undefined,
             `🎋 *Username: ${username}*\n\n🎫 *About: ${

@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const request_1 = __importDefault(require("../../lib/request"));
-const baileys_1 = require("@adiwajshing/baileys");
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -29,7 +28,7 @@ class Command extends BaseCommand_1.default {
             if (!joined)
                 return void (yield M.reply(`🙋 Please provide the url to the site `));
             const url = joined.trim();
-            return void M.reply(yield request_1.default.buffer(`https://shot.screenshotapi.net/screenshot?&url=${url}&full_page=true&extract_text=true&fresh=true&width=600&height=500&output=image&file_type=png&thumbnail_width=3000&extract_html=true&wait_for_event=load`), baileys_1.MessageType.image, undefined, undefined, `🌟🤹 Here you go.\n`, undefined).catch((reason) => M.reply(`✖ An error occurred. Please try again later. ${reason}`));
+            return void M.reply(yield request_1.default.buffer(`https://shot.screenshotapi.net/screenshot?&url=${url}&full_page=true&extract_text=true&fresh=true&width=600&height=500&output=image&file_type=png&thumbnail_width=3000&extract_html=true&wait_for_event=load`), 'image', undefined, undefined, `🌟🤹 Here you go.\n`).catch((reason) => M.reply(`✖ An error occurred. Please try again later. ${reason}`));
         });
     }
 }

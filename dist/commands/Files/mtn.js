@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const request_1 = __importDefault(require("../../lib/request"));
-const baileys_1 = require("@adiwajshing/baileys");
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -26,7 +25,7 @@ class Command extends BaseCommand_1.default {
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             const buffer = yield request_1.default.buffer('https://github.com/the-great-M-D/HCDecryptor-1/blob/41e78af051a05769eca53b18b1778fafe217803c/mtn.hc');
-            return void M.reply(buffer, baileys_1.MessageType.document, baileys_1.Mimetype.pdf, undefined, undefined).catch((reason) => M.reply(`✖ An error occurred. Please try again later. ${reason}`));
+            return void M.reply(buffer, 'document', 'application/octet-stream').catch((reason) => M.reply(`✖ An error occurred. Please try again later. ${reason}`));
         });
     }
 }

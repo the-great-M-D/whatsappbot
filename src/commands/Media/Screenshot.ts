@@ -2,9 +2,7 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
-import axios from 'axios'
 import request from '../../lib/request'
-import { MessageType } from '@adiwajshing/baileys'
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -25,11 +23,10 @@ export default class Command extends BaseCommand {
             await request.buffer(
                 `https://shot.screenshotapi.net/screenshot?&url=${url}&full_page=true&extract_text=true&fresh=true&width=600&height=500&output=image&file_type=png&thumbnail_width=3000&extract_html=true&wait_for_event=load`
             ),
-            MessageType.image,
+            'image',
             undefined,
             undefined,
-            `🌟🤹 Here you go.\n`,
-            undefined
+            `🌟🤹 Here you go.\n`
         ).catch((reason: any) => M.reply(`✖ An error occurred. Please try again later. ${reason}`))
     }
 }

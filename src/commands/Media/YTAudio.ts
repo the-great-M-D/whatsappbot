@@ -1,4 +1,3 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -22,7 +21,7 @@ export default class Command extends BaseCommand {
         const audio = new YT(M.urls[0], 'audio')
         if (!audio.validateURL()) return void M.reply(`⚓ Provide a Valid YT URL`)
         M.reply('🤹Please wait .. while your Audio is being sent to You 🤹‍♂️ ...')
-        M.reply(await audio.getBuffer(), MessageType.audio).catch((reason: Error) =>
+        M.reply(await audio.getBuffer(), 'audio').catch((reason: Error) =>
             M.reply(`❌ an error occurred, Reason: ${reason}`)
         )
     }

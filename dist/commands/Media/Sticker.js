@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const wa_sticker_formatter_1 = require("wa-sticker-formatter");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
@@ -33,10 +32,8 @@ class Command extends BaseCommand_1.default {
             else if ((_d = M.WAMessage.message) === null || _d === void 0 ? void 0 : _d.imageMessage)
                 buffer = yield this.client.downloadMediaMessage(M.WAMessage);
             else if ((_g = (_f = (_e = M.quoted) === null || _e === void 0 ? void 0 : _e.message) === null || _f === void 0 ? void 0 : _f.message) === null || _g === void 0 ? void 0 : _g.videoMessage)
-                // return void M.reply(`*Gif/Video to Sticker* feature is currently unavailable.\nYou can still use Image to Sticker though!!`)
                 buffer = yield this.client.downloadMediaMessage(M.quoted.message);
             else if ((_h = M.WAMessage.message) === null || _h === void 0 ? void 0 : _h.videoMessage)
-                // return void M.reply(`*Gif/Video to Sticker* feature is currently unavailable.\nYou can still use Image to Sticker though!!`)
                 buffer = yield this.client.downloadMediaMessage(M.WAMessage);
             if (!buffer)
                 return void M.reply(`You didn't provide any Image/Video to convert`);
@@ -105,7 +102,7 @@ class Command extends BaseCommand_1.default {
             const sticker = yield new wa_sticker_formatter_1.Sticker(buffer, getOptions()).build().catch(() => null);
             if (!sticker)
                 return void M.reply(`An Error Occurred While Converting`);
-            yield M.reply(sticker, baileys_1.MessageType.sticker, baileys_1.Mimetype.webp);
+            yield M.reply(sticker, 'sticker');
         });
     }
 }

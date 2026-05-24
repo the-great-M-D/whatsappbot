@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const request_1 = __importDefault(require("../../lib/request"));
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const axios_1 = __importDefault(require("axios"));
@@ -39,15 +38,13 @@ class Command extends BaseCommand_1.default {
             });
             while (true) {
                 try {
-                    M.reply(buffer || '🌟 An error occurred. Please try again later', baileys_1.MessageType.image, undefined, undefined, `✔ *_Verified:_* *_${data.result.is_verified}_*\n🗣 *_Private:_* *_${data.result.is_private}_*\n🎛 *_Post Count:_* *_${data.result.posts_count}_*\n🤹 *_Following:_* *_${data.result.following}_*\n🗻 *_Followers:_* *_${data.result.followers}_*\n📖 *_Bio_:* ${data.result.biography}\n📃 *_Fullname:_* *_${data.result.full_name}_*\n🀄 *_Username:_* *_${data.result.username}_*\n`, undefined).catch((e) => {
+                    M.reply(buffer || '🌟 An error occurred. Please try again later', 'image', undefined, undefined, `✔ *_Verified:_* *_${data.result.is_verified}_*\n🗣 *_Private:_* *_${data.result.is_private}_*\n🎛 *_Post Count:_* *_${data.result.posts_count}_*\n🤹 *_Following:_* *_${data.result.following}_*\n🗻 *_Followers:_* *_${data.result.followers}_*\n📖 *_Bio_:* ${data.result.biography}\n📃 *_Fullname:_* *_${data.result.full_name}_*\n🀄 *_Username:_* *_${data.result.username}_*\n`).catch((e) => {
                         console.log(`This error occurs when an image is sent via M.reply()\n Child Catch Block : \n${e}`);
-                        // console.log('Failed')
                         M.reply(`🤹 An error occurred. Please try again later.`);
                     });
                     break;
                 }
                 catch (e) {
-                    // console.log('Failed2')
                     M.reply(`An error occurred. Please try again later.`);
                     console.log(`This error occurs when an image is sent via M.reply()\n Parent Catch Block : \n${e}`);
                 }

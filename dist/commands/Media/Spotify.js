@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const request_1 = __importDefault(require("../../lib/request"));
 const Spotify_1 = __importDefault(require("../../lib/Spotify"));
@@ -35,11 +34,8 @@ class Command extends BaseCommand_1.default {
             if (info.error)
                 return void M.reply(`⚓ Error Fetching: ${url}. Check if the url is valid and try again`);
             const caption = `🎧 *Title:* ${info.name || ''}\n🎤 *Artists:* ${(info.artists || []).join(',')}\n💽 *Album:* ${info.album_name}\n📆 *Release Date:* ${info.release_date || ''}`;
-            M.reply(yield request_1.default.buffer(info === null || info === void 0 ? void 0 : info.cover_url), baileys_1.MessageType.image, undefined, undefined, caption
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ).catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            M.reply(yield track.getAudio(), baileys_1.MessageType.audio).catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+            M.reply(yield request_1.default.buffer(info === null || info === void 0 ? void 0 : info.cover_url), 'image', undefined, undefined, caption).catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+            M.reply(yield track.getAudio(), 'audio').catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
         });
     }
 }

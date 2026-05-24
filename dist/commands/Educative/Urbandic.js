@@ -32,7 +32,6 @@ class Command extends BaseCommand_1.default {
             yield axios_1.default
                 .get(`http://api.urbandictionary.com/v0/define?term=${term}`)
                 .then((response) => {
-                // console.log(response);
                 const text = `📚 *urban dictionary :* ${term}\n\n📖 *Definition :* ${response.data.list[0].definition.replace(/\[/g, '').replace(/\]/g, '')}\n\n💬 *Example :* ${response.data.list[0].example.replace(/\[/g, '').replace(/\]/g, '')}`;
                 M.reply(text);
             })

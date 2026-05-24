@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const request_1 = __importDefault(require("../../lib/request"));
 class Command extends BaseCommand_1.default {
@@ -46,7 +45,7 @@ class Command extends BaseCommand_1.default {
             }
             const data = yield this.client.getUser(user);
             yield M.reply(yield request_1.default.buffer(pfp ||
-                'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Kawaii_robot_power_clipart.svg/640px-Kawaii_robot_power_clipart.svg.png'), baileys_1.MessageType.image, undefined, undefined, `🎋 *Username: ${username}*\n\n🎫 *About: ${(yield this.client.getStatus(user)) || 'None'}*\n\n🌟 *XP: ${data.Xp || 0}*\n\n👑 *Admin: ${((_c = (_b = M.groupMetadata) === null || _b === void 0 ? void 0 : _b.admins) === null || _c === void 0 ? void 0 : _c.includes(user)) || false}*\n\n❌ *Ban ${data.ban || false}*`);
+                'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Kawaii_robot_power_clipart.svg/640px-Kawaii_robot_power_clipart.svg.png'), 'image', undefined, undefined, `🎋 *Username: ${username}*\n\n🎫 *About: ${(yield this.client.getStatus(user)) || 'None'}*\n\n🌟 *XP: ${data.Xp || 0}*\n\n👑 *Admin: ${((_c = (_b = M.groupMetadata) === null || _b === void 0 ? void 0 : _b.admins) === null || _c === void 0 ? void 0 : _c.includes(user)) || false}*\n\n❌ *Ban ${data.ban || false}*`);
         });
     }
 }

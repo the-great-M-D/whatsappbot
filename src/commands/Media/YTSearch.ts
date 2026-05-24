@@ -1,4 +1,3 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -30,9 +29,9 @@ export default class Command extends BaseCommand {
             }\n 📙 *Duration:* ${videos[i].duration}\n📘 *URL:* ${videos[i].url}\n\n`
         }
         M.reply('Please wait... while the Bot is 🤹 searching...')
-        this.client
-            .sendMessage(M.from, text, MessageType.extendedText, {
-                quoted: M.WAMessage,
+        this.client.sock
+            .sendMessage(M.from, {
+                text,
                 contextInfo: {
                     externalAdReply: {
                         title: `Search Term: ${term}`,
@@ -42,7 +41,7 @@ export default class Command extends BaseCommand {
                         mediaUrl: videos[0].url
                     }
                 }
-            })
+            }, { quoted: M.WAMessage })
             .catch((reason: any) => M.reply(`❌ an error occurred, Reason: ${reason}`))
     }
 }

@@ -1,4 +1,3 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import redditFetcher, { IRedditResponse } from '../../lib/redditFetcher'
@@ -41,12 +40,10 @@ export default class Command extends BaseCommand {
             try {
                 M.reply(
                     buffer || notFound || `Could not fetch image. Please try again later`,
-                    MessageType.image,
+                    'image',
                     undefined,
                     undefined,
-                    `🖌️ *Title: ${res.title}*\n🤹‍♂️ Author: ${res.author}*\n*🎏 Subreddit: ${res.subreddit}*\n🌐 *Post: ${res.postLink}*`,
-                    // thumbnail && res.spoiler ? thumbnail : undefined
-                    undefined
+                    `🖌️ *Title: ${res.title}*\n🤹‍♂️ Author: ${res.author}*\n*🎏 Subreddit: ${res.subreddit}*\n🌐 *Post: ${res.postLink}*`
                 )
                 break
             } catch (e) {

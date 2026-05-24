@@ -1,4 +1,3 @@
-import { MessageType, Mimetype } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -25,7 +24,7 @@ export default class Command extends BaseCommand {
         M.reply('🤹 please wait while video is being Downloaded ... it will be sent when ready thanx 🤹‍♂️ ... ✌️')
         if (Number(videoDetails.lengthSeconds) > 1800)
             return void M.reply('✌️ Only Admins can download videos longer than 30 minutes')
-        M.reply(await video.getBuffer(), MessageType.video).catch((reason: Error) =>
+        M.reply(await video.getBuffer(), 'video').catch((reason: Error) =>
             M.reply(`❌ an error occurred, Reason: ${reason}`)
         )
     }

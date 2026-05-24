@@ -12,8 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -25,13 +23,15 @@ class Command extends BaseCommand_1.default {
             baseXp: 10
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+            var _a, _b, _c, _d, _e, _f, _g;
             if (!M.quoted)
                 return void (yield M.reply(`Quote the "viewOnceMessage" you want to retrieve`));
-            if (!((_e = (_d = (_c = (_b = (_a = M === null || M === void 0 ? void 0 : M.quoted) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.viewOnceMessage) === null || _d === void 0 ? void 0 : _d.message) === null || _e === void 0 ? void 0 : _e.videoMessage) &&
-                !((_h = (_g = ((_f = M.quoted.message) === null || _f === void 0 ? void 0 : _f.message).viewOnceMessage) === null || _g === void 0 ? void 0 : _g.message) === null || _h === void 0 ? void 0 : _h.imageMessage))
+            const quotedMsg = (_a = M.quoted.message) === null || _a === void 0 ? void 0 : _a.message;
+            if (!((_c = (_b = quotedMsg === null || quotedMsg === void 0 ? void 0 : quotedMsg.viewOnceMessage) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.videoMessage) &&
+                !((_e = (_d = quotedMsg === null || quotedMsg === void 0 ? void 0 : quotedMsg.viewOnceMessage) === null || _d === void 0 ? void 0 : _d.message) === null || _e === void 0 ? void 0 : _e.imageMessage))
                 return void M.reply('Quote the "viewOnceMessage" that you want to retrieve');
-            return void M.reply(yield this.client.downloadMediaMessage(((_j = M.quoted.message) === null || _j === void 0 ? void 0 : _j.message).viewOnceMessage), baileys_1.MessageType[((_m = (_l = ((_k = M.quoted.message) === null || _k === void 0 ? void 0 : _k.message).viewOnceMessage) === null || _l === void 0 ? void 0 : _l.message) === null || _m === void 0 ? void 0 : _m.imageMessage) ? 'image' : 'video'], undefined, undefined, 'Abracadabra, 🤹 Open sesame, this message is now public property... M_D"s Bot 🤹');
+            const isImage = !!((_g = (_f = quotedMsg.viewOnceMessage) === null || _f === void 0 ? void 0 : _f.message) === null || _g === void 0 ? void 0 : _g.imageMessage);
+            return void M.reply(yield this.client.downloadMediaMessage(quotedMsg.viewOnceMessage), isImage ? 'image' : 'video', undefined, undefined, 'Abracadabra, 🤹 Open sesame, this message is now public property... M_D"s Bot 🤹');
         });
     }
 }

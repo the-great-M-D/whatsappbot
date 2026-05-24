@@ -1,9 +1,9 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
 import jimp from 'jimp'
+
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
         super(client, handler, {
@@ -29,7 +29,7 @@ export default class Command extends BaseCommand {
         img.blur(isNaN(level as unknown as number) ? 5 : parseInt(level))
         img.getBuffer(`image/png`, (err, buffer) => {
             if (err) return void M.reply(err?.message || `Couldn't blur the image`)
-            M.reply(buffer, MessageType.image)
+            M.reply(buffer, 'image')
         })
     }
 }
