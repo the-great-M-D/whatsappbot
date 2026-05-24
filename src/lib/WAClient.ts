@@ -116,14 +116,8 @@ export default class WAClient extends EventEmitter {
             if (connection === 'close') {
                 this.state = 'close'
                 const statusCode = (lastDisconnect?.error as any)?.output?.statusCode
-
-                if (statusCode === DisconnectReason.loggedOut || statusCode === 403) {
-                    this.log(`Session ended (${statusCode}). Clearing auth for fresh start.`, true)
-                    this.clearAuth()
-                } else {
-                    this.log(`Connection closed (${statusCode ?? 'unknown'}), reconnecting in 5s...`)
-                    setTimeout(() => this.connect(), 5000)
-                }
+                this.log(`Connection closed (${statusCode ?? 'unknown'}), reconnecting in 5s...`)
+                setTimeout(() => this.connect(), 5000)
             }
         })
 
