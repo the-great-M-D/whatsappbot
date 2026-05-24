@@ -3,174 +3,385 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kaoi WhatsApp Bot</title>
+    <title>Kaoi Bot — Dashboard</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="dashboard">
-        <div class="card">
-            <div class="logo">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="16" cy="16" r="16" fill="#25D366"/>
-                    <path d="M23.5 8.5C21.7 6.7 19.3 5.7 16.7 5.7C11.3 5.7 6.9 10.1 6.9 15.5C6.9 17.3 7.4 19 8.2 20.5L6.8 25.3L11.7 23.9C13.2 24.7 14.9 25.1 16.7 25.1C22.1 25.1 26.5 20.7 26.5 15.3C26.3 12.7 25.3 10.3 23.5 8.5ZM16.7 23.5C15.1 23.5 13.5 23.1 12.1 22.3L11.8 22.1L9 22.9L9.8 20.2L9.6 19.9C8.7 18.4 8.3 16.7 8.3 15C8.3 10.8 11.8 7.3 16 7.3C18 7.3 19.9 8.1 21.3 9.5C22.7 10.9 23.5 12.8 23.5 14.8C23.7 19.2 20.2 23.5 16.7 23.5ZM20.2 17.1C19.9 16.9 18.5 16.2 18.3 16.1C18.1 16 17.9 15.9 17.7 16.2C17.5 16.5 17 17.1 16.8 17.3C16.6 17.5 16.5 17.5 16.2 17.4C15.9 17.3 14.9 16.9 13.8 16C12.9 15.2 12.3 14.2 12.1 13.9C11.9 13.6 12.1 13.5 12.3 13.3C12.4 13.2 12.6 13 12.8 12.8C13 12.6 13 12.5 13.1 12.3C13.2 12.1 13.1 11.9 13.1 11.8C13.1 11.7 12.5 10.3 12.3 9.8C12.1 9.3 11.9 9.4 11.8 9.4H11.3C11.1 9.4 10.8 9.5 10.6 9.8C10.4 10.1 9.7 10.8 9.7 12.2C9.7 13.6 10.6 14.9 10.8 15.2C11 15.5 12.5 17.8 14.8 19C15.4 19.3 15.9 19.5 16.3 19.7C16.9 19.9 17.5 19.9 18 19.8C18.6 19.7 19.7 19.1 19.9 18.4C20.2 17.7 20.2 17.2 20.1 17.1C20.1 17.2 20.2 17.1 20.2 17.1Z" fill="white"/>
-                </svg>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SETUP VIEW  (shown when not connected)
+══════════════════════════════════════════════════════════════════ -->
+<div id="setup-view">
+    <div class="setup-card">
+        <div class="setup-logo">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="16" fill="#25D366"/>
+                <path d="M23.5 8.5C21.7 6.7 19.3 5.7 16.7 5.7C11.3 5.7 6.9 10.1 6.9 15.5C6.9 17.3 7.4 19 8.2 20.5L6.8 25.3L11.7 23.9C13.2 24.7 14.9 25.1 16.7 25.1C22.1 25.1 26.5 20.7 26.5 15.3C26.3 12.7 25.3 10.3 23.5 8.5ZM16.7 23.5C15.1 23.5 13.5 23.1 12.1 22.3L11.8 22.1L9 22.9L9.8 20.2L9.6 19.9C8.7 18.4 8.3 16.7 8.3 15C8.3 10.8 11.8 7.3 16 7.3C18 7.3 19.9 8.1 21.3 9.5C22.7 10.9 23.5 12.8 23.5 14.8C23.7 19.2 20.2 23.5 16.7 23.5ZM20.2 17.1C19.9 16.9 18.5 16.2 18.3 16.1C18.1 16 17.9 15.9 17.7 16.2C17.5 16.5 17 17.1 16.8 17.3C16.6 17.5 16.5 17.5 16.2 17.4C15.9 17.3 14.9 16.9 13.8 16C12.9 15.2 12.3 14.2 12.1 13.9C11.9 13.6 12.1 13.5 12.3 13.3C12.4 13.2 12.6 13 12.8 12.8C13 12.6 13 12.5 13.1 12.3C13.2 12.1 13.1 11.9 13.1 11.8C13.1 11.7 12.5 10.3 12.3 9.8C12.1 9.3 11.9 9.4 11.8 9.4H11.3C11.1 9.4 10.8 9.5 10.6 9.8C10.4 10.1 9.7 10.8 9.7 12.2C9.7 13.6 10.6 14.9 10.8 15.2C11 15.5 12.5 17.8 14.8 19C15.4 19.3 15.9 19.5 16.3 19.7C16.9 19.9 17.5 19.9 18 19.8C18.6 19.7 19.7 19.1 19.9 18.4C20.2 17.7 20.2 17.2 20.1 17.1Z" fill="white"/>
+            </svg>
+        </div>
+        <h1>Kaoi Bot</h1>
+        <p class="setup-sub">WhatsApp Bot Dashboard</p>
+
+        <div id="status-badge" class="badge badge-waiting">
+            <span class="dot"></span>
+            <span id="status-text">Connecting...</span>
+        </div>
+
+        <div id="main-section">
+            <div id="phone-section">
+                <p class="section-label">Enter your WhatsApp number to get a pairing code</p>
+                <div class="phone-input-row">
+                    <input id="phone-input" type="tel" placeholder="+27 81 234 5678" autocomplete="tel" />
+                    <button id="pair-btn" onclick="requestPairCode()">Get Code</button>
+                </div>
+                <p id="pair-error" class="error-msg" style="display:none"></p>
             </div>
 
-            <h1>Kaoi Bot</h1>
-            <p class="subtitle">WhatsApp Bot Dashboard</p>
-
-            <div id="status-badge" class="badge badge-waiting">
-                <span class="dot"></span>
-                <span id="status-text">Connecting...</span>
+            <div id="code-section" style="display:none">
+                <p class="section-label">Enter this code in WhatsApp</p>
+                <div id="code-display"></div>
+                <p class="code-hint">WhatsApp → <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
+                <button class="try-again-btn" onclick="resetPairing()">Use a different number</button>
             </div>
 
-            <div id="main-section">
-
-                <!-- Phone input state -->
-                <div id="phone-section">
-                    <p class="section-label">Enter your WhatsApp number to get a pairing code</p>
-                    <div class="phone-input-row">
-                        <input id="phone-input" type="tel" placeholder="+27 81 234 5678" autocomplete="tel" />
-                        <button id="pair-btn" onclick="requestPairCode()">Get Code</button>
-                    </div>
-                    <p id="pair-error" class="error-msg" style="display:none"></p>
-                </div>
-
-                <!-- Pairing code display state -->
-                <div id="code-section" style="display:none">
-                    <p class="section-label">Enter this code in WhatsApp</p>
-                    <div id="code-display"></div>
-                    <p class="code-hint">WhatsApp → <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
-                    <button class="try-again-btn" onclick="resetPairing()">Use a different number</button>
-                </div>
-
-                <!-- Connected state -->
-                <div id="connected-section" style="display:none" class="connected-state">
-                    <div class="check-circle">✓</div>
-                    <p>Bot is connected to WhatsApp</p>
-                    <p id="connected-user" class="connected-user"></p>
-                </div>
-
+            <div id="connected-section" style="display:none" class="connected-state">
+                <div class="check-circle">✓</div>
+                <p>Bot is connected!</p>
+                <p id="connected-user" class="connected-user"></p>
+                <button class="open-dash-btn" onclick="showDashboard()">Open Dashboard →</button>
             </div>
-
         </div>
     </div>
+</div>
 
-    <script>
-        let pollInterval = null
+<!-- ═══════════════════════════════════════════════════════════════
+     DASHBOARD VIEW  (shown when connected)
+══════════════════════════════════════════════════════════════════ -->
+<div id="dashboard-view" style="display:none">
 
-        function startPolling() {
-            if (pollInterval) return
-            pollInterval = setInterval(poll, 3000)
-        }
+    <header class="dash-header">
+        <div class="header-brand">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="16" fill="#25D366"/>
+                <path d="M23.5 8.5C21.7 6.7 19.3 5.7 16.7 5.7C11.3 5.7 6.9 10.1 6.9 15.5C6.9 17.3 7.4 19 8.2 20.5L6.8 25.3L11.7 23.9C13.2 24.7 14.9 25.1 16.7 25.1C22.1 25.1 26.5 20.7 26.5 15.3C26.3 12.7 25.3 10.3 23.5 8.5ZM16.7 23.5C15.1 23.5 13.5 23.1 12.1 22.3L11.8 22.1L9 22.9L9.8 20.2L9.6 19.9C8.7 18.4 8.3 16.7 8.3 15C8.3 10.8 11.8 7.3 16 7.3C18 7.3 19.9 8.1 21.3 9.5C22.7 10.9 23.5 12.8 23.5 14.8C23.7 19.2 20.2 23.5 16.7 23.5ZM20.2 17.1C19.9 16.9 18.5 16.2 18.3 16.1C18.1 16 17.9 15.9 17.7 16.2C17.5 16.5 17 17.1 16.8 17.3C16.6 17.5 16.5 17.5 16.2 17.4C15.9 17.3 14.9 16.9 13.8 16C12.9 15.2 12.3 14.2 12.1 13.9C11.9 13.6 12.1 13.5 12.3 13.3C12.4 13.2 12.6 13 12.8 12.8C13 12.6 13 12.5 13.1 12.3C13.2 12.1 13.1 11.9 13.1 11.8C13.1 11.7 12.5 10.3 12.3 9.8C12.1 9.3 11.9 9.4 11.8 9.4H11.3C11.1 9.4 10.8 9.5 10.6 9.8C10.4 10.1 9.7 10.8 9.7 12.2C9.7 13.6 10.6 14.9 10.8 15.2C11 15.5 12.5 17.8 14.8 19C15.4 19.3 15.9 19.5 16.3 19.7C16.9 19.9 17.5 19.9 18 19.8C18.6 19.7 19.7 19.1 19.9 18.4C20.2 17.7 20.2 17.2 20.1 17.1Z" fill="white"/>
+            </svg>
+            <span class="brand-name">Kaoi Bot</span>
+        </div>
+        <div class="header-stats">
+            <div class="hstat">
+                <span class="hstat-val" id="h-messages">0</span>
+                <span class="hstat-lbl">Messages</span>
+            </div>
+            <div class="hstat-div"></div>
+            <div class="hstat">
+                <span class="hstat-val" id="h-commands">0</span>
+                <span class="hstat-lbl">Commands</span>
+            </div>
+            <div class="hstat-div"></div>
+            <div class="hstat">
+                <span class="hstat-val" id="h-loaded">0</span>
+                <span class="hstat-lbl">Loaded</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="badge badge-connected">
+                <span class="dot"></span>
+                <span id="dash-user">Connected</span>
+            </div>
+            <div class="uptime-pill" id="uptime-display">⏱ 0s</div>
+        </div>
+    </header>
 
-        function stopPolling() {
-            clearInterval(pollInterval)
-            pollInterval = null
-        }
+    <div class="dash-body">
 
-        async function requestPairCode() {
-            const input = document.getElementById('phone-input')
-            const btn = document.getElementById('pair-btn')
-            const errEl = document.getElementById('pair-error')
-            const phone = input.value.trim()
+        <!-- ── Commands sidebar ── -->
+        <aside class="cmd-sidebar">
+            <div class="sidebar-title">
+                <span>Commands</span>
+                <span class="sidebar-count" id="cmd-total-badge">0</span>
+            </div>
+            <div id="cmd-list" class="cmd-list"></div>
+        </aside>
 
-            if (!phone) {
-                showError('Please enter your phone number')
-                return
-            }
+        <!-- ── Live feed ── -->
+        <main class="feed-main">
+            <div class="feed-header">
+                <span class="feed-title">Live Feed</span>
+                <div class="feed-controls">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="auto-scroll" checked />
+                        Auto-scroll
+                    </label>
+                    <button class="clear-btn" onclick="clearFeed()">Clear</button>
+                </div>
+            </div>
+            <div id="event-feed" class="event-feed">
+                <div class="feed-empty" id="feed-empty">
+                    <div class="feed-empty-icon">📡</div>
+                    <div>Waiting for events…</div>
+                </div>
+            </div>
+        </main>
 
-            btn.disabled = true
-            btn.textContent = 'Requesting...'
-            errEl.style.display = 'none'
+    </div>
+</div>
 
-            try {
-                const res = await fetch('/api/pair', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone })
-                })
-                const data = await res.json()
-                if (data.error) {
-                    showError(data.error)
-                    btn.disabled = false
-                    btn.textContent = 'Get Code'
-                    return
-                }
-                showPairCode(data.code)
-            } catch (e) {
-                showError('Failed to request code. Please try again.')
-                btn.disabled = false
-                btn.textContent = 'Get Code'
-            }
-        }
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+let pollInterval = null
+let eventSource = null
+let statsInterval = null
+let uptimeInterval = null
+let serverStartTs = null
+let eventCount = 0
+let autoScroll = true
 
-        function showError(msg) {
-            const errEl = document.getElementById('pair-error')
-            errEl.textContent = msg
-            errEl.style.display = 'block'
-        }
+// ─── Setup / pairing flow ──────────────────────────────────────────────────
+function startPolling() {
+    if (pollInterval) return
+    pollInterval = setInterval(poll, 3000)
+}
+function stopPolling() {
+    clearInterval(pollInterval)
+    pollInterval = null
+}
 
-        function showPairCode(code) {
-            document.getElementById('phone-section').style.display = 'none'
-            document.getElementById('code-section').style.display = 'block'
+async function requestPairCode() {
+    const input = document.getElementById('phone-input')
+    const btn   = document.getElementById('pair-btn')
+    const errEl = document.getElementById('pair-error')
+    const phone = input.value.trim()
+    if (!phone) { showError('Please enter your phone number'); return }
+    btn.disabled = true
+    btn.textContent = 'Requesting...'
+    errEl.style.display = 'none'
+    try {
+        const res  = await fetch('/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone }) })
+        const data = await res.json()
+        if (data.error) { showError(data.error); btn.disabled = false; btn.textContent = 'Get Code'; return }
+        showPairCode(data.code)
+    } catch (e) {
+        showError('Failed to request code. Please try again.')
+        btn.disabled = false
+        btn.textContent = 'Get Code'
+    }
+}
 
-            // Format code into groups: ABCD-EFGH
-            const clean = code.replace(/-/g, '')
-            const parts = clean.match(/.{1,4}/g) || [code]
-            const display = document.getElementById('code-display')
-            display.innerHTML = parts.map(p => `<span class="code-chunk">${p}</span>`).join('<span class="code-sep">-</span>')
+function showError(msg) {
+    const errEl = document.getElementById('pair-error')
+    errEl.textContent = msg
+    errEl.style.display = 'block'
+}
 
-            // Auto-poll until connected
-            startPolling()
-        }
+function showPairCode(code) {
+    document.getElementById('phone-section').style.display = 'none'
+    document.getElementById('code-section').style.display = 'block'
+    const clean = code.replace(/-/g, '')
+    const parts = clean.match(/.{1,4}/g) || [code]
+    const display = document.getElementById('code-display')
+    display.innerHTML = parts.map(p => `<span class="code-chunk">${p}</span>`).join('<span class="code-sep">-</span>')
+    startPolling()
+}
 
-        function resetPairing() {
+function resetPairing() {
+    stopPolling()
+    document.getElementById('code-section').style.display = 'none'
+    document.getElementById('phone-section').style.display = 'block'
+    document.getElementById('phone-input').value = ''
+    document.getElementById('pair-btn').disabled = false
+    document.getElementById('pair-btn').textContent = 'Get Code'
+}
+
+async function poll() {
+    try {
+        const res    = await fetch('/api/status')
+        const status = await res.json()
+        const badge  = document.getElementById('status-badge')
+        const stText = document.getElementById('status-text')
+
+        if (status.connected) {
             stopPolling()
+            badge.className = 'badge badge-connected'
+            stText.textContent = 'Connected'
+            document.getElementById('phone-section').style.display = 'none'
             document.getElementById('code-section').style.display = 'none'
-            document.getElementById('phone-section').style.display = 'block'
-            document.getElementById('phone-input').value = ''
-            document.getElementById('pair-btn').disabled = false
-            document.getElementById('pair-btn').textContent = 'Get Code'
+            document.getElementById('connected-section').style.display = 'flex'
+            if (status.user) document.getElementById('connected-user').textContent = '@' + status.user
+            return
         }
-
-        async function poll() {
-            try {
-                const res = await fetch('/api/status')
-                const status = await res.json()
-
-                const badge = document.getElementById('status-badge')
-                const statusText = document.getElementById('status-text')
-
-                if (status.connected) {
-                    stopPolling()
-                    badge.className = 'badge badge-connected'
-                    statusText.textContent = 'Connected'
-                    document.getElementById('phone-section').style.display = 'none'
-                    document.getElementById('code-section').style.display = 'none'
-                    document.getElementById('connected-section').style.display = 'flex'
-                    if (status.user) document.getElementById('connected-user').textContent = '@' + status.user
-                    return
-                }
-
-                badge.className = 'badge badge-waiting'
-                statusText.textContent = 'Waiting for pairing...'
-
-                // If server already has a code (e.g. after page refresh), show it
-                if (status.pairCode && document.getElementById('phone-section').style.display !== 'none') {
-                    showPairCode(status.pairCode)
-                }
-
-            } catch (e) {
-                console.error('Poll error:', e)
-            }
+        badge.className = 'badge badge-waiting'
+        stText.textContent = 'Waiting for pairing...'
+        if (status.pairCode && document.getElementById('phone-section').style.display !== 'none') {
+            showPairCode(status.pairCode)
         }
+    } catch (e) { console.error('Poll error:', e) }
+}
 
-        document.getElementById('phone-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') requestPairCode()
-        })
+// ─── Dashboard ─────────────────────────────────────────────────────────────
+function showDashboard() {
+    document.getElementById('setup-view').style.display = 'none'
+    document.getElementById('dashboard-view').style.display = 'flex'
+    initDashboard()
+}
 
-        poll()
-    </script>
+async function initDashboard() {
+    await loadStats()
+    await loadCommands()
+    startSSE()
+    statsInterval  = setInterval(loadStats, 10000)
+    uptimeInterval = setInterval(tickUptime, 1000)
+    document.getElementById('auto-scroll').addEventListener('change', function() {
+        autoScroll = this.checked
+    })
+}
+
+async function loadStats() {
+    try {
+        const res  = await fetch('/api/stats')
+        const data = await res.json()
+        document.getElementById('h-messages').textContent = fmtNum(data.messages)
+        document.getElementById('h-commands').textContent = fmtNum(data.commands)
+        document.getElementById('h-loaded').textContent   = fmtNum(data.commandsLoaded)
+        document.getElementById('dash-user').textContent  = data.user ? '@' + data.user : 'Connected'
+        if (!serverStartTs && data.uptime) {
+            serverStartTs = Date.now() - data.uptime
+        }
+    } catch (e) { console.error('Stats error:', e) }
+}
+
+async function loadCommands() {
+    try {
+        const res  = await fetch('/api/commands')
+        const data = await res.json()
+        const cats = data.categories || {}
+        const sidebar  = document.getElementById('cmd-list')
+        const total    = Object.values(cats).flat().length
+        document.getElementById('cmd-total-badge').textContent = total
+
+        let html = ''
+        const order = ['general','media','fun','educative','dev','moderation','files','games','bots','other']
+        const sorted = [...new Set([...order, ...Object.keys(cats)])].filter(k => cats[k])
+        for (const cat of sorted) {
+            const cmds = cats[cat]
+            if (!cmds || !cmds.length) continue
+            html += `<div class="cmd-category">
+                <div class="cmd-cat-header" onclick="toggleCat(this)">
+                    <span class="cat-icon">${catIcon(cat)}</span>
+                    <span class="cat-name">${cap(cat)}</span>
+                    <span class="cat-count">${cmds.length}</span>
+                    <span class="cat-chevron">▾</span>
+                </div>
+                <div class="cmd-cat-body">
+                    ${cmds.map(c => `<span class="cmd-chip">${c}</span>`).join('')}
+                </div>
+            </div>`
+        }
+        sidebar.innerHTML = html
+    } catch (e) { console.error('Commands error:', e) }
+}
+
+function toggleCat(header) {
+    const body = header.nextElementSibling
+    const chev = header.querySelector('.cat-chevron')
+    const open = body.style.display !== 'none'
+    body.style.display = open ? 'none' : 'flex'
+    chev.textContent = open ? '▸' : '▾'
+}
+
+function startSSE() {
+    if (eventSource) { eventSource.close() }
+    eventSource = new EventSource('/api/events')
+    eventSource.onmessage = function(e) {
+        const evt = JSON.parse(e.data)
+        renderEvent(evt)
+    }
+    eventSource.onerror = function() {
+        setTimeout(startSSE, 3000)
+    }
+}
+
+function renderEvent(evt) {
+    const feed  = document.getElementById('event-feed')
+    const empty = document.getElementById('feed-empty')
+    if (empty) empty.remove()
+
+    const item = document.createElement('div')
+    item.className = `event-item event-${evt.type}`
+    item.innerHTML = `
+        <div class="event-icon">${evt.icon}</div>
+        <div class="event-body">
+            <div class="event-title">${esc(evt.title)}</div>
+            ${evt.detail ? `<div class="event-detail">${esc(evt.detail)}</div>` : ''}
+        </div>
+        <div class="event-time">${fmtTime(evt.ts)}</div>
+    `
+
+    // newest at top
+    feed.insertBefore(item, feed.firstChild)
+
+    // keep max 150 events in DOM
+    const items = feed.querySelectorAll('.event-item')
+    if (items.length > 150) items[items.length - 1].remove()
+}
+
+function clearFeed() {
+    const feed = document.getElementById('event-feed')
+    feed.innerHTML = '<div class="feed-empty" id="feed-empty"><div class="feed-empty-icon">📡</div><div>Waiting for events…</div></div>'
+}
+
+function tickUptime() {
+    if (!serverStartTs) return
+    const s   = Math.floor((Date.now() - serverStartTs) / 1000)
+    const h   = Math.floor(s / 3600)
+    const m   = Math.floor((s % 3600) / 60)
+    const sec = s % 60
+    const str = h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${sec}s` : `${sec}s`
+    document.getElementById('uptime-display').textContent = `⏱ ${str}`
+}
+
+// ─── Utils ──────────────────────────────────────────────────────────────────
+function fmtNum(n) {
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k'
+    return String(n || 0)
+}
+
+function fmtTime(ts) {
+    const d = new Date(ts)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function cap(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+function catIcon(cat) {
+    const icons = { general:'🌐', media:'🎬', fun:'🎉', educative:'📚', dev:'🛠️', moderation:'🛡️', files:'📁', games:'🎮', bots:'🤖', other:'📦' }
+    return icons[cat] || '📦'
+}
+
+// ─── Boot ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('phone-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') requestPairCode()
+    })
+    // check if already connected
+    try {
+        const res = await fetch('/api/status')
+        const status = await res.json()
+        if (status.connected) {
+            showDashboard()
+            document.getElementById('dash-user').textContent = status.user ? '@' + status.user : 'Connected'
+            return
+        }
+    } catch (e) { /* ignore */ }
+    // not connected — show setup
+    poll()
+})
+</script>
+
 </body>
 </html>

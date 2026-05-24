@@ -23,11 +23,6 @@ class MessageHandler {
         this.handleMessage = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d, _e, _f;
             if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && M.WAMessage.status.toString() === '2') {
-                /*
-                BUG : It receives message 2 times and processes it twice.
-                https://github.com/adiwajshing/Baileys/blob/8ce486d/WAMessage/WAMessage.d.ts#L18529
-                https://adiwajshing.github.io/Baileys/enums/proto.webmessageinfo.webmessageinfostatus.html#server_ack
-                */
                 M.sender.jid = this.client.user.jid;
                 M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot';
             }
@@ -59,7 +54,6 @@ class MessageHandler {
             if (!args[0] || !args[0].startsWith(this.client.config.prefix))
                 return void this.client.log(`${chalk_1.default.blueBright('MSG')} from ${chalk_1.default.green(sender.username)} in ${chalk_1.default.cyanBright((groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || '')}`);
             const cmd = args[0].slice(this.client.config.prefix.length).toLowerCase();
-            // If the group is set to muted, don't do anything
             const allowedCommands = ['activate', 'deactivate', 'act', 'deact'];
             if (!(allowedCommands.includes(cmd) || (yield this.client.getGroupData(M.from)).cmd))
                 return void this.client.log(`${chalk_1.default.green('CMD')} ${chalk_1.default.yellow(`${args[0]}[${args.length - 1}]`)} from ${chalk_1.default.green(sender.username)} in ${chalk_1.default.cyanBright((groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || 'DM')}`);
@@ -82,10 +76,14 @@ class MessageHandler {
                 return void M.reply(`Only admins are allowed to use this command`);
             try {
                 yield command.run(M, this.parseArgs(args));
+                this.client.emit('command-executed', {
+                    command: command.config.command,
+                    sender: sender.username || sender.jid.split('@')[0],
+                    group: (groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || null
+                });
                 if (command.config.baseXp) {
                     yield this.client.setXp(M.sender.jid, command.config.baseXp || 10, 50);
                 }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }
             catch (err) {
                 return void this.client.log(err.message, true);
@@ -116,7 +114,6 @@ class MessageHandler {
             files.map((file) => {
                 const filename = file.split('/');
                 if (!filename[filename.length - 1].startsWith('_')) {
-                    //eslint-disable-next-line @typescript-eslint/no-var-requires
                     const command = new (require(file).default)(this.client, this);
                     this.commands.set(command.config.command, command);
                     if (command.config.aliases)

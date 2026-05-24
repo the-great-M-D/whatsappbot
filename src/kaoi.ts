@@ -29,7 +29,8 @@ messageHandler.loadCommands()
 assetHandler.loadAssets()
 messageHandler.loadFeatures()
 
-new Server(Number(process.env.PORT) || 4040, client)
+const server = new Server(Number(process.env.PORT) || 4040, client)
+server.setHandler(messageHandler)
 
 const start = async () => {
     client.once('open', async () => {
