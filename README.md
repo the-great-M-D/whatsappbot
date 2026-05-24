@@ -1,9 +1,9 @@
 <div align="center">
 <a href="https://ibb.co/wQ4GK21"><img src="https://i.ibb.co/HPqwr9Q/whatsapp-botto-void-init.png" alt="whatsapp-botto-void-init" border="0"></a>
 
-# ** WhatsApp Bot 🤹 **
+# * WhatsApp Bot 🤹 *
 
-[![CodeFactor](https://www.codefactor.io/repository/github/prajjwaldatir/kaoi/badge)](https://www.codefactor.io/repository/github/prajjwaldatir/kaoi)
+[![CodeFactor](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/badge/main)](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/overview/main)
 
 ## [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/FUKwD5I2nJC9TOgqxd1RiP) [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NodeJs](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/en/)
 
