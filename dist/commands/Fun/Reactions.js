@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -54,8 +53,6 @@ class Command extends BaseCommand_1.default {
         });
         this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
-            // make key value pairs of reactions like this: { 'bully': 'bullied', 'cuddle': 'cuddled', ... }
-            // Access raw text of message
             const action = ((_a = M.content) === null || _a === void 0 ? void 0 : _a.split(' ')[0].slice(1).toLowerCase()) || '';
             let flag = true;
             if (!(action === 'r' || action === 'react')) {
@@ -89,14 +86,10 @@ class Command extends BaseCommand_1.default {
                 poke: ['Poked'],
                 dance: ['is Dancing with', 'is Dancing by']
             };
-            // take the first argument and make it lowercase
             const term = flag ? joined.split(' ')[0].toLowerCase() : action;
             let text = '';
-            // map over reactions and add index + reaction to text
             Object.keys(Reactions).map((reaction) => {
                 text += `📍${reaction.charAt(0).toUpperCase() + reaction.slice(1)}\n`;
-                // if index is multiple of 3, add a new line, else give 10 - length of the reaction spaces
-                // index % 3 === 2 ? (text += '\n') : (text += ' '.repeat(10 - reaction.length))
             });
             text += `🎀 *Usage:* ${this.client.config.prefix}(reaction) [tag/quote users]\nExample: ${this.client.config.prefix}pat`;
             if (flag) {
@@ -109,13 +102,12 @@ class Command extends BaseCommand_1.default {
                 M.mentioned.push(M.quoted.sender);
             if (!M.mentioned.length)
                 M.mentioned.push(M.sender.jid);
-            // remove duplicate mentions
             M.mentioned = [...new Set(M.mentioned)];
             let grammar;
             M.mentioned[0] === M.sender.jid
                 ? (grammar = Reactions[`${term}`].pop() || Reactions[`${term}`][0])
                 : (grammar = Reactions[`${term}`][0]);
-            M.reply(yield this.client.util.GIFBufferToVideoBuffer(yield this.client.getBuffer((yield this.client.fetch(`https://api.waifu.pics/sfw/${term}`)).url)), baileys_1.MessageType.video, baileys_1.Mimetype.gif, [M.sender.jid, ...M.mentioned], `*@${M.sender.jid.split('@')[0]} ${grammar} ${M.mentioned
+            M.reply(yield this.client.util.GIFBufferToVideoBuffer(yield this.client.getBuffer((yield this.client.fetch(`https://api.waifu.pics/sfw/${term}`)).url)), 'gif', 'video/mp4', [M.sender.jid, ...M.mentioned], `*@${M.sender.jid.split('@')[0]} ${grammar} ${M.mentioned
                 .map((user) => (user === M.sender.jid ? 'Themselves' : `@${user.split('@')[0]}`))
                 .join(', ')}*`);
         });

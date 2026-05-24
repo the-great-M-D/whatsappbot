@@ -14,8 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const request_1 = __importDefault(require("../../lib/request"));
-const baileys_1 = require("@adiwajshing/baileys");
-// import { MessageType, Mimetype } from '@adiwajshing/baileys'
 const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -27,22 +25,19 @@ class Command extends BaseCommand_1.default {
             baseXp: 30
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            // fetch result of https://waifu.pics/api/sfw/waifu from the API using axios
             const { data } = yield axios_1.default.get('https://ipinfo.io/{term}');
             const buffer = yield request_1.default.buffer(data.url).catch((e) => {
                 return void M.reply(e.message);
             });
             while (true) {
                 try {
-                    M.reply(buffer || 'Could not fetch File Please try again later', baileys_1.MessageType.document, undefined, undefined, `ENJOY MTN BY M_D 🤹.\n`, undefined).catch((e) => {
+                    M.reply(buffer || 'Could not fetch File Please try again later', 'document', undefined, undefined, `ENJOY MTN BY M_D 🤹.\n`).catch((e) => {
                         console.log(`This Error occurs when an file is sent via M.reply()\n Child Catch Block : \n${e}`);
-                        // console.log('Failed')
                         M.reply(`Could not fetch file. Here's the URL: ${data.url}`);
                     });
                     break;
                 }
                 catch (e) {
-                    // console.log('Failed2')
                     M.reply(`Could not fetch file. Here's the URL : ${data.url}`);
                     console.log(`This Error occurs when an file is sent via M.reply()\n Parent Catch Block : \n${e}`);
                 }

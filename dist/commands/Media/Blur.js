@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const jimp_1 = __importDefault(require("jimp"));
 class Command extends BaseCommand_1.default {
@@ -41,7 +40,7 @@ class Command extends BaseCommand_1.default {
             img.getBuffer(`image/png`, (err, buffer) => {
                 if (err)
                     return void M.reply((err === null || err === void 0 ? void 0 : err.message) || `Couldn't blur the image`);
-                M.reply(buffer, baileys_1.MessageType.image);
+                M.reply(buffer, 'image');
             });
         });
     }

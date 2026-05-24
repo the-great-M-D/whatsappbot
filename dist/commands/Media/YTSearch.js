@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const yt_search_1 = __importDefault(require("yt-search"));
 class Command extends BaseCommand_1.default {
@@ -38,9 +37,9 @@ class Command extends BaseCommand_1.default {
                 text += `*#${i + 1}*\n📗 *Title:* ${videos[i].title}\n📕 *Channel:* ${videos[i].author.name}\n 📙 *Duration:* ${videos[i].duration}\n📘 *URL:* ${videos[i].url}\n\n`;
             }
             M.reply('Please wait... while the Bot is 🤹 searching...');
-            this.client
-                .sendMessage(M.from, text, baileys_1.MessageType.extendedText, {
-                quoted: M.WAMessage,
+            this.client.sock
+                .sendMessage(M.from, {
+                text,
                 contextInfo: {
                     externalAdReply: {
                         title: `Search Term: ${term}`,
@@ -50,7 +49,7 @@ class Command extends BaseCommand_1.default {
                         mediaUrl: videos[0].url
                     }
                 }
-            })
+            }, { quoted: M.WAMessage })
                 .catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
         });
     }

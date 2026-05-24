@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -53,14 +52,13 @@ class Command extends BaseCommand_1.default {
                 const shipPercent = parseInt(ship.shipPercent);
                 return Math.abs(shipPercent - percentage) <= 10;
             });
-            // choose a random gif from the array
             const gifLink = ship[Math.floor(Math.random() * ship.length)].gifLink;
             let caption = `\t❣️ *Matchmaking...* ❣️ \n`;
             caption += `\t\t---------------------------------\n`;
             caption += `@${user1.split('@')[0]}  x  @${user2.split('@')[0]}\n`;
             caption += `\t\t---------------------------------\n`;
             caption += `${sentence}`;
-            return void M.reply(yield this.client.util.GIFBufferToVideoBuffer(yield this.client.getBuffer(gifLink)), baileys_1.MessageType.video, baileys_1.Mimetype.gif, [user1, user2], caption);
+            return void M.reply(yield this.client.util.GIFBufferToVideoBuffer(yield this.client.getBuffer(gifLink)), 'gif', 'video/mp4', [user1, user2], caption);
         });
     }
 }

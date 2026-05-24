@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const yt_search_1 = __importDefault(require("yt-search"));
 const ultra_lyrics_1 = require("ultra-lyrics");
@@ -31,7 +30,6 @@ class Command extends BaseCommand_1.default {
             if (!joined)
                 return void M.reply('🔎 Provide a search term');
             const term = joined.trim();
-            // get song from yts
             const { videos } = yield (0, yt_search_1.default)(term + ' lyrics song');
             if (!videos || videos.length <= 0)
                 return void M.reply(`🤹‍♂️ No Matching videos found for the term *${term}*`);
@@ -42,8 +40,9 @@ class Command extends BaseCommand_1.default {
             const { error, data } = yield (0, ultra_lyrics_1.getLyrics)(song.data);
             if (error || !data)
                 return void M.reply(`❌ Could Not find any Matching Lyrics: *${song.data.title}*`);
-            this.client
-                .sendMessage(M.from, `*Lyrics of: ${term}*\n\n ${data}`, baileys_1.MessageType.text, {
+            this.client.sock
+                .sendMessage(M.from, {
+                text: `*Lyrics of: ${term}*\n\n ${data}`,
                 contextInfo: {
                     externalAdReply: {
                         title: `${song.data.artist.name} - ${song.data.title}`,

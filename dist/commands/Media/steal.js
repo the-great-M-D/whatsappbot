@@ -15,7 +15,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const wa_sticker_formatter_1 = require("wa-sticker-formatter");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const fs_1 = __importDefault(require("fs"));
@@ -108,7 +107,7 @@ class Command extends BaseCommand_1.default {
             const sticker = yield new wa_sticker_formatter_1.Sticker(buffer, getOptions()).build();
             fs_1.default.writeFileSync(`${filename}.webp`, sticker);
             const stickerbuffer = fs_1.default.readFileSync(`${filename}.webp`);
-            yield M.reply(stickerbuffer, baileys_1.MessageType.sticker, baileys_1.Mimetype.webp);
+            yield M.reply(stickerbuffer, 'sticker');
         });
     }
 }

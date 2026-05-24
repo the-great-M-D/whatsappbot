@@ -1,4 +1,3 @@
-import { MessageType, Mimetype } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -46,7 +45,6 @@ export default class Command extends BaseCommand {
             const shipPercent = parseInt(ship.shipPercent)
             return Math.abs(shipPercent - percentage) <= 10
         })
-        // choose a random gif from the array
         const gifLink = ship[Math.floor(Math.random() * ship.length)].gifLink
         let caption = `\t❣️ *Matchmaking...* ❣️ \n`
         caption += `\t\t---------------------------------\n`
@@ -56,8 +54,8 @@ export default class Command extends BaseCommand {
 
         return void M.reply(
             await this.client.util.GIFBufferToVideoBuffer(await this.client.getBuffer(gifLink)),
-            MessageType.video,
-            Mimetype.gif,
+            'gif',
+            'video/mp4',
             [user1, user2],
             caption
         )

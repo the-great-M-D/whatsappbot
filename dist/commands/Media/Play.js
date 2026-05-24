@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const baileys_1 = require("@adiwajshing/baileys");
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const yt_search_1 = __importDefault(require("yt-search"));
 const YT_1 = __importDefault(require("../../lib/YT"));
@@ -37,9 +36,10 @@ class Command extends BaseCommand_1.default {
             if (!audio.url)
                 return;
             M.reply('🤹 Please while wait... while your track is being sent 🤹‍♂️...');
-            this.client
-                .sendMessage(M.from, yield audio.getBuffer(), baileys_1.MessageType.audio, {
-                quoted: M.WAMessage,
+            this.client.sock
+                .sendMessage(M.from, {
+                audio: yield audio.getBuffer(),
+                mimetype: 'audio/mp4',
                 contextInfo: {
                     externalAdReply: {
                         title: videos[0].title.substr(0, 30),
@@ -49,7 +49,7 @@ class Command extends BaseCommand_1.default {
                         mediaUrl: audio.url
                     }
                 }
-            })
+            }, { quoted: M.WAMessage })
                 .catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
         });
     }

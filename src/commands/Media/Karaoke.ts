@@ -1,4 +1,3 @@
-import { MessageType } from '@adiwajshing/baileys'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -24,9 +23,9 @@ export default class Command extends BaseCommand {
         if (!videos || videos.length <= 0) return void M.reply(`No Matching videos found for the term *${term}*`)
         const text = `The great M_D 🤹 ft  The Coding Family 🤹‍♂️`
 
-        this.client
-            .sendMessage(M.from, text, MessageType.extendedText, {
-                quoted: M.WAMessage,
+        this.client.sock
+            .sendMessage(M.from, {
+                text,
                 contextInfo: {
                     externalAdReply: {
                         title: `Search Term: ${term}`,
@@ -36,8 +35,7 @@ export default class Command extends BaseCommand {
                         mediaUrl: videos[0].url
                     }
                 }
-            })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }, { quoted: M.WAMessage })
             .catch((reason: any) => M.reply(`an error occurred, Reason: ${reason}`))
     }
 }
