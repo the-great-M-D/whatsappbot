@@ -63,11 +63,46 @@ class WAClient extends events_1.default {
     log(msg, error = false) {
         console.log(error ? '❌' : '✅', msg);
     }
-    connect() {
+    stopSocket() {
+        if (this.sock) {
+            try {
+                this.sock.end(undefined);
+            }
+            catch ( /* ignore */_a) { /* ignore */ }
+            this.sock = null;
+        }
+        this.state = 'close';
+    }
+    clearAuth() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const fse = require('fs-extra');
+            yield fse.remove(`auth/${this.config.session}`).catch(() => { });
+        });
+    }
+    connectWithPhone(phone) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const cleaned = phone.replace(/\D/g, '');
+            if (!cleaned)
+                throw new Error('Invalid phone number');
+            // Stop any existing connection and wipe old session
+            this.stopSocket();
+            yield this.clearAuth();
+            // Start fresh connection and request code
+            const code = yield new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (30s). Please try again.')), 30000);
+                this.once('pair-code', (c) => { clearTimeout(timeout); resolve(c); });
+                this.once('pair-error', (e) => { clearTimeout(timeout); reject(new Error(e)); });
+                this.connect(cleaned);
+            });
+            return code;
+        });
+    }
+    connect(pairingPhone) {
         return __awaiter(this, void 0, void 0, function* () {
             const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(`auth/${this.config.session}`);
             const { version } = yield (0, baileys_1.fetchLatestBaileysVersion)();
-            this.registered = !!state.creds.registered;
+            const isRegistered = !!state.creds.registered;
             this.sock = (0, baileys_1.default)({
                 version,
                 logger: (0, pino_1.default)({ level: 'silent' }),
@@ -75,37 +110,43 @@ class WAClient extends events_1.default {
                 printQRInTerminal: false
             });
             this.sock.ev.on('creds.update', saveCreds);
-            this.sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
-                var _a, _b;
-                if (qr) {
-                    this.QRText = qr;
+            // If phone provided and not yet registered, request pairing code after socket init
+            if (pairingPhone && !isRegistered) {
+                setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                     try {
-                        // eslint-disable-next-line @typescript-eslint/no-var-requires
-                        const qrImage = require('qr-image');
-                        this.QR = qrImage.imageSync(qr, { type: 'png' });
+                        this.log(`Requesting pairing code for +${pairingPhone}...`);
+                        const code = yield this.sock.requestPairingCode(pairingPhone);
+                        this.pairCode = code;
+                        this.pairCodePhone = pairingPhone;
+                        this.log(`Pairing code ready: ${code}`);
+                        this.emit('pair-code', code);
                     }
-                    catch (_c) {
-                        this.QR = null;
+                    catch (err) {
+                        this.log(`Failed to get pairing code: ${err.message}`, true);
+                        this.emit('pair-error', err.message);
                     }
-                    this.emit('qr', qr);
-                }
+                }), 2000);
+            }
+            this.sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
+                var _a, _b, _c, _d;
                 if (connection === 'open') {
                     this.state = 'open';
                     this.pairCode = null;
                     this.pairCodePhone = null;
                     this.user = this.sock.user;
+                    this.log(`Connected as ${((_a = this.user) === null || _a === void 0 ? void 0 : _a.name) || ((_b = this.user) === null || _b === void 0 ? void 0 : _b.id) || 'unknown'}`);
                     this.emit('open');
                 }
                 if (connection === 'close') {
                     this.state = 'close';
-                    const statusCode = (_b = (_a = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _a === void 0 ? void 0 : _a.output) === null || _b === void 0 ? void 0 : _b.statusCode;
-                    const shouldReconnect = statusCode !== baileys_1.DisconnectReason.loggedOut && statusCode !== 403;
-                    if (shouldReconnect) {
-                        this.log(`Connection closed (${statusCode}), reconnecting in 5s...`);
-                        setTimeout(() => this.connect(), 5000);
+                    const statusCode = (_d = (_c = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _c === void 0 ? void 0 : _c.output) === null || _d === void 0 ? void 0 : _d.statusCode;
+                    if (statusCode === baileys_1.DisconnectReason.loggedOut || statusCode === 403) {
+                        this.log(`Session ended (${statusCode}). Clearing auth for fresh start.`, true);
+                        this.clearAuth();
                     }
                     else {
-                        this.log(`Connection closed permanently (${statusCode}), not reconnecting`, true);
+                        this.log(`Connection closed (${statusCode !== null && statusCode !== void 0 ? statusCode : 'unknown'}), reconnecting in 5s...`);
+                        setTimeout(() => this.connect(), 5000);
                     }
                 }
             });
@@ -181,23 +222,6 @@ class WAClient extends events_1.default {
             catch (_c) {
                 // ignore
             }
-        });
-    }
-    requestPairCode(phone) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.state === 'open')
-                throw new Error('Already connected');
-            if (!this.sock)
-                throw new Error('Socket not ready yet, please wait a moment and try again');
-            // Strip all non-digits
-            const cleaned = phone.replace(/\D/g, '');
-            if (!cleaned)
-                throw new Error('Invalid phone number');
-            const code = yield this.sock.requestPairingCode(cleaned);
-            this.pairCode = code;
-            this.pairCodePhone = cleaned;
-            this.log(`Pairing code requested for +${cleaned}: ${code}`);
-            return code;
         });
     }
     saveAuthInfo(session) {

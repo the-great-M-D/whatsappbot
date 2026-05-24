@@ -39,12 +39,43 @@ export default class WAClient extends EventEmitter {
         console.log(error ? '❌' : '✅', msg)
     }
 
-    async connect() {
+    private stopSocket() {
+        if (this.sock) {
+            try { this.sock.end(undefined) } catch { /* ignore */ }
+            this.sock = null
+        }
+        this.state = 'close'
+    }
+
+    private async clearAuth() {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const fse = require('fs-extra')
+        await fse.remove(`auth/${this.config.session}`).catch(() => { /* ignore */ })
+    }
+
+    async connectWithPhone(phone: string): Promise<string> {
+        const cleaned = phone.replace(/\D/g, '')
+        if (!cleaned) throw new Error('Invalid phone number')
+
+        // Stop any existing connection and wipe old session
+        this.stopSocket()
+        await this.clearAuth()
+
+        // Start fresh connection and request code
+        const code = await new Promise<string>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (30s). Please try again.')), 30000)
+            this.once('pair-code', (c: string) => { clearTimeout(timeout); resolve(c) })
+            this.once('pair-error', (e: string) => { clearTimeout(timeout); reject(new Error(e)) })
+            this.connect(cleaned)
+        })
+
+        return code
+    }
+
+    async connect(pairingPhone?: string) {
         const { state, saveCreds } = await useMultiFileAuthState(`auth/${this.config.session}`)
-
         const { version } = await fetchLatestBaileysVersion()
-
-        this.registered = !!(state.creds as any).registered
+        const isRegistered = !!(state.creds as any).registered
 
         this.sock = makeWASocket({
             version,
@@ -55,38 +86,43 @@ export default class WAClient extends EventEmitter {
 
         this.sock.ev.on('creds.update', saveCreds)
 
-        this.sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }: any) => {
-            if (qr) {
-                this.QRText = qr
+        // If phone provided and not yet registered, request pairing code after socket init
+        if (pairingPhone && !isRegistered) {
+            setTimeout(async () => {
                 try {
-                    // eslint-disable-next-line @typescript-eslint/no-var-requires
-                    const qrImage = require('qr-image')
-                    this.QR = qrImage.imageSync(qr, { type: 'png' })
-                } catch {
-                    this.QR = null
+                    this.log(`Requesting pairing code for +${pairingPhone}...`)
+                    const code = await this.sock.requestPairingCode(pairingPhone)
+                    this.pairCode = code
+                    this.pairCodePhone = pairingPhone
+                    this.log(`Pairing code ready: ${code}`)
+                    this.emit('pair-code', code)
+                } catch (err: any) {
+                    this.log(`Failed to get pairing code: ${err.message}`, true)
+                    this.emit('pair-error', err.message)
                 }
-                this.emit('qr', qr)
-            }
+            }, 2000)
+        }
 
+        this.sock.ev.on('connection.update', ({ connection, lastDisconnect }: any) => {
             if (connection === 'open') {
                 this.state = 'open'
                 this.pairCode = null
                 this.pairCodePhone = null
                 this.user = this.sock.user
+                this.log(`Connected as ${this.user?.name || this.user?.id || 'unknown'}`)
                 this.emit('open')
             }
 
             if (connection === 'close') {
                 this.state = 'close'
                 const statusCode = (lastDisconnect?.error as any)?.output?.statusCode
-                const shouldReconnect =
-                    statusCode !== DisconnectReason.loggedOut && statusCode !== 403
 
-                if (shouldReconnect) {
-                    this.log(`Connection closed (${statusCode}), reconnecting in 5s...`)
-                    setTimeout(() => this.connect(), 5000)
+                if (statusCode === DisconnectReason.loggedOut || statusCode === 403) {
+                    this.log(`Session ended (${statusCode}). Clearing auth for fresh start.`, true)
+                    this.clearAuth()
                 } else {
-                    this.log(`Connection closed permanently (${statusCode}), not reconnecting`, true)
+                    this.log(`Connection closed (${statusCode ?? 'unknown'}), reconnecting in 5s...`)
+                    setTimeout(() => this.connect(), 5000)
                 }
             }
         })
@@ -171,19 +207,6 @@ export default class WAClient extends EventEmitter {
         } catch {
             // ignore
         }
-    }
-
-    async requestPairCode(phone: string): Promise<string> {
-        if (this.state === 'open') throw new Error('Already connected')
-        if (!this.sock) throw new Error('Socket not ready yet, please wait a moment and try again')
-        // Strip all non-digits
-        const cleaned = phone.replace(/\D/g, '')
-        if (!cleaned) throw new Error('Invalid phone number')
-        const code = await this.sock.requestPairingCode(cleaned)
-        this.pairCode = code
-        this.pairCodePhone = cleaned
-        this.log(`Pairing code requested for +${cleaned}: ${code}`)
-        return code
     }
 
     async saveAuthInfo(session: string): Promise<void> {

@@ -15,7 +15,6 @@ export default class Server extends EventEmitter {
         this.app.get('/api/status', (req, res) => {
             res.json({
                 connected: this.client.state === 'open',
-                hasQR: !!this.client.QR,
                 pairCode: this.client.pairCode || null,
                 pairCodePhone: this.client.pairCodePhone || null,
                 user: this.client.state === 'open'
@@ -28,31 +27,17 @@ export default class Server extends EventEmitter {
             try {
                 const { phone } = req.body
                 if (!phone) return void res.status(400).json({ error: 'Phone number is required' })
-                const code = await this.client.requestPairCode(phone)
+                const code = await this.client.connectWithPhone(phone)
                 res.json({ code })
             } catch (err: any) {
                 res.status(500).json({ error: err.message || 'Failed to generate pairing code' })
             }
         })
 
-        this.app.get('/api/qr', (req, res) => {
-            if (this.client.state === 'open')
-                return void res.json({ connected: true })
-            if (!this.client.QR)
-                return void res.json({ pending: true, message: 'QR not generated yet, please wait...' })
-            res.contentType('image/png')
-            return void res.send(this.client.QR)
-        })
-
         this.app.use('/wa', this.WARouter)
         this.WARouter.use(this.auth)
         this.WARouter.get('/qr', (req, res) => {
-            if (!this.client.QR)
-                return void res.json({
-                    message: this.client.state === 'open' ? "You're already authenticated" : 'QR is not generated yet'
-                })
-            res.contentType('image/png')
-            return void res.send(this.client.QR)
+            res.json({ message: 'QR disabled — use phone number pairing via the dashboard' })
         })
 
         this.app.listen(PORT, '0.0.0.0', () => this.client.log(`Server Started on PORT: ${PORT}`))
