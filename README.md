@@ -29,9 +29,6 @@ Use any one of the above to deploy
 
 ## 💻 Deploy/Hosting Guide
 
--   Section Moved to
-    [Kaoi-Guides](https://github.com/Hiroto77/Kaoi-Guides/blob/main/README.md)
-
 ## 🍥 Features of the Repo
 
 -   To view all features, click
@@ -50,9 +47,9 @@ Use any one of the above to deploy
 
 ### 🟢 WhatsApp Support Group
 
-# [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/FUKwD5I2nJC9TOgqxd1RiP)
+# [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/JgFnnxRDd4t5luD6DqZQI0?mode=gi_t)
 
 ## 📄 License
 
-Distributed under the GNU AFFERO GENERAL PUBLIC License. See [LICENSE](/LICENSE)
+Distributed under the GNU  GENERAL PUBLIC License. See [LICENSE](/LICENSE)
 for more information.
