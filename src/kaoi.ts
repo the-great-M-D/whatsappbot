@@ -19,6 +19,16 @@ const client = new WAClient({
     gkey: process.env.GOOGLE_API_KEY || '',
     chatBotUrl: process.env.CHAT_BOT_URL || ''
 })
+
+process.on('uncaughtException', (err: Error) => {
+    client.log(`${chalk.bgRed('UncaughtException')} ${err.message}`, true)
+})
+
+process.on('unhandledRejection', (reason: unknown) => {
+    const msg = reason instanceof Error ? reason.message : String(reason)
+    client.log(`${chalk.bgRed('UnhandledRejection')} ${msg}`, true)
+})
+
 client.log('Starting...')
 
 const messageHandler = new MessageHandler(client)
