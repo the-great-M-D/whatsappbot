@@ -1,15 +1,13 @@
-import { MessageType, WAMessage } from '@adiwajshing/baileys'
 import { IExtendedGroupMetadata } from '.'
-import Mimetype from '../Handlers/file'
 
 export interface ISimplifiedMessage {
-    type: MessageType
+    type: string
     content: string | null
     args: string[]
     reply(
         content: string | Buffer,
-        type?: MessageType,
-        mime?: Mimetype,
+        type?: string,
+        mime?: string,
         mention?: string[],
         caption?: string,
         thumbnail?: Buffer
@@ -24,9 +22,9 @@ export interface ISimplifiedMessage {
         isAdmin: boolean
     }
     quoted?: {
-        message?: WAMessage | null
+        message?: any | null
         sender?: string | null
     } | null
-    WAMessage: WAMessage
+    WAMessage: any
     urls: string[]
 }

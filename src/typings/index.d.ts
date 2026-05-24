@@ -1,11 +1,10 @@
-import { WAGroupMetadata } from '@adiwajshing/baileys'
+import { WAGroupMetadata } from '@whiskeysockets/baileys'
 
 export * from './message'
 export * from './command'
 export * from './mongo'
 export interface IConfig {
     name: string
-    mods?: string[]
     prefix: string
     session: string
     mods: string[]
