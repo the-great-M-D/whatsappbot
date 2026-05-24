@@ -46,13 +46,13 @@ class YT {
         this.validateURL = () => (0, ytdl_core_1.validateURL)(this.url);
         this.getInfo = () => __awaiter(this, void 0, void 0, function* () { return yield ytdl_core_1.default.getInfo(this.url); });
         this.getBuffer = (filename = `${(0, os_1.tmpdir)()}/${Math.random().toString(36)}.${this.type === 'audio' ? 'mp3' : 'mp4'}`) => __awaiter(this, void 0, void 0, function* () {
-            const stream = (0, fs_extra_1.createWriteStream)(filename);
-            (0, ytdl_core_1.default)(this.url, { quality: this.type === 'audio' ? 'highestaudio' : 'highest' }).pipe(stream);
-            // ytdl(this.url, { quality: this.type === 'audio' ? '140' : 'highest' }).pipe(stream)
-            // ytdl(this.url, { quality: this.type === 'audio' ? '134' : 'highest' }).pipe(stream)
+            const writeStream = (0, fs_extra_1.createWriteStream)(filename);
+            const ytStream = (0, ytdl_core_1.default)(this.url, { quality: this.type === 'audio' ? 'highestaudio' : 'highest' });
+            ytStream.pipe(writeStream);
             filename = yield new Promise((resolve, reject) => {
-                stream.on('finish', () => resolve(filename));
-                stream.on('error', (err) => reject(err && console.log(err)));
+                ytStream.on('error', reject);
+                writeStream.on('finish', () => resolve(filename));
+                writeStream.on('error', reject);
             });
             return yield (0, fs_extra_1.readFile)(filename);
         });

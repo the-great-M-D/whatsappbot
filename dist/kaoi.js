@@ -30,6 +30,13 @@ const client = new WAClient_1.default({
     gkey: process.env.GOOGLE_API_KEY || '',
     chatBotUrl: process.env.CHAT_BOT_URL || ''
 });
+process.on('uncaughtException', (err) => {
+    client.log(`${chalk_1.default.bgRed('UncaughtException')} ${err.message}`, true);
+});
+process.on('unhandledRejection', (reason) => {
+    const msg = reason instanceof Error ? reason.message : String(reason);
+    client.log(`${chalk_1.default.bgRed('UnhandledRejection')} ${msg}`, true);
+});
 client.log('Starting...');
 const messageHandler = new MessageHandler_1.default(client);
 const callHandler = new CallHandler_1.default(client);

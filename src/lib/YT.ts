@@ -17,13 +17,13 @@ export default class YT {
     getBuffer = async (
         filename = `${tmpdir()}/${Math.random().toString(36)}.${this.type === 'audio' ? 'mp3' : 'mp4'}`
     ): Promise<Buffer> => {
-        const stream = createWriteStream(filename)
-        ytdl(this.url, { quality: this.type === 'audio' ? 'highestaudio' : 'highest' }).pipe(stream)
-        // ytdl(this.url, { quality: this.type === 'audio' ? '140' : 'highest' }).pipe(stream)
-        // ytdl(this.url, { quality: this.type === 'audio' ? '134' : 'highest' }).pipe(stream)
+        const writeStream = createWriteStream(filename)
+        const ytStream = ytdl(this.url, { quality: this.type === 'audio' ? 'highestaudio' : 'highest' })
+        ytStream.pipe(writeStream)
         filename = await new Promise((resolve, reject) => {
-            stream.on('finish', () => resolve(filename))
-            stream.on('error', (err) => reject(err && console.log(err)))
+            ytStream.on('error', reject)
+            writeStream.on('finish', () => resolve(filename))
+            writeStream.on('error', reject)
         })
         return await readFile(filename)
     }
