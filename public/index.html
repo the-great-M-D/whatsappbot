@@ -57,6 +57,18 @@
     </div>
 
     <script>
+        let pollInterval = null
+
+        function startPolling() {
+            if (pollInterval) return
+            pollInterval = setInterval(poll, 3000)
+        }
+
+        function stopPolling() {
+            clearInterval(pollInterval)
+            pollInterval = null
+        }
+
         async function requestPairCode() {
             const input = document.getElementById('phone-input')
             const btn = document.getElementById('pair-btn')
@@ -104,13 +116,17 @@
             document.getElementById('code-section').style.display = 'block'
 
             // Format code into groups: ABCD-EFGH
-            const formatted = code.replace(/(.{4})(?=.)/g, '$1-').replace(/-$/, '')
-            const parts = formatted.split('-')
+            const clean = code.replace(/-/g, '')
+            const parts = clean.match(/.{1,4}/g) || [code]
             const display = document.getElementById('code-display')
             display.innerHTML = parts.map(p => `<span class="code-chunk">${p}</span>`).join('<span class="code-sep">-</span>')
+
+            // Auto-poll until connected
+            startPolling()
         }
 
         function resetPairing() {
+            stopPolling()
             document.getElementById('code-section').style.display = 'none'
             document.getElementById('phone-section').style.display = 'block'
             document.getElementById('phone-input').value = ''
@@ -127,14 +143,13 @@
                 const statusText = document.getElementById('status-text')
 
                 if (status.connected) {
+                    stopPolling()
                     badge.className = 'badge badge-connected'
                     statusText.textContent = 'Connected'
                     document.getElementById('phone-section').style.display = 'none'
                     document.getElementById('code-section').style.display = 'none'
                     document.getElementById('connected-section').style.display = 'flex'
                     if (status.user) document.getElementById('connected-user').textContent = '@' + status.user
-                    document.getElementById('refresh-label').textContent = 'Bot is active'
-                    clearInterval(countdownTimer)
                     return
                 }
 

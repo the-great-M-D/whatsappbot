@@ -98,9 +98,15 @@ class WAClient extends events_1.default {
                 }
                 if (connection === 'close') {
                     this.state = 'close';
-                    const shouldReconnect = ((_b = (_a = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _a === void 0 ? void 0 : _a.output) === null || _b === void 0 ? void 0 : _b.statusCode) !== baileys_1.DisconnectReason.loggedOut;
-                    if (shouldReconnect)
-                        this.connect();
+                    const statusCode = (_b = (_a = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _a === void 0 ? void 0 : _a.output) === null || _b === void 0 ? void 0 : _b.statusCode;
+                    const shouldReconnect = statusCode !== baileys_1.DisconnectReason.loggedOut && statusCode !== 403;
+                    if (shouldReconnect) {
+                        this.log(`Connection closed (${statusCode}), reconnecting in 5s...`);
+                        setTimeout(() => this.connect(), 5000);
+                    }
+                    else {
+                        this.log(`Connection closed permanently (${statusCode}), not reconnecting`, true);
+                    }
                 }
             });
             this.sock.ev.on('messages.upsert', ({ messages }) => {
