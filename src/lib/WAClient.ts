@@ -78,10 +78,16 @@ export default class WAClient extends EventEmitter {
 
             if (connection === 'close') {
                 this.state = 'close'
+                const statusCode = (lastDisconnect?.error as any)?.output?.statusCode
                 const shouldReconnect =
-                    (lastDisconnect?.error as any)?.output?.statusCode !== DisconnectReason.loggedOut
+                    statusCode !== DisconnectReason.loggedOut && statusCode !== 403
 
-                if (shouldReconnect) this.connect()
+                if (shouldReconnect) {
+                    this.log(`Connection closed (${statusCode}), reconnecting in 5s...`)
+                    setTimeout(() => this.connect(), 5000)
+                } else {
+                    this.log(`Connection closed permanently (${statusCode}), not reconnecting`, true)
+                }
             }
         })
 
