@@ -72,7 +72,14 @@ class WAClient extends events_1.default {
             this.sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
                 var _a, _b;
                 if (qr) {
-                    this.QR = qr;
+                    try {
+                        // eslint-disable-next-line @typescript-eslint/no-var-requires
+                        const qrImage = require('qr-image');
+                        this.QR = qrImage.imageSync(qr, { type: 'png' });
+                    }
+                    catch (_c) {
+                        this.QR = null;
+                    }
                     this.emit('qr', qr);
                 }
                 if (connection === 'open') {

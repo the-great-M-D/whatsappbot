@@ -22,6 +22,24 @@ class Server extends events_1.EventEmitter {
             next();
         };
         this.app.use(express_1.default.static((0, path_1.join)(__dirname, '..', '..', 'public')));
+        this.app.get('/api/status', (req, res) => {
+            var _a, _b, _c, _d;
+            res.json({
+                connected: this.client.state === 'open',
+                hasQR: !!this.client.QR,
+                user: this.client.state === 'open'
+                    ? (((_a = this.client.user) === null || _a === void 0 ? void 0 : _a.name) || ((_b = this.client.user) === null || _b === void 0 ? void 0 : _b.notify) || ((_d = (_c = this.client.user) === null || _c === void 0 ? void 0 : _c.id) === null || _d === void 0 ? void 0 : _d.split(':')[0]) || 'Connected')
+                    : null
+            });
+        });
+        this.app.get('/api/qr', (req, res) => {
+            if (this.client.state === 'open')
+                return void res.json({ connected: true });
+            if (!this.client.QR)
+                return void res.json({ pending: true, message: 'QR not generated yet, please wait...' });
+            res.contentType('image/png');
+            return void res.send(this.client.QR);
+        });
         this.app.use('/wa', this.WARouter);
         this.WARouter.use(this.auth);
         this.WARouter.get('/qr', (req, res) => {
