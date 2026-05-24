@@ -10,6 +10,7 @@ channel = "stable-25_05"
 
 [userenv.shared]
 PORT = "5000"
+MONGO_URL = "mongodb+srv://clustermd:<3fbNO7pLepq5Wt3u>@cluster0.ykw79pu.mongodb.net/?appName=Cluster0"
 
 [workflows]
 runButton = "Project"

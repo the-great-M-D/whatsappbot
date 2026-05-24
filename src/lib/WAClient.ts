@@ -50,7 +50,13 @@ export default class WAClient extends EventEmitter {
 
         this.sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }: any) => {
             if (qr) {
-                this.QR = qr
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-var-requires
+                    const qrImage = require('qr-image')
+                    this.QR = qrImage.imageSync(qr, { type: 'png' })
+                } catch {
+                    this.QR = null
+                }
                 this.emit('qr', qr)
             }
 
