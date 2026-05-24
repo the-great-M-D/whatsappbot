@@ -58,12 +58,14 @@ class WAClient extends events_1.default {
         this.pairCodePhone = null;
         this.state = 'close';
         this.registered = false;
+        this.intentionalStop = false;
         this.config = config;
     }
     log(msg, error = false) {
         console.log(error ? '❌' : '✅', msg);
     }
     stopSocket() {
+        this.intentionalStop = true;
         if (this.sock) {
             try {
                 this.sock.end(undefined);
@@ -100,6 +102,7 @@ class WAClient extends events_1.default {
     }
     connect(pairingPhone) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.intentionalStop = false;
             const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(`auth/${this.config.session}`);
             const { version } = yield (0, baileys_1.fetchLatestBaileysVersion)();
             const isRegistered = !!state.creds.registered;
@@ -139,6 +142,10 @@ class WAClient extends events_1.default {
                 }
                 if (connection === 'close') {
                     this.state = 'close';
+                    if (this.intentionalStop) {
+                        this.intentionalStop = false;
+                        return;
+                    }
                     const statusCode = (_d = (_c = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _c === void 0 ? void 0 : _c.output) === null || _d === void 0 ? void 0 : _d.statusCode;
                     this.log(`Connection closed (${statusCode !== null && statusCode !== void 0 ? statusCode : 'unknown'}), reconnecting in 5s...`);
                     setTimeout(() => this.connect(), 5000);
