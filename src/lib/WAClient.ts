@@ -25,7 +25,10 @@ export default class WAClient extends EventEmitter {
     public chats: Record<string, any> = {}
     public QR: Buffer | null = null
     public QRText: string | null = null
+    public pairCode: string | null = null
+    public pairCodePhone: string | null = null
     public state: string = 'close'
+    public registered: boolean = false
 
     constructor(config: any) {
         super()
@@ -41,10 +44,13 @@ export default class WAClient extends EventEmitter {
 
         const { version } = await fetchLatestBaileysVersion()
 
+        this.registered = !!(state.creds as any).registered
+
         this.sock = makeWASocket({
             version,
             logger: P({ level: 'silent' }),
-            auth: state
+            auth: state,
+            printQRInTerminal: false
         })
 
         this.sock.ev.on('creds.update', saveCreds)
@@ -64,6 +70,8 @@ export default class WAClient extends EventEmitter {
 
             if (connection === 'open') {
                 this.state = 'open'
+                this.pairCode = null
+                this.pairCodePhone = null
                 this.user = this.sock.user
                 this.emit('open')
             }
@@ -157,6 +165,19 @@ export default class WAClient extends EventEmitter {
         } catch {
             // ignore
         }
+    }
+
+    async requestPairCode(phone: string): Promise<string> {
+        if (this.state === 'open') throw new Error('Already connected')
+        if (!this.sock) throw new Error('Socket not ready yet, please wait a moment and try again')
+        // Strip all non-digits
+        const cleaned = phone.replace(/\D/g, '')
+        if (!cleaned) throw new Error('Invalid phone number')
+        const code = await this.sock.requestPairingCode(cleaned)
+        this.pairCode = code
+        this.pairCodePhone = cleaned
+        this.log(`Pairing code requested for +${cleaned}: ${code}`)
+        return code
     }
 
     async saveAuthInfo(session: string): Promise<void> {

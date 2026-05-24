@@ -9,16 +9,30 @@ export default class Server extends EventEmitter {
 
     constructor(public PORT: number, public client: WAClient) {
         super()
+        this.app.use(express.json())
         this.app.use(express.static(join(__dirname, '..', '..', 'public')))
 
         this.app.get('/api/status', (req, res) => {
             res.json({
                 connected: this.client.state === 'open',
                 hasQR: !!this.client.QR,
+                pairCode: this.client.pairCode || null,
+                pairCodePhone: this.client.pairCodePhone || null,
                 user: this.client.state === 'open'
                     ? (this.client.user?.name || this.client.user?.notify || this.client.user?.id?.split(':')[0] || 'Connected')
                     : null
             })
+        })
+
+        this.app.post('/api/pair', async (req, res) => {
+            try {
+                const { phone } = req.body
+                if (!phone) return void res.status(400).json({ error: 'Phone number is required' })
+                const code = await this.client.requestPairCode(phone)
+                res.json({ code })
+            } catch (err: any) {
+                res.status(500).json({ error: err.message || 'Failed to generate pairing code' })
+            }
         })
 
         this.app.get('/api/qr', (req, res) => {
@@ -28,14 +42,6 @@ export default class Server extends EventEmitter {
                 return void res.json({ pending: true, message: 'QR not generated yet, please wait...' })
             res.contentType('image/png')
             return void res.send(this.client.QR)
-        })
-
-        this.app.get('/api/qr-text', (req, res) => {
-            if (this.client.state === 'open')
-                return void res.json({ connected: true })
-            if (!this.client.QRText)
-                return void res.json({ pending: true })
-            res.json({ qrText: this.client.QRText })
         })
 
         this.app.use('/wa', this.WARouter)

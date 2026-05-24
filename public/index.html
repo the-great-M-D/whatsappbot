@@ -24,93 +24,135 @@
                 <span id="status-text">Connecting...</span>
             </div>
 
-            <div id="qr-section">
-                <div id="qr-loading" class="qr-placeholder">
-                    <div class="spinner"></div>
-                    <p>Waiting for QR code...</p>
-                </div>
-                <div id="qr-image-wrap" style="display:none">
-                    <img id="qr-img" src="" alt="WhatsApp QR Code" />
-                    <p class="qr-hint">Open WhatsApp → Linked Devices → Link a Device</p>
-                    <div id="pair-code-section" style="display:none; width:100%">
-                        <div class="pair-divider"><span>or use pairing code</span></div>
-                        <div class="pair-code-box">
-                            <code id="pair-code-text"></code>
-                            <button id="copy-btn" onclick="copyCode()">Copy</button>
-                        </div>
+            <div id="main-section">
+
+                <!-- Phone input state -->
+                <div id="phone-section">
+                    <p class="section-label">Enter your WhatsApp number to get a pairing code</p>
+                    <div class="phone-input-row">
+                        <input id="phone-input" type="tel" placeholder="+27 81 234 5678" autocomplete="tel" />
+                        <button id="pair-btn" onclick="requestPairCode()">Get Code</button>
                     </div>
+                    <p id="pair-error" class="error-msg" style="display:none"></p>
                 </div>
-                <div id="qr-connected" style="display:none" class="connected-state">
+
+                <!-- Pairing code display state -->
+                <div id="code-section" style="display:none">
+                    <p class="section-label">Enter this code in WhatsApp</p>
+                    <div id="code-display"></div>
+                    <p class="code-hint">WhatsApp → <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
+                    <button class="try-again-btn" onclick="resetPairing()">Use a different number</button>
+                </div>
+
+                <!-- Connected state -->
+                <div id="connected-section" style="display:none" class="connected-state">
                     <div class="check-circle">✓</div>
                     <p>Bot is connected to WhatsApp</p>
                     <p id="connected-user" class="connected-user"></p>
                 </div>
+
             </div>
 
             <div id="refresh-bar">
-                <span id="refresh-label">Refreshing in <span id="countdown">5</span>s</span>
+                <span id="refresh-label">Checking status...</span>
             </div>
         </div>
     </div>
 
     <script>
+        let pollTimer = null
+        let countdownTimer = null
         let countdown = 5
-        let timer
 
-        function copyCode() {
-            const code = document.getElementById('pair-code-text').textContent
-            navigator.clipboard.writeText(code).then(() => {
-                const btn = document.getElementById('copy-btn')
-                btn.textContent = 'Copied!'
-                setTimeout(() => btn.textContent = 'Copy', 2000)
-            })
+        async function requestPairCode() {
+            const input = document.getElementById('phone-input')
+            const btn = document.getElementById('pair-btn')
+            const errEl = document.getElementById('pair-error')
+            const phone = input.value.trim()
+
+            if (!phone) {
+                showError('Please enter your phone number')
+                return
+            }
+
+            btn.disabled = true
+            btn.textContent = 'Requesting...'
+            errEl.style.display = 'none'
+
+            try {
+                const res = await fetch('/api/pair', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                })
+                const data = await res.json()
+                if (data.error) {
+                    showError(data.error)
+                    btn.disabled = false
+                    btn.textContent = 'Get Code'
+                    return
+                }
+                showPairCode(data.code)
+            } catch (e) {
+                showError('Failed to request code. Please try again.')
+                btn.disabled = false
+                btn.textContent = 'Get Code'
+            }
+        }
+
+        function showError(msg) {
+            const errEl = document.getElementById('pair-error')
+            errEl.textContent = msg
+            errEl.style.display = 'block'
+        }
+
+        function showPairCode(code) {
+            document.getElementById('phone-section').style.display = 'none'
+            document.getElementById('code-section').style.display = 'block'
+
+            // Format code into groups: ABCD-EFGH
+            const formatted = code.replace(/(.{4})(?=.)/g, '$1-').replace(/-$/, '')
+            const parts = formatted.split('-')
+            const display = document.getElementById('code-display')
+            display.innerHTML = parts.map(p => `<span class="code-chunk">${p}</span>`).join('<span class="code-sep">-</span>')
+        }
+
+        function resetPairing() {
+            document.getElementById('code-section').style.display = 'none'
+            document.getElementById('phone-section').style.display = 'block'
+            document.getElementById('phone-input').value = ''
+            document.getElementById('pair-btn').disabled = false
+            document.getElementById('pair-btn').textContent = 'Get Code'
         }
 
         async function poll() {
             try {
-                const statusRes = await fetch('/api/status')
-                const status = await statusRes.json()
+                const res = await fetch('/api/status')
+                const status = await res.json()
 
                 const badge = document.getElementById('status-badge')
                 const statusText = document.getElementById('status-text')
-                const qrLoading = document.getElementById('qr-loading')
-                const qrImageWrap = document.getElementById('qr-image-wrap')
-                const qrConnected = document.getElementById('qr-connected')
-                const qrImg = document.getElementById('qr-img')
-                const connectedUser = document.getElementById('connected-user')
 
                 if (status.connected) {
                     badge.className = 'badge badge-connected'
                     statusText.textContent = 'Connected'
-                    qrLoading.style.display = 'none'
-                    qrImageWrap.style.display = 'none'
-                    qrConnected.style.display = 'flex'
-                    if (status.user) connectedUser.textContent = '@' + status.user
+                    document.getElementById('phone-section').style.display = 'none'
+                    document.getElementById('code-section').style.display = 'none'
+                    document.getElementById('connected-section').style.display = 'flex'
+                    if (status.user) document.getElementById('connected-user').textContent = '@' + status.user
                     document.getElementById('refresh-label').textContent = 'Bot is active'
+                    clearInterval(countdownTimer)
                     return
                 }
 
                 badge.className = 'badge badge-waiting'
-                statusText.textContent = 'Waiting for scan...'
+                statusText.textContent = 'Waiting for pairing...'
 
-                if (status.hasQR) {
-                    qrLoading.style.display = 'none'
-                    qrImageWrap.style.display = 'block'
-                    qrImg.src = '/api/qr?t=' + Date.now()
-
-                    // Fetch and show the raw pairing code text
-                    try {
-                        const qrTextRes = await fetch('/api/qr-text')
-                        const qrTextData = await qrTextRes.json()
-                        if (qrTextData.qrText) {
-                            document.getElementById('pair-code-text').textContent = qrTextData.qrText
-                            document.getElementById('pair-code-section').style.display = 'block'
-                        }
-                    } catch (e) { /* ignore */ }
-                } else {
-                    qrLoading.style.display = 'flex'
-                    qrImageWrap.style.display = 'none'
+                // If server already has a code (e.g. after page refresh), show it
+                if (status.pairCode && document.getElementById('phone-section').style.display !== 'none') {
+                    showPairCode(status.pairCode)
                 }
+
             } catch (e) {
                 console.error('Poll error:', e)
             }
@@ -119,20 +161,23 @@
         }
 
         function startCountdown() {
-            clearInterval(timer)
+            clearInterval(countdownTimer)
             countdown = 5
-            document.getElementById('countdown').textContent = countdown
             document.getElementById('refresh-label').innerHTML = 'Refreshing in <span id="countdown">' + countdown + '</span>s'
-            timer = setInterval(() => {
+            countdownTimer = setInterval(() => {
                 countdown--
                 const el = document.getElementById('countdown')
                 if (el) el.textContent = countdown
                 if (countdown <= 0) {
-                    clearInterval(timer)
+                    clearInterval(countdownTimer)
                     poll()
                 }
             }, 1000)
         }
+
+        document.getElementById('phone-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') requestPairCode()
+        })
 
         poll()
     </script>

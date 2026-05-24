@@ -54,7 +54,10 @@ class WAClient extends events_1.default {
         this.chats = {};
         this.QR = null;
         this.QRText = null;
+        this.pairCode = null;
+        this.pairCodePhone = null;
         this.state = 'close';
+        this.registered = false;
         this.config = config;
     }
     log(msg, error = false) {
@@ -64,10 +67,12 @@ class WAClient extends events_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(`auth/${this.config.session}`);
             const { version } = yield (0, baileys_1.fetchLatestBaileysVersion)();
+            this.registered = !!state.creds.registered;
             this.sock = (0, baileys_1.default)({
                 version,
                 logger: (0, pino_1.default)({ level: 'silent' }),
-                auth: state
+                auth: state,
+                printQRInTerminal: false
             });
             this.sock.ev.on('creds.update', saveCreds);
             this.sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
@@ -86,6 +91,8 @@ class WAClient extends events_1.default {
                 }
                 if (connection === 'open') {
                     this.state = 'open';
+                    this.pairCode = null;
+                    this.pairCodePhone = null;
                     this.user = this.sock.user;
                     this.emit('open');
                 }
@@ -168,6 +175,23 @@ class WAClient extends events_1.default {
             catch (_c) {
                 // ignore
             }
+        });
+    }
+    requestPairCode(phone) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.state === 'open')
+                throw new Error('Already connected');
+            if (!this.sock)
+                throw new Error('Socket not ready yet, please wait a moment and try again');
+            // Strip all non-digits
+            const cleaned = phone.replace(/\D/g, '');
+            if (!cleaned)
+                throw new Error('Invalid phone number');
+            const code = yield this.sock.requestPairingCode(cleaned);
+            this.pairCode = code;
+            this.pairCodePhone = cleaned;
+            this.log(`Pairing code requested for +${cleaned}: ${code}`);
+            return code;
         });
     }
     saveAuthInfo(session) {

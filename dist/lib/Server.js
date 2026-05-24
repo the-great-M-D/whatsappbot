@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -21,17 +30,32 @@ class Server extends events_1.EventEmitter {
                 return void res.json({ message: `Invalid Session ID` });
             next();
         };
+        this.app.use(express_1.default.json());
         this.app.use(express_1.default.static((0, path_1.join)(__dirname, '..', '..', 'public')));
         this.app.get('/api/status', (req, res) => {
             var _a, _b, _c, _d;
             res.json({
                 connected: this.client.state === 'open',
                 hasQR: !!this.client.QR,
+                pairCode: this.client.pairCode || null,
+                pairCodePhone: this.client.pairCodePhone || null,
                 user: this.client.state === 'open'
                     ? (((_a = this.client.user) === null || _a === void 0 ? void 0 : _a.name) || ((_b = this.client.user) === null || _b === void 0 ? void 0 : _b.notify) || ((_d = (_c = this.client.user) === null || _c === void 0 ? void 0 : _c.id) === null || _d === void 0 ? void 0 : _d.split(':')[0]) || 'Connected')
                     : null
             });
         });
+        this.app.post('/api/pair', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { phone } = req.body;
+                if (!phone)
+                    return void res.status(400).json({ error: 'Phone number is required' });
+                const code = yield this.client.requestPairCode(phone);
+                res.json({ code });
+            }
+            catch (err) {
+                res.status(500).json({ error: err.message || 'Failed to generate pairing code' });
+            }
+        }));
         this.app.get('/api/qr', (req, res) => {
             if (this.client.state === 'open')
                 return void res.json({ connected: true });
@@ -39,13 +63,6 @@ class Server extends events_1.EventEmitter {
                 return void res.json({ pending: true, message: 'QR not generated yet, please wait...' });
             res.contentType('image/png');
             return void res.send(this.client.QR);
-        });
-        this.app.get('/api/qr-text', (req, res) => {
-            if (this.client.state === 'open')
-                return void res.json({ connected: true });
-            if (!this.client.QRText)
-                return void res.json({ pending: true });
-            res.json({ qrText: this.client.QRText });
         });
         this.app.use('/wa', this.WARouter);
         this.WARouter.use(this.auth);
