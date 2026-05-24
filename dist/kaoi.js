@@ -41,7 +41,9 @@ messageHandler.loadFeatures();
 new Server_1.default(Number(process.env.PORT) || 4040, client);
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     client.once('open', () => __awaiter(void 0, void 0, void 0, function* () {
-        client.log(chalk_1.default.green(`Connected to WhatsApp as ${chalk_1.default.blueBright(client.user.notify || client.user.vname || client.user.name || client.user.jid.split('@')[0])}`));
+        var _a, _b, _c, _d;
+        const userNum = ((_a = client.user) === null || _a === void 0 ? void 0 : _a.name) || ((_b = client.user) === null || _b === void 0 ? void 0 : _b.notify) || ((_d = (_c = client.user) === null || _c === void 0 ? void 0 : _c.id) === null || _d === void 0 ? void 0 : _d.split(':')[0]) || 'unknown';
+        client.log(chalk_1.default.green(`Connected to WhatsApp as ${chalk_1.default.blueBright(userNum)}`));
         yield client.saveAuthInfo(client.config.session);
         if (process.env.CRON) {
             if (!node_cron_1.default.validate(process.env.CRON))
