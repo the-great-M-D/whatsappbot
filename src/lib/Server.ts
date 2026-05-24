@@ -20,7 +20,7 @@ export default class Server extends EventEmitter {
             res.contentType('image/png')
             return void res.send(this.client.QR)
         })
-        this.app.listen(PORT, () => this.client.log(`Server Started on PORT: ${PORT}`))
+        this.app.listen(PORT, '0.0.0.0', () => this.client.log(`Server Started on PORT: ${PORT}`))
     }
 
     auth = (req: Request, res: Response, next: NextFunction): void => {

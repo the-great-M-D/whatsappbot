@@ -17,7 +17,7 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage, { joined }: IParsedArgs): Promise<void> => {
-        const type = joined.trim().toLowerCase() as toggleableGroupActions
+        const type = joined.trim().toLowerCase() as typeof toggleableGroupActions[number]
         if (!Object.values(toggleableGroupActions).includes(type))
             return void M.reply(`🟥 Invalid Option: *${this.client.util.capitalize(type)}*`)
         const data = await this.client.getGroupData(M.from)

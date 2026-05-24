@@ -43,7 +43,7 @@ export default class Command extends BaseCommand {
             undefined,
             undefined,
             `🎋 *Username: ${username}*\n\n🎫 *About: ${
-                (await this.client.getStatus(user)).status || 'None'
+                (await this.client.getStatus(user)) || 'None'
             }*\n\n🌟 *XP: ${data.Xp || 0}*\n\n👑 *Admin: ${
                 M.groupMetadata?.admins?.includes(user) || false
             }*\n\n❌ *Ban ${data.ban || false}*`

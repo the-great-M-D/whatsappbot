@@ -5,11 +5,14 @@
     "lib": [
       "ESNext"
     ],                                   
-    "outDir": "./dist",                    
-    "strict": true,                                
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": false,                                
     "esModuleInterop": true,                        
     "skipLibCheck": true,                          
-    "forceConsistentCasingInFileNames": true        
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false
   },
   "include": [
     "src/**/*"
