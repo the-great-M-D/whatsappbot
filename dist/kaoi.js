@@ -38,7 +38,8 @@ const eventHandler = new EventHandler_1.default(client);
 messageHandler.loadCommands();
 assetHandler.loadAssets();
 messageHandler.loadFeatures();
-new Server_1.default(Number(process.env.PORT) || 4040, client);
+const server = new Server_1.default(Number(process.env.PORT) || 4040, client);
+server.setHandler(messageHandler);
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     client.once('open', () => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c, _d;
