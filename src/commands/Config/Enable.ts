@@ -23,7 +23,7 @@ export default class Command extends BaseCommand {
         const command = this.handler.commands.get(key) || this.handler.aliases.get(key)
         if (feature) {
             const data = await this.client.getFeatures(feature)
-            if (data.state) return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* is already *active*`)
+            if (!!(data as any)) return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* is already *active*`)
             await this.client.DB.feature.updateOne({ feature: feature }, { $set: { state: true } }).catch(() => {
                 return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* failed to enable`)
             })

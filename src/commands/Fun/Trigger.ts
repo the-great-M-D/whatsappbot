@@ -48,7 +48,7 @@ export default class Command extends BaseCommand {
                     256 + LR,
                     54 + LR
                 )
-                GIF.addFrame(ctx)
+                GIF.addFrame(ctx as any)
             }
             GIF.finish()
             return GIF.out.getData()

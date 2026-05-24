@@ -23,7 +23,7 @@ export default class Command extends BaseCommand {
         const feature = key === 'chatbot' ? key : ''
         if (feature) {
             const data = await this.client.getFeatures(feature)
-            if (!data.state) return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* is already *inactive*`)
+            if (!(data as any)) return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* is already *inactive*`)
             await this.client.DB.feature.updateOne({ feature: feature }, { $set: { ['state']: false } }).catch(() => {
                 return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* could not be disabled`)
             })
