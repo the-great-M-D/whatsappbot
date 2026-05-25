@@ -24,7 +24,7 @@ class Command extends BaseCommand_1.default {
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
-            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.user.jid)))
+            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
                 return void M.reply(`❌ Failed to ${this.config.command} as I'm not an admin`);
             if ((_c = M.quoted) === null || _c === void 0 ? void 0 : _c.sender)
                 M.mentioned.push(M.quoted.sender);
@@ -36,7 +36,7 @@ class Command extends BaseCommand_1.default {
                 const username = usr.notify || usr.vname || usr.name || user.split('@')[0];
                 if (!((_e = (_d = M.groupMetadata) === null || _d === void 0 ? void 0 : _d.admins) === null || _e === void 0 ? void 0 : _e.includes(user)))
                     M.reply(`❌ Skipped *${username}* as they're not an admin`);
-                else if (user !== this.client.user.jid) {
+                else if (user !== this.client.botJid) {
                     yield this.client.groupDemoteAdmin(M.from, [user]);
                     M.reply(`➰ Successfully Demoted *${username}*`);
                 }

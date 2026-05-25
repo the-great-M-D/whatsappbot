@@ -24,7 +24,7 @@ class MessageHandler {
             var _a, _b, _c, _d, _e, _f, _g;
             console.log(`[HANDLER] from=${M.from} chat=${M.chat} fromMe=${M.WAMessage.key.fromMe} content=${String(M.content).slice(0, 60)}`);
             if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && ((_a = M.WAMessage.status) !== null && _a !== void 0 ? _a : '').toString() === '2') {
-                M.sender.jid = this.client.user.jid;
+                M.sender.jid = this.client.botJid;
                 M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot';
             }
             else if (M.WAMessage.key.fromMe)
@@ -50,7 +50,7 @@ class MessageHandler {
             }
             if (M.chat !== 'dm' && !M.from.endsWith('@g.us'))
                 return void null;
-            if ((yield this.client.getGroupData(M.from)).mod && ((_c = (_b = M.groupMetadata) === null || _b === void 0 ? void 0 : _b.admins) === null || _c === void 0 ? void 0 : _c.includes(this.client.user.jid)))
+            if ((yield this.client.getGroupData(M.from)).mod && ((_c = (_b = M.groupMetadata) === null || _b === void 0 ? void 0 : _b.admins) === null || _c === void 0 ? void 0 : _c.includes(this.client.botJid)))
                 this.moderate(M);
             if (!args[0] || !args[0].startsWith(this.client.config.prefix))
                 return void this.client.log(`${chalk_1.default.blueBright('MSG')} from ${chalk_1.default.green(sender.username)} in ${chalk_1.default.cyanBright((groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || '')}`);

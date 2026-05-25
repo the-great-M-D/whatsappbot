@@ -13,7 +13,7 @@ export default class MessageHandler {
     handleMessage = async (M: ISimplifiedMessage): Promise<void> => {
         console.log(`[HANDLER] from=${M.from} chat=${M.chat} fromMe=${M.WAMessage.key.fromMe} content=${String(M.content).slice(0,60)}`)
         if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && (M.WAMessage.status ?? '').toString() === '2') {
-            M.sender.jid = this.client.user.jid
+            M.sender.jid = this.client.botJid
             M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot'
         } else if (M.WAMessage.key.fromMe) return void null
 
@@ -42,7 +42,7 @@ export default class MessageHandler {
         }
         if (M.chat !== 'dm' && !M.from.endsWith('@g.us')) return void null
 
-        if ((await this.client.getGroupData(M.from)).mod && M.groupMetadata?.admins?.includes(this.client.user.jid))
+        if ((await this.client.getGroupData(M.from)).mod && M.groupMetadata?.admins?.includes(this.client.botJid))
             this.moderate(M)
         if (!args[0] || !args[0].startsWith(this.client.config.prefix))
             return void this.client.log(

@@ -137,7 +137,7 @@ class Command extends BaseCommand_1.default {
                         return void M.reply(`Mention the person you want to challenge`);
                     if (this.ongoing.has(M.from) || this.challenges.get(M.from))
                         return void M.reply('A Chess session is already going on');
-                    if (challengee === this.client.user.jid)
+                    if (challengee === this.client.botJid)
                         return void M.reply(`Challenge someone else`);
                     this.challenges.set(M.from, { challenger: M.sender.jid, challengee });
                     return void M.reply(`@${M.sender.jid.split('@')[0]} has Challenged @${challengee.split('@')[0]} to a chess match. Use *${this.client.config.prefix}chess accept* to start the challenge`);

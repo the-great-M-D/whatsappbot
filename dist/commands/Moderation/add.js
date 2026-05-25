@@ -28,7 +28,7 @@ class Command extends BaseCommand_1.default {
             const number = parsedArgs.joined.replace(/\D+/g, '').replace(/\s+/g, '').toString();
             console.log(number);
             try {
-                if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.user.jid)))
+                if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
                     return void M.reply(`❌ Failed to ${this.config.command} Make me admin first, !!!!!`);
                 if (!number.length)
                     return void M.reply(`Please write the user's number you want to ${this.config.command}`);

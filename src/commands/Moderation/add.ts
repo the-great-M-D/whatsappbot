@@ -38,7 +38,7 @@ console.log(number) ;
 
         try{
 
-        if (!M.groupMetadata?.admins?.includes(this.client.user.jid))
+        if (!M.groupMetadata?.admins?.includes(this.client.botJid))
 
             return void M.reply(`❌ Failed to ${this.config.command} Make me admin first, !!!!!`)
 
