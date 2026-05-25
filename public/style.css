@@ -504,15 +504,77 @@ body {
 .event-system   { border-left-color: var(--purple); background: color-mix(in srgb, var(--surface) 95%, var(--purple)); }
 
 /* ─── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    /* Dashboard: let it scroll naturally on mobile instead of being locked */
+    #dashboard-view {
+        height: auto;
+        min-height: 100dvh;
+        overflow: visible;
+    }
+    .dash-body {
+        flex-direction: column;
+        overflow: visible;
+    }
+    /* Sidebar becomes a horizontal scrollable strip */
+    .cmd-sidebar {
+        width: 100%;
+        min-width: 0;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        height: auto;
+        max-height: 44px;
+        background: var(--surface);
+    }
+    .sidebar-title { display: none; }
+    .cmd-list {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 0;
+        padding: 0;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .cmd-list::-webkit-scrollbar { display: none; }
+    .cmd-category { border-bottom: none; border-right: 1px solid var(--border); flex-shrink: 0; }
+    .cmd-cat-header { padding: 12px 14px; }
+    .cat-chevron { display: none; }
+    .cmd-cat-body { display: none !important; }
+    /* Feed */
+    .feed-main {
+        flex: 1;
+        min-height: 400px;
+        overflow: visible;
+    }
+    .event-feed {
+        flex: none;
+        overflow-y: visible;
+        max-height: none;
+    }
+}
+
 @media (max-width: 640px) {
-    .cmd-sidebar { display: none; }
+    /* Header: compress */
+    .dash-header {
+        padding: 0 12px;
+        height: 50px;
+        min-height: 50px;
+    }
     .header-stats { display: none; }
-    .brand-name { font-size: 14px; }
-    .uptime-pill { display: none; }
+    .uptime-pill  { display: none; }
+    .brand-name   { font-size: 13px; }
+    /* sidebar hidden entirely at this width */
+    .cmd-sidebar  { display: none; }
 }
 
 @media (max-width: 480px) {
-    .setup-card { padding: 28px 20px; border-radius: 16px; }
+    .setup-card { padding: 28px 16px; border-radius: 14px; }
     .phone-input-row { flex-direction: column; }
-    .code-chunk { font-size: 22px; }
+    .code-chunk { font-size: 20px; }
+    .dash-header { gap: 6px; }
 }
