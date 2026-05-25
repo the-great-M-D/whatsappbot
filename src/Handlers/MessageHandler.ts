@@ -11,6 +11,7 @@ export default class MessageHandler {
     constructor(public client: WAClient) {}
 
     handleMessage = async (M: ISimplifiedMessage): Promise<void> => {
+        console.log(`[HANDLER] from=${M.from} chat=${M.chat} fromMe=${M.WAMessage.key.fromMe} content=${String(M.content).slice(0,60)}`)
         if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && (M.WAMessage.status ?? '').toString() === '2') {
             M.sender.jid = this.client.user.jid
             M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot'
@@ -85,7 +86,9 @@ export default class MessageHandler {
                 await this.client.setXp(M.sender.jid, command.config.baseXp || 10, 50)
             }
         } catch (err: any) {
-            return void this.client.log(err.message, true)
+            this.client.log(`[CMD ERROR] ${command.config.command}: ${err.message}`, true)
+            console.error('[CMD ERROR STACK]', err)
+            try { await M.reply(`❌ Error: ${err.message}`) } catch { /* ignore */ }
         }
     }
 

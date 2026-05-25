@@ -126,7 +126,10 @@ export default class Server extends EventEmitter {
         if (this.eventBuffer.length > 200) this.eventBuffer.shift()
         const payload = `data: ${JSON.stringify(full)}\n\n`
         this.sseClients.forEach((res) => {
-            try { res.write(payload) } catch { this.sseClients.delete(res) }
+            try {
+                res.write(payload)
+                ;(res as any).flush?.()
+            } catch { this.sseClients.delete(res) }
         })
     }
 

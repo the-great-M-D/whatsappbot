@@ -170,11 +170,14 @@ export default class WAClient extends EventEmitter {
             }
         })
 
-        this.sock.ev.on('messages.upsert', async ({ messages }: any) => {
-            const msg = messages[0]
-            if (!msg?.message) return
-            const simplified = await buildSimplifiedMessage(msg, this)
-            if (simplified) this.emit('new-message', simplified)
+        this.sock.ev.on('messages.upsert', async ({ messages, type }: any) => {
+            for (const msg of messages) {
+                if (!msg?.message) continue
+                if (msg.key?.fromMe && type === 'append') continue
+                console.log(`[MSG] upsert type=${type} from=${msg.key?.remoteJid} fromMe=${msg.key?.fromMe}`)
+                const simplified = await buildSimplifiedMessage(msg, this)
+                if (simplified) this.emit('new-message', simplified)
+            }
         })
 
         this.sock.ev.on('group-participants.update', (data: any) => {
