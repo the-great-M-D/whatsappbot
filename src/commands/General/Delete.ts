@@ -21,8 +21,7 @@ export default class Command extends BaseCommand {
         if (M.quoted.sender !== this.client.user.jid) return void M.reply(`I can only delete the messages sent by me`)
         // TODO : if the quoted message of the quoted message is sent by the user, delete it
         await this.client.deleteMessage(M.from, {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            id: (M.quoted.message as any).stanzaId,
+            id: (M.quoted.message as any)?.key?.id || (M.quoted.message as any)?.stanzaId,
             remoteJid: M.from,
             fromMe: true
         })

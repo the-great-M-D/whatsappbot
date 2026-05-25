@@ -25,6 +25,7 @@ export default class WAClient extends EventEmitter {
     public features = new Map<string, boolean>()
     public contacts: Record<string, any> = {}
     public chats: Record<string, any> = {}
+    public groupMetadataCache: Map<string, { data: any; ts: number }> = new Map()
     public QR: Buffer | null = null
     public QRText: string | null = null
     public pairCode: string | null = null
@@ -177,6 +178,7 @@ export default class WAClient extends EventEmitter {
         })
 
         this.sock.ev.on('group-participants.update', (data: any) => {
+            if (data?.id) this.invalidateGroupCache(data.id)
             this.emit('group-participants-update', data)
         })
 
@@ -287,11 +289,20 @@ export default class WAClient extends EventEmitter {
     }
 
     async fetchGroupMetadataFromWA(jid: string): Promise<any> {
+        const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+        const cached = this.groupMetadataCache.get(jid)
+        if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
         try {
-            return await this.sock.groupMetadata(jid)
+            const data = await this.sock.groupMetadata(jid)
+            if (data) this.groupMetadataCache.set(jid, { data, ts: Date.now() })
+            return data
         } catch {
-            return null
+            return cached?.data ?? null
         }
+    }
+
+    invalidateGroupCache(jid: string): void {
+        this.groupMetadataCache.delete(jid)
     }
 
     async getProfilePicture(jid: string): Promise<string | null> {

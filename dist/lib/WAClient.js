@@ -55,6 +55,7 @@ class WAClient extends events_1.default {
         this.features = new Map();
         this.contacts = {};
         this.chats = {};
+        this.groupMetadataCache = new Map();
         this.QR = null;
         this.QRText = null;
         this.pairCode = null;
@@ -197,6 +198,8 @@ class WAClient extends events_1.default {
                     this.emit('new-message', simplified);
             }));
             this.sock.ev.on('group-participants.update', (data) => {
+                if (data === null || data === void 0 ? void 0 : data.id)
+                    this.invalidateGroupCache(data.id);
                 this.emit('group-participants-update', data);
             });
             this.sock.ev.on('contacts.upsert', (contacts) => {
@@ -298,14 +301,25 @@ class WAClient extends events_1.default {
         });
     }
     fetchGroupMetadataFromWA(jid) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+            const cached = this.groupMetadataCache.get(jid);
+            if (cached && Date.now() - cached.ts < CACHE_TTL)
+                return cached.data;
             try {
-                return yield this.sock.groupMetadata(jid);
+                const data = yield this.sock.groupMetadata(jid);
+                if (data)
+                    this.groupMetadataCache.set(jid, { data, ts: Date.now() });
+                return data;
             }
-            catch (_a) {
-                return null;
+            catch (_b) {
+                return (_a = cached === null || cached === void 0 ? void 0 : cached.data) !== null && _a !== void 0 ? _a : null;
             }
         });
+    }
+    invalidateGroupCache(jid) {
+        this.groupMetadataCache.delete(jid);
     }
     getProfilePicture(jid) {
         return __awaiter(this, void 0, void 0, function* () {

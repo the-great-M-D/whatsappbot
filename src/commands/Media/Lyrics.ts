@@ -38,7 +38,8 @@ export default class Command extends BaseCommand {
                         body: video.url,
                         mediaType: 2,
                         thumbnailUrl: video.thumbnail,
-                        mediaUrl: video.url
+                        mediaUrl: video.url,
+                        sourceUrl: video.url
                     },
                     mentionedJid: [M.sender.jid]
                 }

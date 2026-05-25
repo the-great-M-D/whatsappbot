@@ -102,7 +102,7 @@ export default class Command extends BaseCommand {
                 await this.client.getBuffer(
                     (
                         await (this.client.fetch as any)(`https://api.waifu.pics/sfw/${term}`)
-                    ).url
+                    ).data.url
                 )
             ),
             'gif',
