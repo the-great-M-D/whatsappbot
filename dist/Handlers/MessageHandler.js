@@ -21,8 +21,8 @@ class MessageHandler {
         this.commands = new Map();
         this.aliases = new Map();
         this.handleMessage = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f;
-            if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && M.WAMessage.status.toString() === '2') {
+            var _a, _b, _c, _d, _e, _f, _g;
+            if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && ((_a = M.WAMessage.status) !== null && _a !== void 0 ? _a : '').toString() === '2') {
                 M.sender.jid = this.client.user.jid;
                 M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot';
             }
@@ -47,9 +47,9 @@ class MessageHandler {
                     });
                 }
             }
-            if (!M.groupMetadata && !(M.chat === 'dm'))
+            if (M.chat !== 'dm' && !M.from.endsWith('@g.us'))
                 return void null;
-            if ((yield this.client.getGroupData(M.from)).mod && ((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.user.jid)))
+            if ((yield this.client.getGroupData(M.from)).mod && ((_c = (_b = M.groupMetadata) === null || _b === void 0 ? void 0 : _b.admins) === null || _c === void 0 ? void 0 : _c.includes(this.client.user.jid)))
                 this.moderate(M);
             if (!args[0] || !args[0].startsWith(this.client.config.prefix))
                 return void this.client.log(`${chalk_1.default.blueBright('MSG')} from ${chalk_1.default.green(sender.username)} in ${chalk_1.default.cyanBright((groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || '')}`);
@@ -67,12 +67,12 @@ class MessageHandler {
             const state = yield this.client.DB.disabledcommands.findOne({ command: command.config.command });
             if (state)
                 return void M.reply(`❌ This command is disabled${state.reason ? ` for ${state.reason}` : ''}`);
-            if (!((_c = command.config) === null || _c === void 0 ? void 0 : _c.dm) && M.chat === 'dm')
+            if (!((_d = command.config) === null || _d === void 0 ? void 0 : _d.dm) && M.chat === 'dm')
                 return void M.reply('This command can only be used in groups');
-            if (((_d = command.config) === null || _d === void 0 ? void 0 : _d.modsOnly) && !((_e = this.client.config.mods) === null || _e === void 0 ? void 0 : _e.includes(M.sender.jid))) {
+            if (((_e = command.config) === null || _e === void 0 ? void 0 : _e.modsOnly) && !((_f = this.client.config.mods) === null || _f === void 0 ? void 0 : _f.includes(M.sender.jid))) {
                 return void M.reply(`Only MODS are allowed to use this command`);
             }
-            if (((_f = command.config) === null || _f === void 0 ? void 0 : _f.adminOnly) && !M.sender.isAdmin)
+            if (((_g = command.config) === null || _g === void 0 ? void 0 : _g.adminOnly) && !M.sender.isAdmin)
                 return void M.reply(`Only admins are allowed to use this command`);
             try {
                 yield command.run(M, this.parseArgs(args));
@@ -96,11 +96,11 @@ class MessageHandler {
                 const groupinvites = M.urls.filter((url) => url.includes('chat.whatsapp.com'));
                 if (groupinvites.length) {
                     groupinvites.forEach((invite) => __awaiter(this, void 0, void 0, function* () {
-                        var _g;
+                        var _h;
                         const splitInvite = invite.split('/');
                         const z = yield this.client.groupInviteCode(M.from);
                         if (z !== splitInvite[splitInvite.length - 1]) {
-                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_g = M.groupMetadata) === null || _g === void 0 ? void 0 : _g.subject) || ''}`);
+                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_h = M.groupMetadata) === null || _h === void 0 ? void 0 : _h.subject) || ''}`);
                             return void (yield this.client.groupRemove(M.from, [M.sender.jid]));
                         }
                     }));

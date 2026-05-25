@@ -66,7 +66,7 @@ export default class Command extends BaseCommand {
                         video: this.client.assets.get('chess-win') || Buffer.from(''),
                         caption: `@${w.split('@')[0]} Won! 🎊`,
                         gifPlayback: true,
-                        mentions: [w]
+                        contextInfo: { mentionedJid: [w] }
                     }
                 )
         }

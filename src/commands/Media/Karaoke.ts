@@ -32,7 +32,8 @@ export default class Command extends BaseCommand {
                         body: `🤹 Handcrafted for you by M_D 🤹`,
                         mediaType: 2,
                         thumbnailUrl: videos[0].thumbnail,
-                        mediaUrl: videos[0].url
+                        mediaUrl: videos[0].url,
+                        sourceUrl: videos[0].url
                     }
                 }
             }, { quoted: M.WAMessage })

@@ -11,7 +11,7 @@ export default class MessageHandler {
     constructor(public client: WAClient) {}
 
     handleMessage = async (M: ISimplifiedMessage): Promise<void> => {
-        if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && M.WAMessage.status.toString() === '2') {
+        if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && (M.WAMessage.status ?? '').toString() === '2') {
             M.sender.jid = this.client.user.jid
             M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot'
         } else if (M.WAMessage.key.fromMe) return void null
@@ -39,7 +39,7 @@ export default class MessageHandler {
                     })
             }
         }
-        if (!M.groupMetadata && !(M.chat === 'dm')) return void null
+        if (M.chat !== 'dm' && !M.from.endsWith('@g.us')) return void null
 
         if ((await this.client.getGroupData(M.from)).mod && M.groupMetadata?.admins?.includes(this.client.user.jid))
             this.moderate(M)

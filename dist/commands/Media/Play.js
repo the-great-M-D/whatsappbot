@@ -46,7 +46,8 @@ class Command extends BaseCommand_1.default {
                         body: `author : ${videos[0].author.name.substr(0, 20)}\nSent Via : M_D Bot's 🤹`,
                         mediaType: 2,
                         thumbnailUrl: `https://i.ytimg.com/vi/${audio.id}/hqdefault.jpg`,
-                        mediaUrl: audio.url
+                        mediaUrl: audio.url,
+                        sourceUrl: audio.url
                     }
                 }
             }, { quoted: M.WAMessage })

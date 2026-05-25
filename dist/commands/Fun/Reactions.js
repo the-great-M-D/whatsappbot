@@ -107,7 +107,7 @@ class Command extends BaseCommand_1.default {
             M.mentioned[0] === M.sender.jid
                 ? (grammar = Reactions[`${term}`].pop() || Reactions[`${term}`][0])
                 : (grammar = Reactions[`${term}`][0]);
-            M.reply(yield this.client.util.GIFBufferToVideoBuffer(yield this.client.getBuffer((yield this.client.fetch(`https://api.waifu.pics/sfw/${term}`)).url)), 'gif', 'video/mp4', [M.sender.jid, ...M.mentioned], `*@${M.sender.jid.split('@')[0]} ${grammar} ${M.mentioned
+            M.reply(yield this.client.util.GIFBufferToVideoBuffer(yield this.client.getBuffer((yield this.client.fetch(`https://api.waifu.pics/sfw/${term}`)).data.url)), 'gif', 'video/mp4', [M.sender.jid, ...M.mentioned], `*@${M.sender.jid.split('@')[0]} ${grammar} ${M.mentioned
                 .map((user) => (user === M.sender.jid ? 'Themselves' : `@${user.split('@')[0]}`))
                 .join(', ')}*`);
         });

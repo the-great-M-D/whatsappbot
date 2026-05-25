@@ -96,7 +96,7 @@ class Command extends BaseCommand_1.default {
                         video: this.client.assets.get('chess-win') || Buffer.from(''),
                         caption: `@${w.split('@')[0]} Won! 🎊`,
                         gifPlayback: true,
-                        mentions: [w]
+                        contextInfo: { mentionedJid: [w] }
                     });
             });
             const print = (msg) => {

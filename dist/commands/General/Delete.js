@@ -24,15 +24,14 @@ class Command extends BaseCommand_1.default {
             baseXp: 0
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            var _a, _b, _c, _d;
             if (!((_a = M === null || M === void 0 ? void 0 : M.quoted) === null || _a === void 0 ? void 0 : _a.message))
                 return void M.reply('Quote the message you want to delete');
             if (M.quoted.sender !== this.client.user.jid)
                 return void M.reply(`I can only delete the messages sent by me`);
             // TODO : if the quoted message of the quoted message is sent by the user, delete it
             yield this.client.deleteMessage(M.from, {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                id: M.quoted.message.stanzaId,
+                id: ((_c = (_b = M.quoted.message) === null || _b === void 0 ? void 0 : _b.key) === null || _c === void 0 ? void 0 : _c.id) || ((_d = M.quoted.message) === null || _d === void 0 ? void 0 : _d.stanzaId),
                 remoteJid: M.from,
                 fromMe: true
             });
