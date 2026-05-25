@@ -76,5 +76,9 @@ const start = () => __awaiter(void 0, void 0, void 0, function* () {
     client.on('group-participants-update', eventHandler.handle);
     yield client.connect();
 });
-client.log(chalk_1.default.yellow('Running without database — XP, bans and group configs will not persist'));
-start();
+client.DB.connect().then(() => {
+    if (!client.DB.connected) {
+        client.log(chalk_1.default.yellow('Running without database — XP, bans and group configs will not persist'));
+    }
+    start();
+});
