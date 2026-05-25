@@ -62,6 +62,8 @@ class WAClient extends events_1.default {
         this.state = 'close';
         this.registered = false;
         this.intentionalStop = false;
+        this.reconnectAttempts = 0;
+        this.MAX_RECONNECTS = 5;
         this.config = config;
     }
     log(msg, error = false) {
@@ -147,6 +149,7 @@ class WAClient extends events_1.default {
                 var _a, _b, _c, _d;
                 if (connection === 'open') {
                     this.state = 'open';
+                    this.reconnectAttempts = 0;
                     this.pairCode = null;
                     this.pairCodePhone = null;
                     this.user = this.sock.user;
@@ -155,13 +158,34 @@ class WAClient extends events_1.default {
                 }
                 if (connection === 'close') {
                     this.state = 'close';
+                    this.QR = null;
+                    this.QRText = null;
                     if (this.intentionalStop) {
                         this.intentionalStop = false;
+                        this.reconnectAttempts = 0;
                         return;
                     }
                     const statusCode = (_d = (_c = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _c === void 0 ? void 0 : _c.output) === null || _d === void 0 ? void 0 : _d.statusCode;
-                    this.log(`Connection closed (${statusCode !== null && statusCode !== void 0 ? statusCode : 'unknown'}), reconnecting in 5s...`);
-                    setTimeout(() => this.connect(), 5000);
+                    // 401 = logged out, 440 = session replaced by another device
+                    if (statusCode === 401 || statusCode === 440) {
+                        const reason = statusCode === 440
+                            ? 'session was replaced by another device'
+                            : 'logged out by WhatsApp';
+                        this.log(`Disconnected: ${reason}. Clearing credentials and resetting to QR...`, true);
+                        this.reconnectAttempts = 0;
+                        this.clearAuth().then(() => setTimeout(() => this.connect(), 3000));
+                        return;
+                    }
+                    this.reconnectAttempts++;
+                    if (this.reconnectAttempts > this.MAX_RECONNECTS) {
+                        this.log(`Too many reconnect attempts (${this.reconnectAttempts}). Clearing credentials and resetting to QR...`, true);
+                        this.reconnectAttempts = 0;
+                        this.clearAuth().then(() => setTimeout(() => this.connect(), 5000));
+                        return;
+                    }
+                    const delay = Math.min(5000 * this.reconnectAttempts, 30000);
+                    this.log(`Connection closed (${statusCode !== null && statusCode !== void 0 ? statusCode : 'unknown'}), reconnecting in ${delay / 1000}s... (attempt ${this.reconnectAttempts})`);
+                    setTimeout(() => this.connect(), delay);
                 }
             });
             this.sock.ev.on('messages.upsert', ({ messages }) => __awaiter(this, void 0, void 0, function* () {
