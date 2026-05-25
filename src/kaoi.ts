@@ -73,5 +73,9 @@ const start = async () => {
     await client.connect()
 }
 
-client.log(chalk.yellow('Running without database — XP, bans and group configs will not persist'))
-start()
+client.DB.connect().then(() => {
+    if (!client.DB.connected) {
+        client.log(chalk.yellow('Running without database — XP, bans and group configs will not persist'))
+    }
+    start()
+})
