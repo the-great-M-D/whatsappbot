@@ -37,6 +37,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.toggleableGroupActions = void 0;
 const baileys_1 = __importStar(require("@whiskeysockets/baileys"));
+const MongoAuthState_1 = require("./MongoAuthState");
+const fs_extra_1 = require("fs-extra");
 const pino_1 = __importDefault(require("pino"));
 const events_1 = __importDefault(require("events"));
 const Utils_1 = __importDefault(require("./Utils"));
@@ -78,9 +80,10 @@ class WAClient extends events_1.default {
     }
     clearAuth() {
         return __awaiter(this, void 0, void 0, function* () {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const fse = require('fs-extra');
-            yield fse.remove(`auth/${this.config.session}`).catch(() => { });
+            yield (0, fs_extra_1.remove)(`auth/${this.config.session}`).catch(() => { });
+            if (this.DB.connected) {
+                yield (0, MongoAuthState_1.clearAuthFromDB)(this.DB.session);
+            }
         });
     }
     connectWithPhone(phone) {
@@ -102,7 +105,12 @@ class WAClient extends events_1.default {
     connect(pairingPhone) {
         return __awaiter(this, void 0, void 0, function* () {
             this.intentionalStop = false;
-            const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(`auth/${this.config.session}`);
+            const authDir = `auth/${this.config.session}`;
+            // If DB is connected and local auth files are missing, restore from MongoDB
+            if (this.DB.connected) {
+                yield (0, MongoAuthState_1.restoreAuthFromDB)(this.DB.session, authDir);
+            }
+            const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(authDir);
             const { version } = yield (0, baileys_1.fetchLatestBaileysVersion)();
             const isRegistered = !!state.creds.registered;
             this.sock = (0, baileys_1.default)({
@@ -111,7 +119,14 @@ class WAClient extends events_1.default {
                 auth: state,
                 printQRInTerminal: false
             });
-            this.sock.ev.on('creds.update', saveCreds);
+            // Wrap saveCreds to also back up to MongoDB after every credentials update
+            const saveAndBackup = () => __awaiter(this, void 0, void 0, function* () {
+                yield saveCreds();
+                if (this.DB.connected) {
+                    yield (0, MongoAuthState_1.backupAuthToDB)(this.DB.session, authDir);
+                }
+            });
+            this.sock.ev.on('creds.update', saveAndBackup);
             if (pairingPhone && !isRegistered) {
                 setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                     try {

@@ -3,6 +3,8 @@ import makeWASocket, {
     fetchLatestBaileysVersion,
     downloadMediaMessage
 } from '@whiskeysockets/baileys'
+import { backupAuthToDB, restoreAuthFromDB, clearAuthFromDB } from './MongoAuthState'
+import { remove as fsRemove } from 'fs-extra'
 
 import P from 'pino'
 import EventEmitter from 'events'
@@ -50,9 +52,10 @@ export default class WAClient extends EventEmitter {
     }
 
     private async clearAuth() {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const fse = require('fs-extra')
-        await fse.remove(`auth/${this.config.session}`).catch(() => { /* ignore */ })
+        await fsRemove(`auth/${this.config.session}`).catch(() => { /* ignore */ })
+        if (this.DB.connected) {
+            await clearAuthFromDB(this.DB.session)
+        }
     }
 
     async connectWithPhone(phone: string): Promise<string> {
@@ -74,7 +77,14 @@ export default class WAClient extends EventEmitter {
 
     async connect(pairingPhone?: string) {
         this.intentionalStop = false
-        const { state, saveCreds } = await useMultiFileAuthState(`auth/${this.config.session}`)
+        const authDir = `auth/${this.config.session}`
+
+        // If DB is connected and local auth files are missing, restore from MongoDB
+        if (this.DB.connected) {
+            await restoreAuthFromDB(this.DB.session, authDir)
+        }
+
+        const { state, saveCreds } = await useMultiFileAuthState(authDir)
         const { version } = await fetchLatestBaileysVersion()
         const isRegistered = !!(state.creds as any).registered
 
@@ -85,7 +95,14 @@ export default class WAClient extends EventEmitter {
             printQRInTerminal: false
         })
 
-        this.sock.ev.on('creds.update', saveCreds)
+        // Wrap saveCreds to also back up to MongoDB after every credentials update
+        const saveAndBackup = async () => {
+            await saveCreds()
+            if (this.DB.connected) {
+                await backupAuthToDB(this.DB.session, authDir)
+            }
+        }
+        this.sock.ev.on('creds.update', saveAndBackup)
 
         if (pairingPhone && !isRegistered) {
             setTimeout(async () => {
