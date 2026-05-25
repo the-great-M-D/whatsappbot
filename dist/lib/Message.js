@@ -62,8 +62,13 @@ function buildSimplifiedMessage(msg, client) {
                 try {
                     const raw = yield client.fetchGroupMetadataFromWA(from);
                     if (raw) {
-                        groupMetadata = Object.assign(Object.assign({}, raw), { admins: raw.participants
-                                .filter((p) => p.admin || p.superAdmin)
+                        groupMetadata = Object.assign(Object.assign({}, raw), { participants: raw.participants.map((p) => ({
+                                jid: p.id,
+                                admin: p.admin,
+                                isAdmin: !!(p.admin),
+                                isSuperAdmin: p.admin === 'superadmin'
+                            })), admins: raw.participants
+                                .filter((p) => p.admin)
                                 .map((p) => p.id) });
                     }
                 }

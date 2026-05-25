@@ -26,7 +26,7 @@ class Command extends BaseCommand_1.default {
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
             let text = '*Action*\n\n';
-            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.user.jid)))
+            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
                 return void M.reply(`❌ Failed to ${this.config.command} as I'm not the group admin`);
             if ((_c = M.quoted) === null || _c === void 0 ? void 0 : _c.sender)
                 M.mentioned.push(M.quoted.sender);
@@ -40,7 +40,7 @@ class Command extends BaseCommand_1.default {
                     text += `❌ Skipped *@${user.split('@')[0]}* as they're owner.\n`;
                 }
                 // check if user is Bot
-                else if (this.client.user.jid === user) {
+                else if (this.client.botJid === user) {
                     text += `❌ Skipped *@${user.split('@')[0]}* as they're me.\n`;
                 }
                 else {

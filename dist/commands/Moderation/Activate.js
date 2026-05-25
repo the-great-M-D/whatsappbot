@@ -27,7 +27,7 @@ class Command extends BaseCommand_1.default {
         });
         this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
             const type = joined.trim().toLowerCase();
-            if (!Object.values(WAClient_1.toggleableGroupActions).includes(type))
+            if (!WAClient_1.activatableFeatures.includes(type))
                 return void M.reply(`🟥 Invalid Option: *${this.client.util.capitalize(type)}*`);
             const data = yield this.client.getGroupData(M.from);
             if (data[type])

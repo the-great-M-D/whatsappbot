@@ -17,8 +17,8 @@ export default class Command extends BaseCommand {
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
         const immortals = this.client.config.mods
-            ? [M.sender.jid, this.client.user.jid, ...this.client.config.mods]
-            : [M.sender.jid, this.client.user.jid]
+            ? [M.sender.jid, this.client.botJid, ...this.client.config.mods]
+            : [M.sender.jid, this.client.botJid]
 
         if (M.quoted?.sender) M.mentioned.push(M.quoted.sender)
         if (!M.mentioned.length || !M.mentioned[0]) return void M.reply('Mention the user whom you want to ban')

@@ -1,6 +1,6 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
-import WAClient, { toggleableGroupActions } from '../../lib/WAClient'
+import WAClient, { activatableFeatures } from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
 
 export default class Command extends BaseCommand {
@@ -17,8 +17,8 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage, { joined }: IParsedArgs): Promise<void> => {
-        const type = joined.trim().toLowerCase() as typeof toggleableGroupActions[number]
-        if (!Object.values(toggleableGroupActions).includes(type))
+        const type = joined.trim().toLowerCase() as typeof activatableFeatures[number]
+        if (!(activatableFeatures as readonly string[]).includes(type))
             return void M.reply(`🟥 Invalid Option: *${this.client.util.capitalize(type)}*`)
         const data = await this.client.getGroupData(M.from)
         if (!data[type]) return void M.reply(`🟨 *${this.client.util.capitalize(type)}* is already *inactive*`)

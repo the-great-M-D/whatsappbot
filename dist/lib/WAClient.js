@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toggleableGroupActions = void 0;
+exports.activatableFeatures = exports.toggleableGroupActions = void 0;
 const baileys_1 = __importStar(require("@whiskeysockets/baileys"));
 const MongoAuthState_1 = require("./MongoAuthState");
 const fs_extra_1 = require("fs-extra");
@@ -45,6 +45,7 @@ const Utils_1 = __importDefault(require("./Utils"));
 const DatabaseHandler_1 = __importDefault(require("../Handlers/DatabaseHandler"));
 const Message_1 = require("./Message");
 exports.toggleableGroupActions = ['announce', 'not_announce', 'locked', 'unlocked'];
+exports.activatableFeatures = ['events', 'mod', 'safe', 'nsfw', 'cmd', 'invitelink'];
 class WAClient extends events_1.default {
     constructor(config) {
         super();
@@ -66,6 +67,11 @@ class WAClient extends events_1.default {
         this.reconnectAttempts = 0;
         this.MAX_RECONNECTS = 5;
         this.config = config;
+    }
+    get botJid() {
+        var _a;
+        const id = ((_a = this.user) === null || _a === void 0 ? void 0 : _a.id) || '';
+        return id.replace(/:(\d+)@/, '@');
     }
     log(msg, error = false) {
         console.log(error ? '❌' : '✅', msg);

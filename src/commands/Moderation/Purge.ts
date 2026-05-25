@@ -18,7 +18,7 @@ export default class Command extends BaseCommand {
     run = async (M: ISimplifiedMessage): Promise<void> => {
         
             
-        if (!M.groupMetadata?.admins?.includes(this.client.user.jid))
+        if (!M.groupMetadata?.admins?.includes(this.client.botJid))
             return void M.reply("I can't remove without being an admin")
         if (!this.purgeSet.has(M.groupMetadata?.id || '')) {
             this.addToPurge(M.groupMetadata?.id || '')
@@ -32,7 +32,7 @@ export default class Command extends BaseCommand {
         })
         // now remove all admins except yourself and the owner
         M.groupMetadata.admins.map(async (user) => {
-            if (user !== M.sender.jid && user !== this.client.user.jid)
+            if (user !== M.sender.jid && user !== this.client.botJid)
                 await this.client.groupRemove(M.from, [user]).catch(() => console.log('error removing admin'))
         })
         await M.reply('Done!').catch(() => console.log('Failed to send message'))

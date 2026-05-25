@@ -59,8 +59,14 @@ export async function buildSimplifiedMessage(
                 if (raw) {
                     groupMetadata = {
                         ...raw,
+                        participants: raw.participants.map((p: any) => ({
+                            jid: p.id,
+                            admin: p.admin,
+                            isAdmin: !!(p.admin),
+                            isSuperAdmin: p.admin === 'superadmin'
+                        })),
                         admins: raw.participants
-                            .filter((p: any) => p.admin || p.superAdmin)
+                            .filter((p: any) => p.admin)
                             .map((p: any) => p.id)
                     }
                 }

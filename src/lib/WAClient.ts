@@ -14,6 +14,7 @@ import { buildSimplifiedMessage } from './Message'
 import { IGroupModel, IUserModel } from '../typings'
 
 export const toggleableGroupActions = ['announce', 'not_announce', 'locked', 'unlocked'] as const
+export const activatableFeatures = ['events', 'mod', 'safe', 'nsfw', 'cmd', 'invitelink'] as const
 
 export default class WAClient extends EventEmitter {
     public sock: any
@@ -39,6 +40,11 @@ export default class WAClient extends EventEmitter {
     constructor(config: any) {
         super()
         this.config = config
+    }
+
+    get botJid(): string {
+        const id: string = this.user?.id || ''
+        return id.replace(/:(\d+)@/, '@')
     }
 
     log(msg: string, error = false) {

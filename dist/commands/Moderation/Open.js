@@ -25,7 +25,7 @@ class Command extends BaseCommand_1.default {
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
-            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.user.jid)))
+            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
                 return void M.reply("I can't open the group without being an admin");
             if (!M.groupMetadata.announce)
                 return void M.reply('Group is already open');

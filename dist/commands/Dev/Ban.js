@@ -26,8 +26,8 @@ class Command extends BaseCommand_1.default {
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a;
             const immortals = this.client.config.mods
-                ? [M.sender.jid, this.client.user.jid, ...this.client.config.mods]
-                : [M.sender.jid, this.client.user.jid];
+                ? [M.sender.jid, this.client.botJid, ...this.client.config.mods]
+                : [M.sender.jid, this.client.botJid];
             if ((_a = M.quoted) === null || _a === void 0 ? void 0 : _a.sender)
                 M.mentioned.push(M.quoted.sender);
             if (!M.mentioned.length || !M.mentioned[0])

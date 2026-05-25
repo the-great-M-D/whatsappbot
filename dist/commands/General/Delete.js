@@ -27,7 +27,7 @@ class Command extends BaseCommand_1.default {
             var _a, _b, _c, _d;
             if (!((_a = M === null || M === void 0 ? void 0 : M.quoted) === null || _a === void 0 ? void 0 : _a.message))
                 return void M.reply('Quote the message you want to delete');
-            if (M.quoted.sender !== this.client.user.jid)
+            if (M.quoted.sender !== this.client.botJid)
                 return void M.reply(`I can only delete the messages sent by me`);
             // TODO : if the quoted message of the quoted message is sent by the user, delete it
             yield this.client.deleteMessage(M.from, {

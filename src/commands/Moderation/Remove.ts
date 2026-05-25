@@ -18,7 +18,7 @@ export default class Command extends BaseCommand {
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
         let text = '*Action*\n\n'
-        if (!M.groupMetadata?.admins?.includes(this.client.user.jid))
+        if (!M.groupMetadata?.admins?.includes(this.client.botJid))
             return void M.reply(`❌ Failed to ${this.config.command} as I'm not the group admin`)
         if (M.quoted?.sender) M.mentioned.push(M.quoted.sender)
         if (!M.mentioned.length) return void M.reply(`Please tag the users you want to ${this.config.command}`)
@@ -29,7 +29,7 @@ export default class Command extends BaseCommand {
                 text += `❌ Skipped *@${user.split('@')[0]}* as they're owner.\n`
             }
             // check if user is Bot
-            else if (this.client.user.jid === user) {
+            else if (this.client.botJid === user) {
                 text += `❌ Skipped *@${user.split('@')[0]}* as they're me.\n`
             } else {
                 text += `🟥 Removed *@${user.split('@')[0]}*\n`
