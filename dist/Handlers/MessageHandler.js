@@ -22,6 +22,7 @@ class MessageHandler {
         this.aliases = new Map();
         this.handleMessage = (M) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d, _e, _f, _g;
+            console.log(`[HANDLER] from=${M.from} chat=${M.chat} fromMe=${M.WAMessage.key.fromMe} content=${String(M.content).slice(0, 60)}`);
             if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && ((_a = M.WAMessage.status) !== null && _a !== void 0 ? _a : '').toString() === '2') {
                 M.sender.jid = this.client.user.jid;
                 M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot';
@@ -86,7 +87,12 @@ class MessageHandler {
                 }
             }
             catch (err) {
-                return void this.client.log(err.message, true);
+                this.client.log(`[CMD ERROR] ${command.config.command}: ${err.message}`, true);
+                console.error('[CMD ERROR STACK]', err);
+                try {
+                    yield M.reply(`❌ Error: ${err.message}`);
+                }
+                catch ( /* ignore */_h) { /* ignore */ }
             }
         });
         this.moderate = (M) => __awaiter(this, void 0, void 0, function* () {
@@ -96,11 +102,11 @@ class MessageHandler {
                 const groupinvites = M.urls.filter((url) => url.includes('chat.whatsapp.com'));
                 if (groupinvites.length) {
                     groupinvites.forEach((invite) => __awaiter(this, void 0, void 0, function* () {
-                        var _h;
+                        var _j;
                         const splitInvite = invite.split('/');
                         const z = yield this.client.groupInviteCode(M.from);
                         if (z !== splitInvite[splitInvite.length - 1]) {
-                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_h = M.groupMetadata) === null || _h === void 0 ? void 0 : _h.subject) || ''}`);
+                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_j = M.groupMetadata) === null || _j === void 0 ? void 0 : _j.subject) || ''}`);
                             return void (yield this.client.groupRemove(M.from, [M.sender.jid]));
                         }
                     }));

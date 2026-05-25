@@ -135,10 +135,12 @@ class Server extends events_1.EventEmitter {
             this.eventBuffer.shift();
         const payload = `data: ${JSON.stringify(full)}\n\n`;
         this.sseClients.forEach((res) => {
+            var _a, _b;
             try {
                 res.write(payload);
+                (_b = (_a = res).flush) === null || _b === void 0 ? void 0 : _b.call(_a);
             }
-            catch (_a) {
+            catch (_c) {
                 this.sseClients.delete(res);
             }
         });

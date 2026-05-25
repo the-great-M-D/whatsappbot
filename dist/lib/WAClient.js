@@ -189,13 +189,18 @@ class WAClient extends events_1.default {
                     setTimeout(() => this.connect(), delay);
                 }
             });
-            this.sock.ev.on('messages.upsert', ({ messages }) => __awaiter(this, void 0, void 0, function* () {
-                const msg = messages[0];
-                if (!(msg === null || msg === void 0 ? void 0 : msg.message))
-                    return;
-                const simplified = yield (0, Message_1.buildSimplifiedMessage)(msg, this);
-                if (simplified)
-                    this.emit('new-message', simplified);
+            this.sock.ev.on('messages.upsert', ({ messages, type }) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b, _c;
+                for (const msg of messages) {
+                    if (!(msg === null || msg === void 0 ? void 0 : msg.message))
+                        continue;
+                    if (((_a = msg.key) === null || _a === void 0 ? void 0 : _a.fromMe) && type === 'append')
+                        continue;
+                    console.log(`[MSG] upsert type=${type} from=${(_b = msg.key) === null || _b === void 0 ? void 0 : _b.remoteJid} fromMe=${(_c = msg.key) === null || _c === void 0 ? void 0 : _c.fromMe}`);
+                    const simplified = yield (0, Message_1.buildSimplifiedMessage)(msg, this);
+                    if (simplified)
+                        this.emit('new-message', simplified);
+                }
             }));
             this.sock.ev.on('group-participants.update', (data) => {
                 if (data === null || data === void 0 ? void 0 : data.id)
