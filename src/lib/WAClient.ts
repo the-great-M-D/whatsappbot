@@ -32,6 +32,8 @@ export default class WAClient extends EventEmitter {
     public state: string = 'close'
     public registered: boolean = false
     private intentionalStop: boolean = false
+    private reconnectAttempts: number = 0
+    private readonly MAX_RECONNECTS = 5
 
     constructor(config: any) {
         super()
@@ -123,6 +125,7 @@ export default class WAClient extends EventEmitter {
         this.sock.ev.on('connection.update', ({ connection, lastDisconnect }: any) => {
             if (connection === 'open') {
                 this.state = 'open'
+                this.reconnectAttempts = 0
                 this.pairCode = null
                 this.pairCodePhone = null
                 this.user = this.sock.user
@@ -132,13 +135,37 @@ export default class WAClient extends EventEmitter {
 
             if (connection === 'close') {
                 this.state = 'close'
+                this.QR = null
+                this.QRText = null
                 if (this.intentionalStop) {
                     this.intentionalStop = false
+                    this.reconnectAttempts = 0
                     return
                 }
                 const statusCode = (lastDisconnect?.error as any)?.output?.statusCode
-                this.log(`Connection closed (${statusCode ?? 'unknown'}), reconnecting in 5s...`)
-                setTimeout(() => this.connect(), 5000)
+
+                // 401 = logged out, 440 = session replaced by another device
+                if (statusCode === 401 || statusCode === 440) {
+                    const reason = statusCode === 440
+                        ? 'session was replaced by another device'
+                        : 'logged out by WhatsApp'
+                    this.log(`Disconnected: ${reason}. Clearing credentials and resetting to QR...`, true)
+                    this.reconnectAttempts = 0
+                    this.clearAuth().then(() => setTimeout(() => this.connect(), 3000))
+                    return
+                }
+
+                this.reconnectAttempts++
+                if (this.reconnectAttempts > this.MAX_RECONNECTS) {
+                    this.log(`Too many reconnect attempts (${this.reconnectAttempts}). Clearing credentials and resetting to QR...`, true)
+                    this.reconnectAttempts = 0
+                    this.clearAuth().then(() => setTimeout(() => this.connect(), 5000))
+                    return
+                }
+
+                const delay = Math.min(5000 * this.reconnectAttempts, 30000)
+                this.log(`Connection closed (${statusCode ?? 'unknown'}), reconnecting in ${delay / 1000}s... (attempt ${this.reconnectAttempts})`)
+                setTimeout(() => this.connect(), delay)
             }
         })
 
