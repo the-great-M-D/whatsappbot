@@ -74,6 +74,10 @@ const start = () => __awaiter(void 0, void 0, void 0, function* () {
     }));
     client.on('new-message', messageHandler.handleMessage);
     client.on('group-participants-update', eventHandler.handle);
+    client.on('killswitch', () => {
+        client.log('Killswitch triggered — forcing reconnect for re-pair');
+        client.forceReconnect();
+    });
     yield client.connect();
 });
 client.DB.connect().then(() => {

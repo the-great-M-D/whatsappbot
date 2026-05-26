@@ -88,6 +88,11 @@ class WAClient extends events_1.default {
         }
         this.state = 'close';
     }
+    forceReconnect() {
+        this.stopSocket();
+        this.reconnectAttempts = 0;
+        setTimeout(() => this.connect(), 1000);
+    }
     clearAuth() {
         return __awaiter(this, void 0, void 0, function* () {
             yield (0, fs_extra_1.remove)(`auth/${this.config.session}`).catch(() => { });

@@ -70,6 +70,11 @@ const start = async () => {
 
     client.on('group-participants-update', eventHandler.handle)
 
+    client.on('killswitch', () => {
+        client.log('Killswitch triggered — forcing reconnect for re-pair')
+        client.forceReconnect()
+    })
+
     await client.connect()
 }
 
