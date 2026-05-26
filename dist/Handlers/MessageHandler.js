@@ -53,22 +53,27 @@ class MessageHandler {
             }
             if (M.chat !== 'dm' && !M.from.endsWith('@g.us'))
                 return void null;
-            if ((yield this.client.getGroupData(M.from)).mod && ((_e = (_d = M.groupMetadata) === null || _d === void 0 ? void 0 : _d.admins) === null || _e === void 0 ? void 0 : _e.includes(this.client.botJid)))
+            // Fetch group data once and reuse for both mod check and cmd check
+            const groupData = M.chat === 'group' ? yield this.client.getGroupData(M.from) : null;
+            if ((groupData === null || groupData === void 0 ? void 0 : groupData.mod) && ((_e = (_d = M.groupMetadata) === null || _d === void 0 ? void 0 : _d.admins) === null || _e === void 0 ? void 0 : _e.includes(this.client.botJid)))
                 this.moderate(M);
             if (!args[0] || !args[0].startsWith(this.client.config.prefix))
                 return void this.client.log(`${chalk_1.default.blueBright('MSG')} from ${chalk_1.default.green(sender.username)} in ${chalk_1.default.cyanBright((groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || '')}`);
             const cmd = args[0].slice(this.client.config.prefix.length).toLowerCase();
             const allowedCommands = ['activate', 'deactivate', 'act', 'deact'];
-            if (!(allowedCommands.includes(cmd) || (yield this.client.getGroupData(M.from)).cmd))
+            if (!(allowedCommands.includes(cmd) || (groupData === null || groupData === void 0 ? void 0 : groupData.cmd)))
                 return void this.client.log(`${chalk_1.default.green('CMD')} ${chalk_1.default.yellow(`${args[0]}[${args.length - 1}]`)} from ${chalk_1.default.green(sender.username)} in ${chalk_1.default.cyanBright((groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || 'DM')}`);
             const command = this.commands.get(cmd) || this.aliases.get(cmd);
             this.client.log(`${chalk_1.default.green('CMD')} ${chalk_1.default.yellow(`${args[0]}[${args.length - 1}]`)} from ${chalk_1.default.green(sender.username)} in ${chalk_1.default.cyanBright((groupMetadata === null || groupMetadata === void 0 ? void 0 : groupMetadata.subject) || 'DM')}`);
             if (!command)
                 return void M.reply('No Command Found! Try using one from the help list.');
-            const user = yield this.client.getUser(M.sender.jid);
+            // Run user lookup and disabled-command check in parallel
+            const [user, state] = yield Promise.all([
+                this.client.getUser(M.sender.jid),
+                this.client.DB.disabledcommands.findOne({ command: command.config.command })
+            ]);
             if (user.ban)
                 return void M.reply("You're Banned from using commands.");
-            const state = yield this.client.DB.disabledcommands.findOne({ command: command.config.command });
             if (state)
                 return void M.reply(`❌ This command is disabled${state.reason ? ` for ${state.reason}` : ''}`);
             if (!((_f = command.config) === null || _f === void 0 ? void 0 : _f.dm) && M.chat === 'dm')

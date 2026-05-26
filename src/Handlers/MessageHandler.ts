@@ -46,7 +46,9 @@ export default class MessageHandler {
         }
         if (M.chat !== 'dm' && !M.from.endsWith('@g.us')) return void null
 
-        if ((await this.client.getGroupData(M.from)).mod && M.groupMetadata?.admins?.includes(this.client.botJid))
+        // Fetch group data once and reuse for both mod check and cmd check
+        const groupData = M.chat === 'group' ? await this.client.getGroupData(M.from) : null
+        if (groupData?.mod && M.groupMetadata?.admins?.includes(this.client.botJid))
             this.moderate(M)
         if (!args[0] || !args[0].startsWith(this.client.config.prefix))
             return void this.client.log(
@@ -56,7 +58,7 @@ export default class MessageHandler {
             )
         const cmd = args[0].slice(this.client.config.prefix.length).toLowerCase()
         const allowedCommands = ['activate', 'deactivate', 'act', 'deact']
-        if (!(allowedCommands.includes(cmd) || (await this.client.getGroupData(M.from)).cmd))
+        if (!(allowedCommands.includes(cmd) || groupData?.cmd))
             return void this.client.log(
                 `${chalk.green('CMD')} ${chalk.yellow(`${args[0]}[${args.length - 1}]`)} from ${chalk.green(
                     sender.username
@@ -69,9 +71,12 @@ export default class MessageHandler {
             )} in ${chalk.cyanBright(groupMetadata?.subject || 'DM')}`
         )
         if (!command) return void M.reply('No Command Found! Try using one from the help list.')
-        const user = await this.client.getUser(M.sender.jid)
+        // Run user lookup and disabled-command check in parallel
+        const [user, state] = await Promise.all([
+            this.client.getUser(M.sender.jid),
+            this.client.DB.disabledcommands.findOne({ command: command.config.command })
+        ])
         if (user.ban) return void M.reply("You're Banned from using commands.")
-        const state = await this.client.DB.disabledcommands.findOne({ command: command.config.command })
         if (state) return void M.reply(`❌ This command is disabled${state.reason ? ` for ${state.reason}` : ''}`)
         if (!command.config?.dm && M.chat === 'dm') return void M.reply('This command can only be used in groups')
         if (command.config?.devOnly) {

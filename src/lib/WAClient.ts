@@ -27,6 +27,7 @@ export default class WAClient extends EventEmitter {
     public contacts: Record<string, any> = {}
     public chats: Record<string, any> = {}
     public groupMetadataCache: Map<string, { data: any; ts: number }> = new Map()
+    private cachedBaileysVersion: [number, number, number] | null = null
     public QR: Buffer | null = null
     public QRText: string | null = null
     public pairCode: string | null = null
@@ -101,7 +102,11 @@ export default class WAClient extends EventEmitter {
         }
 
         const { state, saveCreds } = await useMultiFileAuthState(authDir)
-        const { version } = await fetchLatestBaileysVersion()
+        if (!this.cachedBaileysVersion) {
+            const { version } = await fetchLatestBaileysVersion()
+            this.cachedBaileysVersion = version as [number, number, number]
+        }
+        const version = this.cachedBaileysVersion as [number, number, number]
         const isRegistered = !!(state.creds as any).registered
 
         this.sock = makeWASocket({

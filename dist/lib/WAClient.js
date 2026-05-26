@@ -57,6 +57,7 @@ class WAClient extends events_1.default {
         this.contacts = {};
         this.chats = {};
         this.groupMetadataCache = new Map();
+        this.cachedBaileysVersion = null;
         this.QR = null;
         this.QRText = null;
         this.pairCode = null;
@@ -126,7 +127,11 @@ class WAClient extends events_1.default {
                 yield (0, MongoAuthState_1.restoreAuthFromDB)(this.DB.session, authDir);
             }
             const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(authDir);
-            const { version } = yield (0, baileys_1.fetchLatestBaileysVersion)();
+            if (!this.cachedBaileysVersion) {
+                const { version } = yield (0, baileys_1.fetchLatestBaileysVersion)();
+                this.cachedBaileysVersion = version;
+            }
+            const version = this.cachedBaileysVersion;
             const isRegistered = !!state.creds.registered;
             this.sock = (0, baileys_1.default)({
                 version,
