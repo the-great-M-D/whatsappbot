@@ -16,7 +16,7 @@ export default class {
             const split = file.split('/')
             const key = split[split.length - 1].split('.')[0]
             this.client.assets.set(key, buffer)
-            this.client.log(`Loaded: ${chalk.green(key)} from ${chalk.green(file)}`)
+            this.client.log(`Loaded: ${chalk.green(key)}`)
         })
         this.client.log(`Successfully Loaded ${chalk.greenBright(this.client.assets.size)} Assets`)
     }

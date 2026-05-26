@@ -18,7 +18,7 @@ class default_1 {
                 const split = file.split('/');
                 const key = split[split.length - 1].split('.')[0];
                 this.client.assets.set(key, buffer);
-                this.client.log(`Loaded: ${chalk_1.default.green(key)} from ${chalk_1.default.green(file)}`);
+                this.client.log(`Loaded: ${chalk_1.default.green(key)}`);
             });
             this.client.log(`Successfully Loaded ${chalk_1.default.greenBright(this.client.assets.size)} Assets`);
         };
