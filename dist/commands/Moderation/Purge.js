@@ -17,36 +17,46 @@ class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
             command: 'purge',
-            description: 'Removes all group members',
+            description: 'Removes all non-admin group members, then the bot leaves',
             category: 'moderation',
+            adminOnly: true,
             usage: `${client.config.prefix}purge`,
             baseXp: 0
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
-            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
-                return void M.reply("I can't remove without being an admin");
-            if (!this.purgeSet.has(((_c = M.groupMetadata) === null || _c === void 0 ? void 0 : _c.id) || '')) {
-                this.addToPurge(((_d = M.groupMetadata) === null || _d === void 0 ? void 0 : _d.id) || '');
-                return void M.reply("Are you sure? This will remove everyone from the group chat. Use this command again if you'd like to proceed");
+            if (!M.groupMetadata)
+                return void M.reply("Couldn't fetch group info. Try again.");
+            if (!this.client.isBotAdmin(M.groupMetadata.admins || []))
+                return void M.reply("I need to be an admin to purge the group");
+            if (!M.sender.isAdmin)
+                return void M.reply("Only admins can use this command");
+            const groupId = M.from;
+            if (!this.purgeSet.has(groupId)) {
+                this.addToPurge(groupId);
+                return void M.reply("⚠️ *Are you sure?* This will remove everyone from the group and I will leave.\n\nRun *!purge* again within 60 seconds to confirm.");
             }
-            M.groupMetadata.participants.map((user) => __awaiter(this, void 0, void 0, function* () {
-                if (!user.isAdmin)
-                    yield this.client.groupRemove(M.from, [user.jid]).catch(() => console.log('Failed to remove users'));
-            }));
-            // now remove all admins except yourself and the owner
-            M.groupMetadata.admins.map((user) => __awaiter(this, void 0, void 0, function* () {
-                if (user !== M.sender.jid && user !== this.client.botJid)
-                    yield this.client.groupRemove(M.from, [user]).catch(() => console.log('error removing admin'));
-            }));
-            yield M.reply('Done!').catch(() => console.log('Failed to send message'));
-            this.client.groupLeave(M.from);
+            this.purgeSet.delete(groupId);
+            const participants = M.groupMetadata.participants || [];
+            const admins = M.groupMetadata.admins || [];
+            // Remove non-admins first
+            const nonAdmins = participants
+                .filter(p => !p.isAdmin && p.jid !== this.client.botJid && p.jid !== this.client.botLid);
+            for (const p of nonAdmins) {
+                yield this.client.groupRemove(groupId, [p.jid]).catch(() => null);
+            }
+            // Remove admins except the sender and the bot
+            const otherAdmins = admins.filter(jid => jid !== M.sender.jid && jid !== this.client.botJid && jid !== this.client.botLid);
+            for (const jid of otherAdmins) {
+                yield this.client.groupRemove(groupId, [jid]).catch(() => null);
+            }
+            yield M.reply('✅ Done! Leaving now...').catch(() => null);
+            yield this.client.groupLeave(groupId).catch(() => null);
         });
         this.purgeSet = new Set();
-        this.addToPurge = (id) => __awaiter(this, void 0, void 0, function* () {
+        this.addToPurge = (id) => {
             this.purgeSet.add(id);
             setTimeout(() => this.purgeSet.delete(id), 60000);
-        });
+        };
     }
 }
 exports.default = Command;
