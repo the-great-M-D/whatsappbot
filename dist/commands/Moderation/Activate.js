@@ -33,7 +33,6 @@ class Command extends BaseCommand_1.default {
             if (data[type])
                 return void M.reply(`🟨 *${this.client.util.capitalize(type)}* is already *active*`);
             yield this.client.DB.group.updateOne({ jid: M.from }, { $set: { [type]: true } });
-            this.client.invalidateGroupData(M.from);
             return void M.reply(`🟩 *${this.client.util.capitalize(type)}* is now active`);
         });
     }

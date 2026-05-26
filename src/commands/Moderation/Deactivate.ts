@@ -23,7 +23,6 @@ export default class Command extends BaseCommand {
         const data = await this.client.getGroupData(M.from)
         if (!data[type]) return void M.reply(`🟨 *${this.client.util.capitalize(type)}* is already *inactive*`)
         await this.client.DB.group.updateOne({ jid: M.from }, { $set: { [type]: false } })
-        this.client.invalidateGroupData(M.from)
         return void M.reply(`🟩 *${this.client.util.capitalize(type)}* is now inactive`)
     }
 }
