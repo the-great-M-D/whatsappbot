@@ -128,7 +128,7 @@ export default class MessageHandler {
                 const command: BaseCommand = new (require(file).default)(this.client, this)
                 this.commands.set(command.config.command, command)
                 if (command.config.aliases) command.config.aliases.forEach((alias) => this.aliases.set(alias, command))
-                this.client.log(`Loaded: ${chalk.green(command.config.command)} from ${chalk.green(file)}`)
+                this.client.log(`Loaded: ${chalk.green(command.config.command)}`)
                 return command
             }
         })

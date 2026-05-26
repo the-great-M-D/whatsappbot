@@ -129,7 +129,7 @@ class MessageHandler {
                     this.commands.set(command.config.command, command);
                     if (command.config.aliases)
                         command.config.aliases.forEach((alias) => this.aliases.set(alias, command));
-                    this.client.log(`Loaded: ${chalk_1.default.green(command.config.command)} from ${chalk_1.default.green(file)}`);
+                    this.client.log(`Loaded: ${chalk_1.default.green(command.config.command)}`);
                     return command;
                 }
             });
