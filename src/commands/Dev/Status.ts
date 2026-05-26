@@ -7,56 +7,77 @@ export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
         super(client, handler, {
             command: 'status',
-            description: 'Puts the text as status ',
+            description: 'Posts text, image, or video as a WhatsApp status',
             category: 'dev',
             dm: true,
-            usage: `${client.config.prefix}status [text] [tag Image/Video]`,
+            usage: `${client.config.prefix}status [text] — or tag an image/video`,
             modsOnly: true,
             baseXp: 30
         })
     }
 
     run = async (M: ISimplifiedMessage, parsedArgs: IParsedArgs): Promise<void> => {
-        parsedArgs.flags.forEach((flag) => (parsedArgs.joined = parsedArgs.joined.replace(flag, '')))
-        const args = parsedArgs.joined.split(',')
-        let buffer
-        if (M.quoted?.message?.message?.imageMessage) {
-            M.reply('⭐ Posting Image Status')
-            let i = 0
-            while (i < 5) {
-                try {
-                    buffer = await this.client.downloadMediaMessage(M.quoted.message)
-                    const caption = args[0] || ''
-                    return void this.client.sock.sendMessage('status@broadcast', { image: buffer, caption })
-                } catch {
-                    i += 1
-                    M.reply('Marker Not Found Error : https://github.com/oliver-moran/jimp/issues/102 ')
-                }
+        parsedArgs.flags.forEach((flag) => (parsedArgs.joined = parsedArgs.joined.replace(flag, '').trim()))
+
+        // Build statusJidList from known contacts (required by Baileys v7)
+        const statusJidList = Object.keys(this.client.contacts).filter(j => j.endsWith('@s.whatsapp.net'))
+
+        const sendOpts = { statusJidList }
+
+        try {
+            // Quoted image
+            if (M.quoted?.message?.message?.imageMessage) {
+                await M.reply('⭐ Posting image status…')
+                const buffer = await this.client.downloadMediaMessage(M.quoted.message)
+                const caption = parsedArgs.joined || ''
+                await this.client.sock.sendMessage('status@broadcast', { image: buffer, caption }, sendOpts)
+                return void await M.reply('✅ Image status posted')
             }
-        } else if (M.WAMessage.message?.imageMessage) {
-            M.reply('Posting Image Status ⭐')
-            buffer = await this.client.downloadMediaMessage(M.WAMessage)
-            const caption = args[0] || ''
-            this.client.sock.sendMessage('status@broadcast', { image: buffer, caption })
-        } else if (M.quoted?.message?.message?.videoMessage) {
-            M.reply('Posting Video Status ✨')
-            buffer = await this.client.downloadMediaMessage(M.quoted.message)
-            const caption = args[0] || ''
-            this.client.sock.sendMessage('status@broadcast', { video: buffer, caption })
-        } else if (M.WAMessage.message?.videoMessage) {
-            M.reply('✨ Posting Video Status')
-            buffer = await this.client.downloadMediaMessage(M.WAMessage)
-            const caption = args[0] || ''
-            this.client.sock.sendMessage('status@broadcast', { video: buffer, caption })
-        } else if (M.quoted?.message?.message?.conversation) {
-            M.reply('✨ Posting Text Status')
-            const text = M.quoted?.message?.message?.conversation || ''
-            this.client.sock.sendMessage('status@broadcast', { text })
-        } else if (!M.quoted?.message) {
-            M.reply('Posting Text Status ✨')
-            const text = args[0] || ''
-            M.reply(`text : ${text}`)
-            this.client.sock.sendMessage('status@broadcast', { text })
-        } else M.reply('Use Image/Video via Tagging it or/and use text')
+
+            // Own image
+            if (M.WAMessage.message?.imageMessage) {
+                await M.reply('⭐ Posting image status…')
+                const buffer = await this.client.downloadMediaMessage(M.WAMessage)
+                const caption = parsedArgs.joined || ''
+                await this.client.sock.sendMessage('status@broadcast', { image: buffer, caption }, sendOpts)
+                return void await M.reply('✅ Image status posted')
+            }
+
+            // Quoted video
+            if (M.quoted?.message?.message?.videoMessage) {
+                await M.reply('✨ Posting video status…')
+                const buffer = await this.client.downloadMediaMessage(M.quoted.message)
+                const caption = parsedArgs.joined || ''
+                await this.client.sock.sendMessage('status@broadcast', { video: buffer, caption }, sendOpts)
+                return void await M.reply('✅ Video status posted')
+            }
+
+            // Own video
+            if (M.WAMessage.message?.videoMessage) {
+                await M.reply('✨ Posting video status…')
+                const buffer = await this.client.downloadMediaMessage(M.WAMessage)
+                const caption = parsedArgs.joined || ''
+                await this.client.sock.sendMessage('status@broadcast', { video: buffer, caption }, sendOpts)
+                return void await M.reply('✅ Video status posted')
+            }
+
+            // Quoted text
+            if (M.quoted?.message?.message?.conversation) {
+                const text = M.quoted.message.message.conversation
+                await M.reply('✨ Posting text status…')
+                await this.client.sock.sendMessage('status@broadcast', { text }, sendOpts)
+                return void await M.reply('✅ Text status posted')
+            }
+
+            // Plain text from args
+            const text = parsedArgs.joined
+            if (!text) return void M.reply(`Usage: \`${this.config.usage}\`\nOr tag an image/video with optional caption`)
+            await M.reply('✨ Posting text status…')
+            await this.client.sock.sendMessage('status@broadcast', { text }, sendOpts)
+            return void await M.reply('✅ Text status posted')
+
+        } catch (err: any) {
+            return void M.reply(`❌ Failed to post status: ${err.message}`)
+        }
     }
 }
