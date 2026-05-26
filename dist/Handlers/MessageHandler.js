@@ -21,7 +21,7 @@ class MessageHandler {
         this.commands = new Map();
         this.aliases = new Map();
         this.handleMessage = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
             console.log(`[HANDLER] from=${M.from} chat=${M.chat} fromMe=${M.WAMessage.key.fromMe} content=${String(M.content).slice(0, 60)}`);
             if (M.WAMessage.key.fromMe) {
                 if (M.chat !== 'dm') {
@@ -79,17 +79,14 @@ class MessageHandler {
             if (!((_f = command.config) === null || _f === void 0 ? void 0 : _f.dm) && M.chat === 'dm')
                 return void M.reply('This command can only be used in groups');
             if ((_g = command.config) === null || _g === void 0 ? void 0 : _g.devOnly) {
-                const devJid = (_h = this.client.config.mods) === null || _h === void 0 ? void 0 : _h[0];
-                if (!devJid || M.sender.jid !== devJid)
+                if (!((_h = this.client.config.mods) === null || _h === void 0 ? void 0 : _h.includes(M.sender.jid)))
                     return void M.reply(`Only the bot developer can use this command`);
             }
             if ((_j = command.config) === null || _j === void 0 ? void 0 : _j.modsOnly) {
-                console.log(`[MOD CHECK] senderJid=${M.sender.jid} mods=${JSON.stringify(this.client.config.mods)}`);
                 if (!((_k = this.client.config.mods) === null || _k === void 0 ? void 0 : _k.includes(M.sender.jid)))
                     return void M.reply(`Only MODS are allowed to use this command`);
             }
             if ((_l = command.config) === null || _l === void 0 ? void 0 : _l.adminOnly) {
-                console.log(`[ADMIN CHECK] senderJid=${M.sender.jid} isAdmin=${M.sender.isAdmin} admins=${JSON.stringify((_m = M.groupMetadata) === null || _m === void 0 ? void 0 : _m.admins)}`);
                 if (!M.sender.isAdmin)
                     return void M.reply(`Only admins are allowed to use this command`);
             }
@@ -110,7 +107,7 @@ class MessageHandler {
                 try {
                     yield M.reply(`❌ Error: ${err.message}`);
                 }
-                catch ( /* ignore */_o) { /* ignore */ }
+                catch ( /* ignore */_m) { /* ignore */ }
             }
         });
         this.moderate = (M) => __awaiter(this, void 0, void 0, function* () {
@@ -120,11 +117,11 @@ class MessageHandler {
                 const groupinvites = M.urls.filter((url) => url.includes('chat.whatsapp.com'));
                 if (groupinvites.length) {
                     groupinvites.forEach((invite) => __awaiter(this, void 0, void 0, function* () {
-                        var _p;
+                        var _o;
                         const splitInvite = invite.split('/');
                         const z = yield this.client.groupInviteCode(M.from);
                         if (z !== splitInvite[splitInvite.length - 1]) {
-                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_p = M.groupMetadata) === null || _p === void 0 ? void 0 : _p.subject) || ''}`);
+                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_o = M.groupMetadata) === null || _o === void 0 ? void 0 : _o.subject) || ''}`);
                             return void (yield this.client.groupRemove(M.from, [M.sender.jid]));
                         }
                     }));

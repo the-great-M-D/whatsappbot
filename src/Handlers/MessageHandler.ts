@@ -80,17 +80,14 @@ export default class MessageHandler {
         if (state) return void M.reply(`❌ This command is disabled${state.reason ? ` for ${state.reason}` : ''}`)
         if (!command.config?.dm && M.chat === 'dm') return void M.reply('This command can only be used in groups')
         if (command.config?.devOnly) {
-            const devJid = this.client.config.mods?.[0]
-            if (!devJid || M.sender.jid !== devJid)
+            if (!this.client.config.mods?.includes(M.sender.jid))
                 return void M.reply(`Only the bot developer can use this command`)
         }
         if (command.config?.modsOnly) {
-            console.log(`[MOD CHECK] senderJid=${M.sender.jid} mods=${JSON.stringify(this.client.config.mods)}`)
             if (!this.client.config.mods?.includes(M.sender.jid))
                 return void M.reply(`Only MODS are allowed to use this command`)
         }
         if (command.config?.adminOnly) {
-            console.log(`[ADMIN CHECK] senderJid=${M.sender.jid} isAdmin=${M.sender.isAdmin} admins=${JSON.stringify(M.groupMetadata?.admins)}`)
             if (!M.sender.isAdmin)
                 return void M.reply(`Only admins are allowed to use this command`)
         }
