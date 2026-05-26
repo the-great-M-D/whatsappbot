@@ -89,6 +89,16 @@
                 <span id="dash-user">Connected</span>
             </div>
             <div class="uptime-pill" id="uptime-display">⏱ 0s</div>
+            <button class="pair-new-btn" onclick="openPairModal()" title="Pair a new device">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2"/>
+                    <line x1="12" y1="18" x2="12" y2="18.01"/>
+                    <line x1="9" y1="7" x2="15" y2="7"/>
+                    <line x1="12" y1="11" x2="12" y2="15"/>
+                    <line x1="10" y1="13" x2="14" y2="13"/>
+                </svg>
+                Pair Device
+            </button>
         </div>
     </header>
 
@@ -155,6 +165,62 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     PAIR NEW DEVICE MODAL
+══════════════════════════════════════════════════════════════════ -->
+<div id="pair-modal-overlay" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event)">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2"/>
+                    <line x1="12" y1="18" x2="12" y2="18.01"/>
+                    <line x1="9" y1="7" x2="15" y2="7"/>
+                    <line x1="12" y1="11" x2="12" y2="15"/>
+                    <line x1="10" y1="13" x2="14" y2="13"/>
+                </svg>
+                <span class="modal-title">Pair New Device</span>
+            </div>
+            <button class="modal-close" onclick="closePairModal()">✕</button>
+        </div>
+
+        <!-- Step 1: phone input -->
+        <div id="modal-phone-section">
+            <p class="section-label" style="text-align:left; margin-bottom:14px">
+                Enter the WhatsApp number you want to pair the bot with. You'll get an 8-digit code to enter in the app.
+            </p>
+            <div class="phone-input-row">
+                <input id="modal-phone-input" type="tel" placeholder="+27 81 234 5678" autocomplete="tel" />
+                <button id="modal-pair-btn" onclick="modalRequestPairCode()">Get Code</button>
+            </div>
+            <p id="modal-pair-error" class="error-msg" style="display:none"></p>
+        </div>
+
+        <!-- Step 2: code display -->
+        <div id="modal-code-section" style="display:none">
+            <p class="section-label" style="text-align:left; margin-bottom:14px">
+                Open WhatsApp on the target phone and enter this code:
+            </p>
+            <div id="modal-code-display" class="modal-code-display"></div>
+            <p class="code-hint" style="text-align:left; margin-top:12px">
+                WhatsApp → <strong>Linked Devices</strong> → <strong>Link with phone number</strong>
+            </p>
+            <div class="modal-actions">
+                <button class="try-again-btn" onclick="modalResetPairing()">Use a different number</button>
+                <button class="modal-done-btn" onclick="closePairModal()">Done</button>
+            </div>
+        </div>
+
+        <!-- Step 3: success -->
+        <div id="modal-success-section" style="display:none" class="modal-success">
+            <div class="check-circle">✓</div>
+            <p class="modal-success-text">Bot reconnected!</p>
+            <p id="modal-connected-user" class="connected-user"></p>
+            <button class="modal-done-btn" onclick="closePairModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
 // ─── State ─────────────────────────────────────────────────────────────────
 let pollInterval   = null
@@ -167,6 +233,7 @@ let activeFilter   = 'all'
 let allEvents      = []          // full in-memory list (max 200)
 let typeCounts     = { all: 0, message: 0, command: 0, group: 0, call: 0, system: 0 }
 let flashTimeout   = null
+let modalPollInterval = null
 
 // ─── Setup / pairing flow ──────────────────────────────────────────────────
 function startPolling() {
@@ -346,11 +413,9 @@ function setPillState(live) {
 }
 
 function ingestEvent(evt) {
-    // Store in memory
     allEvents.unshift(evt)
     if (allEvents.length > 200) allEvents.pop()
 
-    // Update counts
     const type = evt.type || 'system'
     const bucket = ['message','command','group','call','connect','disconnect'].includes(type)
         ? (type === 'connect' || type === 'disconnect' ? 'system' : type)
@@ -360,12 +425,15 @@ function ingestEvent(evt) {
     else typeCounts.system++
     updateTabCounts()
 
-    // Flash the LIVE pill
     flashLive()
 
-    // Render if not paused and matches filter
     if (!paused && matchesFilter(evt, activeFilter)) {
         renderEvent(evt, true)
+    }
+
+    // If the modal is open and we receive a connect event, show success
+    if (evt.type === 'connect' && document.getElementById('pair-modal-overlay').style.display !== 'none') {
+        modalShowSuccess(evt)
     }
 }
 
@@ -430,7 +498,6 @@ function renderEvent(evt, animate) {
 
     feed.insertBefore(item, feed.firstChild)
 
-    // keep max 150 in DOM
     const items = feed.querySelectorAll('.event-item')
     if (items.length > 150) items[items.length - 1].remove()
 }
@@ -469,6 +536,105 @@ function tickUptime() {
     document.getElementById('uptime-display').textContent = `⏱ ${str}`
 }
 
+// ─── Pair New Device Modal ─────────────────────────────────────────────────
+function openPairModal() {
+    modalResetPairing()
+    document.getElementById('pair-modal-overlay').style.display = 'flex'
+    document.getElementById('modal-phone-input').focus()
+}
+
+function closePairModal() {
+    document.getElementById('pair-modal-overlay').style.display = 'none'
+    stopModalPoll()
+    modalResetPairing()
+}
+
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('pair-modal-overlay')) closePairModal()
+}
+
+function modalResetPairing() {
+    stopModalPoll()
+    document.getElementById('modal-phone-section').style.display = 'block'
+    document.getElementById('modal-code-section').style.display = 'none'
+    document.getElementById('modal-success-section').style.display = 'none'
+    document.getElementById('modal-phone-input').value = ''
+    const btn = document.getElementById('modal-pair-btn')
+    btn.disabled = false
+    btn.textContent = 'Get Code'
+    const err = document.getElementById('modal-pair-error')
+    err.style.display = 'none'
+}
+
+async function modalRequestPairCode() {
+    const input = document.getElementById('modal-phone-input')
+    const btn   = document.getElementById('modal-pair-btn')
+    const errEl = document.getElementById('modal-pair-error')
+    const phone = input.value.trim()
+    if (!phone) { modalShowError('Please enter your phone number'); return }
+    btn.disabled = true
+    btn.textContent = 'Requesting...'
+    errEl.style.display = 'none'
+    try {
+        const res  = await fetch('/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone }) })
+        const data = await res.json()
+        if (data.error) { modalShowError(data.error); btn.disabled = false; btn.textContent = 'Get Code'; return }
+        modalShowPairCode(data.code)
+    } catch (e) {
+        modalShowError('Failed to request code. Please try again.')
+        btn.disabled = false
+        btn.textContent = 'Get Code'
+    }
+}
+
+function modalShowError(msg) {
+    const errEl = document.getElementById('modal-pair-error')
+    errEl.textContent = msg
+    errEl.style.display = 'block'
+}
+
+function modalShowPairCode(code) {
+    document.getElementById('modal-phone-section').style.display = 'none'
+    document.getElementById('modal-code-section').style.display = 'block'
+    const clean = code.replace(/-/g, '')
+    const parts = clean.match(/.{1,4}/g) || [code]
+    const display = document.getElementById('modal-code-display')
+    display.innerHTML = parts.map(p => `<span class="code-chunk">${p}</span>`).join('<span class="code-sep">-</span>')
+    startModalPoll()
+}
+
+function startModalPoll() {
+    if (modalPollInterval) return
+    modalPollInterval = setInterval(modalPoll, 3000)
+}
+
+function stopModalPoll() {
+    clearInterval(modalPollInterval)
+    modalPollInterval = null
+}
+
+async function modalPoll() {
+    try {
+        const res    = await fetch('/api/status')
+        const status = await res.json()
+        if (status.connected) {
+            stopModalPoll()
+            modalShowSuccess({ title: status.user ? 'Connected as ' + status.user : 'Connected' })
+            loadStats()
+        }
+    } catch (e) { /* ignore */ }
+}
+
+function modalShowSuccess(evt) {
+    stopModalPoll()
+    document.getElementById('modal-phone-section').style.display = 'none'
+    document.getElementById('modal-code-section').style.display = 'none'
+    document.getElementById('modal-success-section').style.display = 'flex'
+    const userEl = document.getElementById('modal-connected-user')
+    if (evt && evt.title) userEl.textContent = evt.title
+    loadStats()
+}
+
 // ─── Utils ──────────────────────────────────────────────────────────────────
 function fmtNum(n) {
     if (n >= 1000) return (n / 1000).toFixed(1) + 'k'
@@ -497,6 +663,12 @@ function catIcon(cat) {
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('phone-input').addEventListener('keydown', e => {
         if (e.key === 'Enter') requestPairCode()
+    })
+    document.getElementById('modal-phone-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') modalRequestPairCode()
+    })
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closePairModal()
     })
     try {
         const res = await fetch('/api/status')
