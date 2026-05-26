@@ -31,6 +31,7 @@ export default class WAClient extends EventEmitter {
     public QRText: string | null = null
     public pairCode: string | null = null
     public pairCodePhone: string | null = null
+    public botLid: string | null = null
     public state: string = 'close'
     public registered: boolean = false
     private intentionalStop: boolean = false
@@ -181,6 +182,14 @@ export default class WAClient extends EventEmitter {
                 if (!msg?.message) continue
                 if (msg.key?.fromMe && type === 'append') continue
                 console.log(`[MSG] upsert type=${type} from=${msg.key?.remoteJid} fromMe=${msg.key?.fromMe}`)
+                // Capture bot's LID from fromMe group messages (key.participant = bot's own LID)
+                if (msg.key?.fromMe && msg.key?.remoteJid?.endsWith('@g.us') && msg.key?.participant) {
+                    const p = msg.key.participant as string
+                    if (p.endsWith('@lid') && !this.botLid) {
+                        this.botLid = p
+                        console.log(`[BOT LID] captured: ${this.botLid}`)
+                    }
+                }
                 const simplified = await buildSimplifiedMessage(msg, this)
                 if (simplified) this.emit('new-message', simplified)
             }
@@ -328,6 +337,12 @@ export default class WAClient extends EventEmitter {
         } catch {
             return null
         }
+    }
+
+    isBotAdmin(admins: string[]): boolean {
+        if (admins.includes(this.botJid)) return true
+        if (this.botLid && admins.includes(this.botLid)) return true
+        return false
     }
 
     async groupRemove(jid: string, participants: string[]): Promise<any> {

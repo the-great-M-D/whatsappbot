@@ -61,6 +61,7 @@ class WAClient extends events_1.default {
         this.QRText = null;
         this.pairCode = null;
         this.pairCodePhone = null;
+        this.botLid = null;
         this.state = 'close';
         this.registered = false;
         this.intentionalStop = false;
@@ -196,13 +197,21 @@ class WAClient extends events_1.default {
                 }
             });
             this.sock.ev.on('messages.upsert', ({ messages, type }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c;
+                var _a, _b, _c, _d, _e, _f, _g;
                 for (const msg of messages) {
                     if (!(msg === null || msg === void 0 ? void 0 : msg.message))
                         continue;
                     if (((_a = msg.key) === null || _a === void 0 ? void 0 : _a.fromMe) && type === 'append')
                         continue;
                     console.log(`[MSG] upsert type=${type} from=${(_b = msg.key) === null || _b === void 0 ? void 0 : _b.remoteJid} fromMe=${(_c = msg.key) === null || _c === void 0 ? void 0 : _c.fromMe}`);
+                    // Capture bot's LID from fromMe group messages (key.participant = bot's own LID)
+                    if (((_d = msg.key) === null || _d === void 0 ? void 0 : _d.fromMe) && ((_f = (_e = msg.key) === null || _e === void 0 ? void 0 : _e.remoteJid) === null || _f === void 0 ? void 0 : _f.endsWith('@g.us')) && ((_g = msg.key) === null || _g === void 0 ? void 0 : _g.participant)) {
+                        const p = msg.key.participant;
+                        if (p.endsWith('@lid') && !this.botLid) {
+                            this.botLid = p;
+                            console.log(`[BOT LID] captured: ${this.botLid}`);
+                        }
+                    }
                     const simplified = yield (0, Message_1.buildSimplifiedMessage)(msg, this);
                     if (simplified)
                         this.emit('new-message', simplified);
@@ -351,6 +360,13 @@ class WAClient extends events_1.default {
                 return null;
             }
         });
+    }
+    isBotAdmin(admins) {
+        if (admins.includes(this.botJid))
+            return true;
+        if (this.botLid && admins.includes(this.botLid))
+            return true;
+        return false;
     }
     groupRemove(jid, participants) {
         return __awaiter(this, void 0, void 0, function* () {

@@ -24,19 +24,19 @@ class Command extends BaseCommand_1.default {
             baseXp: 10
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
+            var _a, _b;
             let text = '*Action*\n\n';
-            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
+            if (!this.client.isBotAdmin(((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) || []))
                 return void M.reply(`❌ Failed to ${this.config.command} as I'm not the group admin`);
-            if ((_c = M.quoted) === null || _c === void 0 ? void 0 : _c.sender)
+            if ((_b = M.quoted) === null || _b === void 0 ? void 0 : _b.sender)
                 M.mentioned.push(M.quoted.sender);
             if (!M.mentioned.length)
                 return void M.reply(`Please tag the users you want to ${this.config.command}`);
             M.mentioned.forEach((user) => __awaiter(this, void 0, void 0, function* () {
-                var _d;
+                var _c;
                 // const usr = this.client.contacts[user]
                 // const username = usr.notify || usr.vname || usr.name || user.split('@')[0]
-                if (((_d = M.groupMetadata) === null || _d === void 0 ? void 0 : _d.owner.split('@')[0]) === user.split('@')[0]) {
+                if (((_c = M.groupMetadata) === null || _c === void 0 ? void 0 : _c.owner.split('@')[0]) === user.split('@')[0]) {
                     text += `❌ Skipped *@${user.split('@')[0]}* as they're owner.\n`;
                 }
                 // check if user is Bot

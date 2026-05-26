@@ -30,30 +30,20 @@ export default class Command extends BaseCommand {
 
     }
 
-    run = async (M: ISimplifiedMessage,parsedArgs: IParsedArgs): Promise<void> => {
-
-        const number = parsedArgs.joined.replace(/\D+/g,'').replace(/\s+/g,'').toString();
-
-console.log(number) ;
-
-        try{
-
-        if (!M.groupMetadata?.admins?.includes(this.client.botJid))
-
-            return void M.reply(`❌ Failed to ${this.config.command} Make me admin first, !!!!!`)
-
-        if (!number.length) return void M.reply(`Please write the user's number you want to ${this.config.command}`)
-
-        this.client.isOnWhatsApp(`${number}@s.whatsapp.net`)
-
-        if(!this.client.groupAdd(M.from,[`${number}@s.whatsapp.net`])) return void M.reply(`the person you are trying to add is not on whatsapp`)
-
-        }catch{
-
-            M.reply(`something went wrong`)
-
+    run = async (M: ISimplifiedMessage, parsedArgs: IParsedArgs): Promise<void> => {
+        const number = parsedArgs.joined.replace(/\D+/g, '').replace(/\s+/g, '').toString()
+        try {
+            if (!this.client.isBotAdmin(M.groupMetadata?.admins || []))
+                return void M.reply(`❌ Make me admin first before using ${this.config.command}`)
+            if (!number.length) return void M.reply(`Please provide the number you want to ${this.config.command}`)
+            const onWA = await this.client.isOnWhatsApp(`${number}@s.whatsapp.net`)
+            if (!onWA) return void M.reply(`❌ That number is not on WhatsApp`)
+            const result = await this.client.groupAdd(M.from, [`${number}@s.whatsapp.net`])
+            if (!result) return void M.reply(`❌ Failed to add ${number}`)
+            await M.reply(`✅ Successfully added *${number}*`)
+        } catch {
+            M.reply(`❌ Something went wrong`)
         }
-
     }
 
 }
