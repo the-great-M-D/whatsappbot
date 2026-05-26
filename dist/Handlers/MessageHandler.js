@@ -21,7 +21,7 @@ class MessageHandler {
         this.commands = new Map();
         this.aliases = new Map();
         this.handleMessage = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
             console.log(`[HANDLER] from=${M.from} chat=${M.chat} fromMe=${M.WAMessage.key.fromMe} content=${String(M.content).slice(0, 60)}`);
             if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && ((_a = M.WAMessage.status) !== null && _a !== void 0 ? _a : '').toString() === '2') {
                 M.sender.jid = this.client.botJid;
@@ -70,13 +70,18 @@ class MessageHandler {
                 return void M.reply(`❌ This command is disabled${state.reason ? ` for ${state.reason}` : ''}`);
             if (!((_d = command.config) === null || _d === void 0 ? void 0 : _d.dm) && M.chat === 'dm')
                 return void M.reply('This command can only be used in groups');
-            if ((_e = command.config) === null || _e === void 0 ? void 0 : _e.modsOnly) {
+            if ((_e = command.config) === null || _e === void 0 ? void 0 : _e.devOnly) {
+                const devJid = (_f = this.client.config.mods) === null || _f === void 0 ? void 0 : _f[0];
+                if (!devJid || M.sender.jid !== devJid)
+                    return void M.reply(`Only the bot developer can use this command`);
+            }
+            if ((_g = command.config) === null || _g === void 0 ? void 0 : _g.modsOnly) {
                 console.log(`[MOD CHECK] senderJid=${M.sender.jid} mods=${JSON.stringify(this.client.config.mods)}`);
-                if (!((_f = this.client.config.mods) === null || _f === void 0 ? void 0 : _f.includes(M.sender.jid)))
+                if (!((_h = this.client.config.mods) === null || _h === void 0 ? void 0 : _h.includes(M.sender.jid)))
                     return void M.reply(`Only MODS are allowed to use this command`);
             }
-            if ((_g = command.config) === null || _g === void 0 ? void 0 : _g.adminOnly) {
-                console.log(`[ADMIN CHECK] senderJid=${M.sender.jid} isAdmin=${M.sender.isAdmin} admins=${JSON.stringify((_h = M.groupMetadata) === null || _h === void 0 ? void 0 : _h.admins)}`);
+            if ((_j = command.config) === null || _j === void 0 ? void 0 : _j.adminOnly) {
+                console.log(`[ADMIN CHECK] senderJid=${M.sender.jid} isAdmin=${M.sender.isAdmin} admins=${JSON.stringify((_k = M.groupMetadata) === null || _k === void 0 ? void 0 : _k.admins)}`);
                 if (!M.sender.isAdmin)
                     return void M.reply(`Only admins are allowed to use this command`);
             }
@@ -97,7 +102,7 @@ class MessageHandler {
                 try {
                     yield M.reply(`❌ Error: ${err.message}`);
                 }
-                catch ( /* ignore */_j) { /* ignore */ }
+                catch ( /* ignore */_l) { /* ignore */ }
             }
         });
         this.moderate = (M) => __awaiter(this, void 0, void 0, function* () {
@@ -107,11 +112,11 @@ class MessageHandler {
                 const groupinvites = M.urls.filter((url) => url.includes('chat.whatsapp.com'));
                 if (groupinvites.length) {
                     groupinvites.forEach((invite) => __awaiter(this, void 0, void 0, function* () {
-                        var _k;
+                        var _m;
                         const splitInvite = invite.split('/');
                         const z = yield this.client.groupInviteCode(M.from);
                         if (z !== splitInvite[splitInvite.length - 1]) {
-                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_k = M.groupMetadata) === null || _k === void 0 ? void 0 : _k.subject) || ''}`);
+                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_m = M.groupMetadata) === null || _m === void 0 ? void 0 : _m.subject) || ''}`);
                             return void (yield this.client.groupRemove(M.from, [M.sender.jid]));
                         }
                     }));

@@ -70,6 +70,11 @@ export default class MessageHandler {
         const state = await this.client.DB.disabledcommands.findOne({ command: command.config.command })
         if (state) return void M.reply(`❌ This command is disabled${state.reason ? ` for ${state.reason}` : ''}`)
         if (!command.config?.dm && M.chat === 'dm') return void M.reply('This command can only be used in groups')
+        if (command.config?.devOnly) {
+            const devJid = this.client.config.mods?.[0]
+            if (!devJid || M.sender.jid !== devJid)
+                return void M.reply(`Only the bot developer can use this command`)
+        }
         if (command.config?.modsOnly) {
             console.log(`[MOD CHECK] senderJid=${M.sender.jid} mods=${JSON.stringify(this.client.config.mods)}`)
             if (!this.client.config.mods?.includes(M.sender.jid))
