@@ -26,7 +26,7 @@ const client = new WAClient_1.default({
     name: process.env.NAME || 'M_D BOT',
     session: process.env.SESSION || 'M_D',
     prefix: process.env.PREFIX || '!',
-    mods: (process.env.MODS || '').split(',').map((number) => `${number}@s.whatsapp.net`),
+    mods: (process.env.MODS || '').split(',').filter(Boolean).map((n) => { const t = n.trim(); return t.includes('@') ? t : `${t}@s.whatsapp.net`; }),
     gkey: process.env.GOOGLE_API_KEY || '',
     chatBotUrl: process.env.CHAT_BOT_URL || ''
 });
