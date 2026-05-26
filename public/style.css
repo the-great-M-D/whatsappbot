@@ -598,6 +598,136 @@ body {
 .event-disconnect{ border-left-color: var(--red);   background: color-mix(in srgb, var(--surface) 95%, var(--red)); }
 .event-system   { border-left-color: var(--purple); background: color-mix(in srgb, var(--surface) 95%, var(--purple)); }
 
+/* ─── PAIR DEVICE BUTTON ──────────────────────────────────────────────────── */
+.pair-new-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s, background .15s;
+    flex-shrink: 0;
+}
+.pair-new-btn:hover {
+    color: var(--green);
+    border-color: var(--green-border);
+    background: var(--green-dim);
+}
+
+/* ─── PAIR MODAL ──────────────────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .65);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn .15s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+.modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    padding: 28px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.7);
+    animation: slideUp .2s ease-out;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.modal-title-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+.modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -.3px;
+}
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--muted2);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: color .15s, background .15s;
+    font-family: inherit;
+}
+.modal-close:hover { color: var(--text); background: var(--surface2); }
+
+.modal-code-display {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    width: 100%;
+    justify-content: center;
+}
+
+.modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    gap: 10px;
+}
+
+.modal-done-btn {
+    background: var(--green);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .15s;
+}
+.modal-done-btn:hover { background: #1fb855; }
+
+.modal-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0 4px;
+}
+.modal-success-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+}
+
 /* ─── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     /* Dashboard: let it scroll naturally on mobile instead of being locked */
