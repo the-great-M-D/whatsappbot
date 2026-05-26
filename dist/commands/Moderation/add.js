@@ -24,20 +24,23 @@ class Command extends BaseCommand_1.default {
             baseXp: 10
         });
         this.run = (M, parsedArgs) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
+            var _a;
             const number = parsedArgs.joined.replace(/\D+/g, '').replace(/\s+/g, '').toString();
-            console.log(number);
             try {
-                if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
-                    return void M.reply(`❌ Failed to ${this.config.command} Make me admin first, !!!!!`);
+                if (!this.client.isBotAdmin(((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) || []))
+                    return void M.reply(`❌ Make me admin first before using ${this.config.command}`);
                 if (!number.length)
-                    return void M.reply(`Please write the user's number you want to ${this.config.command}`);
-                this.client.isOnWhatsApp(`${number}@s.whatsapp.net`);
-                if (!this.client.groupAdd(M.from, [`${number}@s.whatsapp.net`]))
-                    return void M.reply(`the person you are trying to add is not on whatsapp`);
+                    return void M.reply(`Please provide the number you want to ${this.config.command}`);
+                const onWA = yield this.client.isOnWhatsApp(`${number}@s.whatsapp.net`);
+                if (!onWA)
+                    return void M.reply(`❌ That number is not on WhatsApp`);
+                const result = yield this.client.groupAdd(M.from, [`${number}@s.whatsapp.net`]);
+                if (!result)
+                    return void M.reply(`❌ Failed to add ${number}`);
+                yield M.reply(`✅ Successfully added *${number}*`);
             }
-            catch (_c) {
-                M.reply(`something went wrong`);
+            catch (_b) {
+                M.reply(`❌ Something went wrong`);
             }
         });
     }

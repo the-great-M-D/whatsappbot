@@ -23,18 +23,18 @@ class Command extends BaseCommand_1.default {
             baseXp: 0
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
-            if (!((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(this.client.botJid)))
+            var _a, _b;
+            if (!this.client.isBotAdmin(((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) || []))
                 return void M.reply(`❌ Failed to ${this.config.command} as I'm not an admin`);
-            if ((_c = M.quoted) === null || _c === void 0 ? void 0 : _c.sender)
+            if ((_b = M.quoted) === null || _b === void 0 ? void 0 : _b.sender)
                 M.mentioned.push(M.quoted.sender);
             if (!M.mentioned.length)
                 return void M.reply(`Please tag the users you want to ${this.config.command}`);
             M.mentioned.forEach((user) => __awaiter(this, void 0, void 0, function* () {
-                var _d, _e;
+                var _c, _d;
                 const usr = this.client.contacts[user];
                 const username = usr.notify || usr.vname || usr.name || user.split('@')[0];
-                if (!((_e = (_d = M.groupMetadata) === null || _d === void 0 ? void 0 : _d.admins) === null || _e === void 0 ? void 0 : _e.includes(user)))
+                if (!((_d = (_c = M.groupMetadata) === null || _c === void 0 ? void 0 : _c.admins) === null || _d === void 0 ? void 0 : _d.includes(user)))
                     M.reply(`❌ Skipped *${username}* as they're not an admin`);
                 else if (user !== this.client.botJid) {
                     yield this.client.groupDemoteAdmin(M.from, [user]);
