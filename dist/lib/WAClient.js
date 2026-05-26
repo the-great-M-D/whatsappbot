@@ -65,6 +65,7 @@ class WAClient extends events_1.default {
         this.botLid = null;
         this.state = 'close';
         this.registered = false;
+        this.connectedAt = null;
         this.intentionalStop = false;
         this.reconnectAttempts = 0;
         this.MAX_RECONNECTS = 5;
@@ -171,6 +172,7 @@ class WAClient extends events_1.default {
                     this.pairCode = null;
                     this.pairCodePhone = null;
                     this.user = this.sock.user;
+                    this.connectedAt = Date.now();
                     this.log(`Connected as ${((_a = this.user) === null || _a === void 0 ? void 0 : _a.name) || ((_b = this.user) === null || _b === void 0 ? void 0 : _b.id) || 'unknown'}`);
                     this.emit('open');
                 }

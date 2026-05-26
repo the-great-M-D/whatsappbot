@@ -35,6 +35,7 @@ export default class WAClient extends EventEmitter {
     public botLid: string | null = null
     public state: string = 'close'
     public registered: boolean = false
+    public connectedAt: number | null = null
     private intentionalStop: boolean = false
     private reconnectAttempts: number = 0
     private readonly MAX_RECONNECTS = 5
@@ -148,6 +149,7 @@ export default class WAClient extends EventEmitter {
                 this.pairCode = null
                 this.pairCodePhone = null
                 this.user = this.sock.user
+                this.connectedAt = Date.now()
                 this.log(`Connected as ${this.user?.name || this.user?.id || 'unknown'}`)
                 this.emit('open')
             }
