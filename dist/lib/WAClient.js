@@ -58,6 +58,9 @@ class WAClient extends events_1.default {
         this.chats = {};
         this.groupMetadataCache = new Map();
         this.cachedBaileysVersion = null;
+        this.groupDataCache = new Map();
+        this.userDataCache = new Map();
+        this.GROUP_DATA_TTL = 5 * 60 * 1000;
         this.QR = null;
         this.QRText = null;
         this.pairCode = null;
@@ -536,7 +539,9 @@ class WAClient extends events_1.default {
             if (!user)
                 user = yield this.DB.user.create({ jid });
             user.ban = true;
-            return user.save();
+            const result = yield user.save();
+            this.invalidateUser(jid);
+            return result;
         });
     }
     unbanUser(jid) {
@@ -545,30 +550,47 @@ class WAClient extends events_1.default {
             if (!user)
                 return null;
             user.ban = false;
-            return user.save();
+            const result = yield user.save();
+            this.invalidateUser(jid);
+            return result;
         });
     }
     getGroupData(jid) {
         return __awaiter(this, void 0, void 0, function* () {
+            const cached = this.groupDataCache.get(jid);
+            if (cached && Date.now() - cached.ts < this.GROUP_DATA_TTL)
+                return cached.data;
             let group = yield this.DB.group.findOne({ jid });
             if (!group)
                 group = yield this.DB.group.create({ jid });
+            this.groupDataCache.set(jid, { data: group, ts: Date.now() });
             return group;
         });
     }
+    invalidateGroupData(jid) {
+        this.groupDataCache.delete(jid);
+    }
     getUser(jid) {
         return __awaiter(this, void 0, void 0, function* () {
+            const cached = this.userDataCache.get(jid);
+            if (cached)
+                return cached;
             let user = yield this.DB.user.findOne({ jid });
             if (!user)
                 user = yield this.DB.user.create({ jid });
+            this.userDataCache.set(jid, user);
             return user;
         });
+    }
+    invalidateUser(jid) {
+        this.userDataCache.delete(jid);
     }
     setXp(jid, xp, limit) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield this.getUser(jid);
             user.Xp = Math.min((user.Xp || 0) + xp, limit * 100);
             yield user.save();
+            this.userDataCache.set(jid, user);
         });
     }
     isFeature(name) {
