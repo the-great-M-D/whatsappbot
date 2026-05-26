@@ -12,10 +12,14 @@ export default class MessageHandler {
 
     handleMessage = async (M: ISimplifiedMessage): Promise<void> => {
         console.log(`[HANDLER] from=${M.from} chat=${M.chat} fromMe=${M.WAMessage.key.fromMe} content=${String(M.content).slice(0,60)}`)
-        if (!(M.chat === 'dm') && M.WAMessage.key.fromMe && (M.WAMessage.status ?? '').toString() === '2') {
-            M.sender.jid = this.client.botJid
-            M.sender.username = this.client.user.name || this.client.user.vname || this.client.user.short || 'Kaoi Bot'
-        } else if (M.WAMessage.key.fromMe) return void null
+        if (M.WAMessage.key.fromMe) {
+            if (M.chat !== 'dm') {
+                M.sender.jid = this.client.botJid
+                M.sender.username = this.client.user?.name || this.client.user?.vname || this.client.user?.short || 'Kaoi Bot'
+            } else {
+                return void null
+            }
+        }
 
         if (M.from.includes('status')) return void null
         const { args, groupMetadata, sender } = M
