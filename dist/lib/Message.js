@@ -21,9 +21,11 @@ function buildSimplifiedMessage(msg, client) {
                 return null;
             const isGroup = from.endsWith('@g.us');
             const chat = isGroup ? 'group' : 'dm';
-            const senderJid = isGroup
+            const normalizeJid = (jid) => (jid || '').replace(/:(\d+)@/, '@');
+            const rawSenderJid = isGroup
                 ? (key.participant || msg.participant || '')
                 : (key.fromMe ? (((_a = client.user) === null || _a === void 0 ? void 0 : _a.id) || '') : from);
+            const senderJid = normalizeJid(rawSenderJid);
             const m = msg.message;
             if (!m)
                 return null;
@@ -69,7 +71,7 @@ function buildSimplifiedMessage(msg, client) {
                                 isSuperAdmin: p.admin === 'superadmin'
                             })), admins: raw.participants
                                 .filter((p) => p.admin)
-                                .map((p) => p.id) });
+                                .map((p) => normalizeJid(p.id)) });
                     }
                 }
                 catch ( /* ignore */_p) { /* ignore */ }
