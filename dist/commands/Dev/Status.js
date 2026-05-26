@@ -21,7 +21,7 @@ class Command extends BaseCommand_1.default {
             category: 'dev',
             dm: true,
             usage: `${client.config.prefix}status [text] — or tag an image/video`,
-            modsOnly: true,
+            devOnly: true,
             baseXp: 30
         });
         this.run = (M, parsedArgs) => __awaiter(this, void 0, void 0, function* () {
