@@ -61,6 +61,12 @@ export default class WAClient extends EventEmitter {
         this.state = 'close'
     }
 
+    forceReconnect() {
+        this.stopSocket()
+        this.reconnectAttempts = 0
+        setTimeout(() => this.connect(), 1000)
+    }
+
     private async clearAuth() {
         await fsRemove(`auth/${this.config.session}`).catch(() => { /* ignore */ })
         if (this.DB.connected) {
