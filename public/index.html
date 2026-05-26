@@ -9,7 +9,7 @@
 <body>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     SETUP VIEW  (shown when not connected)
+     SETUP VIEW
 ══════════════════════════════════════════════════════════════════ -->
 <div id="setup-view">
     <div class="setup-card">
@@ -55,7 +55,7 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     DASHBOARD VIEW  (shown when connected)
+     DASHBOARD VIEW
 ══════════════════════════════════════════════════════════════════ -->
 <div id="dashboard-view" style="display:none">
 
@@ -105,22 +105,51 @@
 
         <!-- ── Live feed ── -->
         <main class="feed-main">
+
+            <!-- Feed toolbar -->
             <div class="feed-header">
-                <span class="feed-title">Live Feed</span>
+                <div class="feed-title-row">
+                    <span class="feed-title">Live Events</span>
+                    <span class="live-pill" id="live-pill">
+                        <span class="live-dot"></span>LIVE
+                    </span>
+                </div>
                 <div class="feed-controls">
-                    <label class="toggle-label">
-                        <input type="checkbox" id="auto-scroll" checked />
-                        Auto-scroll
-                    </label>
-                    <button class="clear-btn" onclick="clearFeed()">Clear</button>
+                    <button class="ctrl-btn" id="pause-btn" onclick="togglePause()" title="Pause feed">⏸</button>
+                    <button class="ctrl-btn" onclick="clearFeed()" title="Clear feed">🗑</button>
                 </div>
             </div>
+
+            <!-- Filter tabs -->
+            <div class="filter-bar">
+                <button class="filter-tab active" data-filter="all"     onclick="setFilter('all')">
+                    All <span class="tab-count" id="fc-all">0</span>
+                </button>
+                <button class="filter-tab" data-filter="message"  onclick="setFilter('message')">
+                    💬 Messages <span class="tab-count" id="fc-message">0</span>
+                </button>
+                <button class="filter-tab" data-filter="command"  onclick="setFilter('command')">
+                    ⚡ Commands <span class="tab-count" id="fc-command">0</span>
+                </button>
+                <button class="filter-tab" data-filter="group"    onclick="setFilter('group')">
+                    👥 Groups <span class="tab-count" id="fc-group">0</span>
+                </button>
+                <button class="filter-tab" data-filter="call"     onclick="setFilter('call')">
+                    📞 Calls <span class="tab-count" id="fc-call">0</span>
+                </button>
+                <button class="filter-tab" data-filter="system"   onclick="setFilter('system')">
+                    ⚙ System <span class="tab-count" id="fc-system">0</span>
+                </button>
+            </div>
+
+            <!-- Event feed -->
             <div id="event-feed" class="event-feed">
                 <div class="feed-empty" id="feed-empty">
                     <div class="feed-empty-icon">📡</div>
                     <div>Waiting for events…</div>
                 </div>
             </div>
+
         </main>
 
     </div>
@@ -128,13 +157,16 @@
 
 <script>
 // ─── State ─────────────────────────────────────────────────────────────────
-let pollInterval = null
-let eventSource = null
-let statsInterval = null
+let pollInterval   = null
+let eventSource    = null
+let statsInterval  = null
 let uptimeInterval = null
-let serverStartTs = null
-let eventCount = 0
-let autoScroll = true
+let serverStartTs  = null
+let paused         = false
+let activeFilter   = 'all'
+let allEvents      = []          // full in-memory list (max 200)
+let typeCounts     = { all: 0, message: 0, command: 0, group: 0, call: 0, system: 0 }
+let flashTimeout   = null
 
 // ─── Setup / pairing flow ──────────────────────────────────────────────────
 function startPolling() {
@@ -230,9 +262,6 @@ async function initDashboard() {
     startSSE()
     statsInterval  = setInterval(loadStats, 10000)
     uptimeInterval = setInterval(tickUptime, 1000)
-    document.getElementById('auto-scroll').addEventListener('change', function() {
-        autoScroll = this.checked
-    })
 }
 
 async function loadStats() {
@@ -288,25 +317,108 @@ function toggleCat(header) {
     chev.textContent = open ? '▸' : '▾'
 }
 
+// ─── SSE & Events ──────────────────────────────────────────────────────────
 function startSSE() {
-    if (eventSource) { eventSource.close() }
+    if (eventSource) eventSource.close()
     eventSource = new EventSource('/api/events')
     eventSource.onmessage = function(e) {
-        const evt = JSON.parse(e.data)
-        renderEvent(evt)
+        try {
+            const evt = JSON.parse(e.data)
+            ingestEvent(evt)
+        } catch { /* ignore */ }
     }
     eventSource.onerror = function() {
+        setPillState(false)
         setTimeout(startSSE, 3000)
+    }
+    eventSource.onopen = function() {
+        setPillState(true)
     }
 }
 
-function renderEvent(evt) {
+function setPillState(live) {
+    const pill = document.getElementById('live-pill')
+    if (live) {
+        pill.classList.remove('pill-paused')
+    } else {
+        pill.classList.add('pill-paused')
+    }
+}
+
+function ingestEvent(evt) {
+    // Store in memory
+    allEvents.unshift(evt)
+    if (allEvents.length > 200) allEvents.pop()
+
+    // Update counts
+    const type = evt.type || 'system'
+    const bucket = ['message','command','group','call','connect','disconnect'].includes(type)
+        ? (type === 'connect' || type === 'disconnect' ? 'system' : type)
+        : 'system'
+    typeCounts.all++
+    if (typeCounts[bucket] !== undefined) typeCounts[bucket]++
+    else typeCounts.system++
+    updateTabCounts()
+
+    // Flash the LIVE pill
+    flashLive()
+
+    // Render if not paused and matches filter
+    if (!paused && matchesFilter(evt, activeFilter)) {
+        renderEvent(evt, true)
+    }
+}
+
+function matchesFilter(evt, filter) {
+    if (filter === 'all') return true
+    const type = evt.type || 'system'
+    if (filter === 'system') return type === 'system' || type === 'connect' || type === 'disconnect'
+    return type === filter
+}
+
+function updateTabCounts() {
+    document.getElementById('fc-all').textContent     = fmtNum(typeCounts.all)
+    document.getElementById('fc-message').textContent = fmtNum(typeCounts.message)
+    document.getElementById('fc-command').textContent = fmtNum(typeCounts.command)
+    document.getElementById('fc-group').textContent   = fmtNum(typeCounts.group)
+    document.getElementById('fc-call').textContent    = fmtNum(typeCounts.call)
+    document.getElementById('fc-system').textContent  = fmtNum(typeCounts.system)
+}
+
+function flashLive() {
+    const pill = document.getElementById('live-pill')
+    pill.classList.add('pill-flash')
+    clearTimeout(flashTimeout)
+    flashTimeout = setTimeout(() => pill.classList.remove('pill-flash'), 600)
+}
+
+function setFilter(filter) {
+    activeFilter = filter
+    document.querySelectorAll('.filter-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.filter === filter)
+    })
+    rebuildFeed()
+}
+
+function rebuildFeed() {
+    const feed = document.getElementById('event-feed')
+    feed.innerHTML = ''
+    const filtered = allEvents.filter(e => matchesFilter(e, activeFilter))
+    if (!filtered.length) {
+        feed.innerHTML = '<div class="feed-empty" id="feed-empty"><div class="feed-empty-icon">📡</div><div>No events yet…</div></div>'
+        return
+    }
+    filtered.forEach(evt => renderEvent(evt, false))
+}
+
+function renderEvent(evt, animate) {
     const feed  = document.getElementById('event-feed')
     const empty = document.getElementById('feed-empty')
     if (empty) empty.remove()
 
     const item = document.createElement('div')
-    item.className = `event-item event-${evt.type}`
+    item.className = `event-item event-${evt.type}${animate ? ' event-new' : ''}`
+    item.dataset.type = evt.type || 'system'
     item.innerHTML = `
         <div class="event-icon">${evt.icon}</div>
         <div class="event-body">
@@ -316,15 +428,33 @@ function renderEvent(evt) {
         <div class="event-time">${fmtTime(evt.ts)}</div>
     `
 
-    // newest at top
     feed.insertBefore(item, feed.firstChild)
 
-    // keep max 150 events in DOM
+    // keep max 150 in DOM
     const items = feed.querySelectorAll('.event-item')
     if (items.length > 150) items[items.length - 1].remove()
 }
 
+function togglePause() {
+    paused = !paused
+    const btn  = document.getElementById('pause-btn')
+    const pill = document.getElementById('live-pill')
+    if (paused) {
+        btn.textContent = '▶'
+        btn.title = 'Resume feed'
+        pill.classList.add('pill-paused')
+    } else {
+        btn.textContent = '⏸'
+        btn.title = 'Pause feed'
+        pill.classList.remove('pill-paused')
+        rebuildFeed()
+    }
+}
+
 function clearFeed() {
+    allEvents = []
+    typeCounts = { all: 0, message: 0, command: 0, group: 0, call: 0, system: 0 }
+    updateTabCounts()
     const feed = document.getElementById('event-feed')
     feed.innerHTML = '<div class="feed-empty" id="feed-empty"><div class="feed-empty-icon">📡</div><div>Waiting for events…</div></div>'
 }
@@ -368,7 +498,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('phone-input').addEventListener('keydown', e => {
         if (e.key === 'Enter') requestPairCode()
     })
-    // check if already connected
     try {
         const res = await fetch('/api/status')
         const status = await res.json()
@@ -378,7 +507,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return
         }
     } catch (e) { /* ignore */ }
-    // not connected — show setup
     poll()
 })
 </script>
