@@ -28,6 +28,9 @@ export default class WAClient extends EventEmitter {
     public chats: Record<string, any> = {}
     public groupMetadataCache: Map<string, { data: any; ts: number }> = new Map()
     private cachedBaileysVersion: [number, number, number] | null = null
+    private groupDataCache: Map<string, { data: IGroupModel; ts: number }> = new Map()
+    private userDataCache: Map<string, IUserModel> = new Map()
+    private readonly GROUP_DATA_TTL = 5 * 60 * 1000
     public QR: Buffer | null = null
     public QRText: string | null = null
     public pairCode: string | null = null
@@ -483,32 +486,51 @@ export default class WAClient extends EventEmitter {
         let user = await this.DB.user.findOne({ jid })
         if (!user) user = await this.DB.user.create({ jid })
         user.ban = true
-        return user.save()
+        const result = await user.save()
+        this.invalidateUser(jid)
+        return result
     }
 
     async unbanUser(jid: string): Promise<any> {
         const user = await this.DB.user.findOne({ jid })
         if (!user) return null
         user.ban = false
-        return user.save()
+        const result = await user.save()
+        this.invalidateUser(jid)
+        return result
     }
 
     async getGroupData(jid: string): Promise<IGroupModel> {
+        const cached = this.groupDataCache.get(jid)
+        if (cached && Date.now() - cached.ts < this.GROUP_DATA_TTL) return cached.data
         let group = await this.DB.group.findOne({ jid })
         if (!group) group = await this.DB.group.create({ jid })
+        this.groupDataCache.set(jid, { data: group, ts: Date.now() })
         return group
     }
 
+    invalidateGroupData(jid: string): void {
+        this.groupDataCache.delete(jid)
+    }
+
     async getUser(jid: string): Promise<IUserModel> {
+        const cached = this.userDataCache.get(jid)
+        if (cached) return cached
         let user = await this.DB.user.findOne({ jid })
         if (!user) user = await this.DB.user.create({ jid })
+        this.userDataCache.set(jid, user)
         return user
+    }
+
+    invalidateUser(jid: string): void {
+        this.userDataCache.delete(jid)
     }
 
     async setXp(jid: string, xp: number, limit: number): Promise<void> {
         const user = await this.getUser(jid)
         user.Xp = Math.min((user.Xp || 0) + xp, limit * 100)
         await user.save()
+        this.userDataCache.set(jid, user)
     }
 
     isFeature(name: string): boolean {
