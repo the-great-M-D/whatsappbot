@@ -50,7 +50,7 @@ class Server extends events_1.EventEmitter {
                     : null
             });
         });
-        this.app.post('/api/pair', this.auth, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.app.post('/api/pair', (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { phone } = req.body;
                 if (!phone)
