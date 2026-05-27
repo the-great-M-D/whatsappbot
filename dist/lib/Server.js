@@ -28,11 +28,12 @@ class Server extends events_1.EventEmitter {
         this.startTime = Date.now();
         this.handler = null;
         this.auth = (req, res, next) => {
-            const { session } = req.query;
+            var _a, _b;
+            const session = ((_a = req.query.session) !== null && _a !== void 0 ? _a : (_b = req.body) === null || _b === void 0 ? void 0 : _b.session);
             if (!session)
-                return void res.json({ message: `Session Query not provided` });
+                return void res.status(401).json({ message: `Session not provided` });
             if (session !== this.client.config.session)
-                return void res.json({ message: `Invalid Session ID` });
+                return void res.status(403).json({ message: `Invalid session` });
             next();
         };
         this.app.use(express_1.default.json());
@@ -49,7 +50,7 @@ class Server extends events_1.EventEmitter {
                     : null
             });
         });
-        this.app.post('/api/pair', (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.app.post('/api/pair', this.auth, (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { phone } = req.body;
                 if (!phone)

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
 const DATA_DIR = join(process.cwd(), 'data')
@@ -20,10 +20,20 @@ function makeCollection<T extends Record<string, any>>(
         }
     }
 
+    let flushScheduled = false
     const flush = () => {
-        const snapshot = JSON.stringify(Array.from(store.values()))
+        if (flushScheduled) return
+        flushScheduled = true
         setImmediate(() => {
-            try { writeFileSync(filePath, snapshot) } catch { /* ignore */ }
+            flushScheduled = false
+            const snapshot = JSON.stringify(Array.from(store.values()))
+            const tmp = filePath + '.tmp'
+            try {
+                writeFileSync(tmp, snapshot, 'utf8')
+                renameSync(tmp, filePath)
+            } catch (e) {
+                console.warn(`[DiskStore] Write failed for ${filePath}:`, e)
+            }
         })
     }
 

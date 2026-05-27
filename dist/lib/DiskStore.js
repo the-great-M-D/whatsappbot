@@ -38,13 +38,22 @@ function makeCollection(filePath, idField, makeDefaults) {
             console.warn(`[DiskStore] Could not load ${filePath}, starting fresh`);
         }
     }
+    let flushScheduled = false;
     const flush = () => {
-        const snapshot = JSON.stringify(Array.from(store.values()));
+        if (flushScheduled)
+            return;
+        flushScheduled = true;
         setImmediate(() => {
+            flushScheduled = false;
+            const snapshot = JSON.stringify(Array.from(store.values()));
+            const tmp = filePath + '.tmp';
             try {
-                (0, fs_1.writeFileSync)(filePath, snapshot);
+                (0, fs_1.writeFileSync)(tmp, snapshot, 'utf8');
+                (0, fs_1.renameSync)(tmp, filePath);
             }
-            catch ( /* ignore */_a) { /* ignore */ }
+            catch (e) {
+                console.warn(`[DiskStore] Write failed for ${filePath}:`, e);
+            }
         });
     };
     const wrapDoc = (record) => {

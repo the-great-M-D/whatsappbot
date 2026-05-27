@@ -18,7 +18,7 @@ class Command extends BaseCommand_1.default {
         super(client, handler, {
             adminOnly: true,
             command: 'open',
-            description: 'Opens the group for all participants.',
+            description: 'Opens the group so all participants can send messages',
             category: 'moderation',
             usage: `${client.config.prefix}open`,
             baseXp: 0
@@ -27,9 +27,12 @@ class Command extends BaseCommand_1.default {
             var _a;
             if (!this.client.isBotAdmin(((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) || []))
                 return void M.reply("I can't open the group without being an admin");
+            if (!M.sender.isAdmin)
+                return void M.reply("Only admins can open the group");
             if (!M.groupMetadata.announce)
                 return void M.reply('Group is already open');
-            this.client.groupSettingChange(M.groupMetadata.id, 'not_announcement');
+            yield this.client.groupSettingChange(M.from, 'not_announce').catch(() => null);
+            yield M.reply('✅ Group opened — everyone can now send messages');
         });
     }
 }
