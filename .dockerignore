@@ -1,0 +1,16 @@
+node_modules/
+dist/
+auth/
+data/
+.env
+.env.*
+.git/
+.replit
+replit.nix
+.config/
+.cache/
+.local/
+.upm/
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: kaoi-bot
+    runtime: node
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URL
+        sync: false
+      - key: SESSION
+        value: M_D
+      - key: PREFIX
+        value: "!"
+      - key: MODS
+        sync: false
+      - key: NAME
+        value: M_D BOT
