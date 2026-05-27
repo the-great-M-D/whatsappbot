@@ -33,10 +33,10 @@ class Command extends BaseCommand_1.default {
             if (!M.mentioned.length)
                 return void M.reply(`Please tag the users you want to ${this.config.command}`);
             M.mentioned.forEach((user) => __awaiter(this, void 0, void 0, function* () {
-                var _c;
+                var _a;
                 // const usr = this.client.contacts[user]
                 // const username = usr.notify || usr.vname || usr.name || user.split('@')[0]
-                if (((_c = M.groupMetadata) === null || _c === void 0 ? void 0 : _c.owner.split('@')[0]) === user.split('@')[0]) {
+                if (((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.owner.split('@')[0]) === user.split('@')[0]) {
                     text += `❌ Skipped *@${user.split('@')[0]}* as they're owner.\n`;
                 }
                 // check if user is Bot

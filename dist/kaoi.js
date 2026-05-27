@@ -65,11 +65,11 @@ const start = () => __awaiter(void 0, void 0, void 0, function* () {
         }
     }));
     client.on('CB:Call', (call) => __awaiter(void 0, void 0, void 0, function* () {
-        var _e;
+        var _a;
         if (call.status !== 'offer')
             return;
         const number = call.from;
-        client.log(`${chalk_1.default.blue('CALL')} From ${((_e = client.contacts[number]) === null || _e === void 0 ? void 0 : _e.notify) || number}`);
+        client.log(`${chalk_1.default.blue('CALL')} From ${((_a = client.contacts[number]) === null || _a === void 0 ? void 0 : _a.notify) || number}`);
         yield callHandler.rejectCall(number, call.id);
     }));
     client.on('new-message', messageHandler.handleMessage);

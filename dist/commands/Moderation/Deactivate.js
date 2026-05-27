@@ -25,7 +25,7 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}deactivate [events | mod | safe | nsfw | cmd | invitelink]`,
             baseXp: 0
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             const type = joined.trim().toLowerCase();
             if (!WAClient_1.activatableFeatures.includes(type))
                 return void M.reply(`🟥 Invalid Option: *${this.client.util.capitalize(type)}*`);

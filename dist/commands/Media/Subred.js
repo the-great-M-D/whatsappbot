@@ -25,7 +25,7 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}subred [subredit_name]`,
             baseXp: 30
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             if (!joined)
                 return void (yield M.reply(`Please provide the subreddit you want to fetch`));
             const response = yield (0, redditFetcher_1.default)(joined.toLowerCase().trim());

@@ -117,11 +117,11 @@ class MessageHandler {
                 const groupinvites = M.urls.filter((url) => url.includes('chat.whatsapp.com'));
                 if (groupinvites.length) {
                     groupinvites.forEach((invite) => __awaiter(this, void 0, void 0, function* () {
-                        var _o;
+                        var _a;
                         const splitInvite = invite.split('/');
                         const z = yield this.client.groupInviteCode(M.from);
                         if (z !== splitInvite[splitInvite.length - 1]) {
-                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_o = M.groupMetadata) === null || _o === void 0 ? void 0 : _o.subject) || ''}`);
+                            this.client.log(`${chalk_1.default.blueBright('MOD')} ${chalk_1.default.green('Group Invite')} by ${chalk_1.default.yellow(M.sender.username)} in ${((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.subject) || ''}`);
                             return void (yield this.client.groupRemove(M.from, [M.sender.jid]));
                         }
                     }));

@@ -56,7 +56,7 @@ class Command extends BaseCommand_1.default {
             const state = yield this.client.DB.disabledcommands.findOne({ command: command.config.command });
             M.reply(`🎫 *Command:* ${this.client.util.capitalize((_b = command.config) === null || _b === void 0 ? void 0 : _b.command)}\n🎗️ *Status:* ${state ? 'Disabled' : 'Available'}\n🀄 *Category:* ${this.client.util.capitalize(((_c = command.config) === null || _c === void 0 ? void 0 : _c.category) || '')}${command.config.aliases && command.config.command !== 'react'
                 ? `\n🍥 *Aliases:* ${command.config.aliases.map(this.client.util.capitalize).join(', ')}`
-                : ''}\n🃏 *Group Only:* ${this.client.util.capitalize(JSON.stringify((_d = !command.config.dm) !== null && _d !== void 0 ? _d : true))}\n🎀 *Usage:* ${((_e = command.config) === null || _e === void 0 ? void 0 : _e.usage) || ''}\n\n🔖 *Description:* ${((_f = command.config) === null || _f === void 0 ? void 0 : _f.description) || ''}`);
+                : ''}\n🃏 *Group Only:* ${this.client.util.capitalize(JSON.stringify(!((_d = command.config.dm) !== null && _d !== void 0 ? _d : true)))}\n🎀 *Usage:* ${((_e = command.config) === null || _e === void 0 ? void 0 : _e.usage) || ''}\n\n🔖 *Description:* ${((_f = command.config) === null || _f === void 0 ? void 0 : _f.description) || ''}`);
         });
         this.emojis = ['📺', '🤖', '⚙️', '👨‍💻', '📚', '👻', '🎲', '😶‍🌫️', '📼', '🦉', '🪜', '🤹'];
     }

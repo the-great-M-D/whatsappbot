@@ -26,7 +26,7 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}crypto (Symbol) (Target)\nFor Example\ncrypto BTC INR\nIf you use ${client.config.prefix}crypto without parameters fetches all.`,
             baseXp: 100
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             // check if key exists
             // if (!this.client.config.ckey) return void M.reply('No CryptoCurrency API Key Set')
             const term = joined.trim().split(' ');

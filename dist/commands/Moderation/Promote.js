@@ -32,10 +32,10 @@ class Command extends BaseCommand_1.default {
             if (!M.mentioned.length)
                 return void M.reply(`Please tag the users you want to ${this.config.command}`);
             M.mentioned.forEach((user) => __awaiter(this, void 0, void 0, function* () {
-                var _c, _d;
+                var _a, _b;
                 const usr = this.client.contacts[user];
                 const username = usr.notify || usr.vname || usr.name || user.split('@')[0];
-                if ((_d = (_c = M.groupMetadata) === null || _c === void 0 ? void 0 : _c.admins) === null || _d === void 0 ? void 0 : _d.includes(user))
+                if ((_b = (_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) === null || _b === void 0 ? void 0 : _b.includes(user))
                     M.reply(`❌ Skipped *${username}* as they're already an admin`);
                 else {
                     yield this.client.groupMakeAdmin(M.from, [user]);

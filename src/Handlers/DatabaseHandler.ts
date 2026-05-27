@@ -29,9 +29,7 @@ export default class DatabaseHandler implements IDBModels {
         try {
             await mongoose.connect(uri, {
                 serverSelectionTimeoutMS: 8000,
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            } as any)
+            })
             this.session = SessionModel
             this.connected = true
             console.log('[DB] MongoDB connected (auth/session only) — all other data on disk')

@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const jimp_1 = __importDefault(require("jimp"));
+const jimp_1 = require("jimp");
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -23,25 +23,30 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}blur [(as caption | quote)[image] | @mention]`,
             baseXp: 30
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f;
-            const image = yield (((_b = (_a = M.WAMessage) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.imageMessage)
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
+            var _b, _c, _d, _e, _f, _g;
+            const image = yield (((_c = (_b = M.WAMessage) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.imageMessage)
                 ? this.client.downloadMediaMessage(M.WAMessage)
-                : ((_e = (_d = (_c = M.quoted) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message) === null || _e === void 0 ? void 0 : _e.imageMessage)
+                : ((_f = (_e = (_d = M.quoted) === null || _d === void 0 ? void 0 : _d.message) === null || _e === void 0 ? void 0 : _e.message) === null || _f === void 0 ? void 0 : _f.imageMessage)
                     ? this.client.downloadMediaMessage(M.quoted.message)
                     : M.mentioned[0]
                         ? this.client.getProfilePicture(M.mentioned[0])
-                        : this.client.getProfilePicture(((_f = M.quoted) === null || _f === void 0 ? void 0 : _f.sender) || M.sender.jid));
+                        : this.client.getProfilePicture(((_g = M.quoted) === null || _g === void 0 ? void 0 : _g.sender) || M.sender.jid));
             if (!image)
                 return void M.reply(`Couldn't fetch the required Image`);
             const level = joined.trim() || '5';
-            const img = yield jimp_1.default.read(image);
-            img.blur(isNaN(level) ? 5 : parseInt(level));
-            img.getBuffer(`image/png`, (err, buffer) => {
-                if (err)
-                    return void M.reply((err === null || err === void 0 ? void 0 : err.message) || `Couldn't blur the image`);
+            const blurLevel = isNaN(parseInt(level)) ? 5 : parseInt(level);
+            try {
+                const img = Buffer.isBuffer(image)
+                    ? yield jimp_1.Jimp.fromBuffer(image)
+                    : yield jimp_1.Jimp.read(image);
+                img.blur(blurLevel);
+                const buffer = yield img.getBuffer('image/png');
                 M.reply(buffer, 'image');
-            });
+            }
+            catch (err) {
+                M.reply((err === null || err === void 0 ? void 0 : err.message) || `Couldn't blur the image`);
+            }
         });
     }
 }
