@@ -1,10 +1,13 @@
 import Spotify from 'spotifydl-core'
 
-/** Using public keys */
-const client = new Spotify({
-    clientId: 'acc6302297e040aeb6e4ac1fbdfd62c3',
-    clientSecret: '0e8439a1280a43aba9a5bc0a16f3f009'
-})
+const clientId = process.env.SPOTIFY_CLIENT_ID || ''
+const clientSecret = process.env.SPOTIFY_CLIENT_SECRET || ''
+
+if (!clientId || !clientSecret) {
+    console.warn('[Spotify] SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET env vars not set — spotify commands will fail')
+}
+
+const client = new Spotify({ clientId, clientSecret })
 
 export default class {
     constructor(public url: string) {}
