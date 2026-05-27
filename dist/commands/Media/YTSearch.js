@@ -18,40 +18,51 @@ class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
             command: 'ytsearch',
-            description: 'Searches YT',
+            description: 'Searches YouTube and returns top results',
             category: 'media',
             aliases: ['yts'],
-            usage: `${client.config.prefix}yts [term]`,
+            usage: `${client.config.prefix}ytsearch [search term]`,
             baseXp: 20
         });
         this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             if (!joined)
                 return void M.reply('🔎 Provide a search term');
             const term = joined.trim();
-            const { videos } = yield (0, yt_search_1.default)(term);
-            if (!videos || videos.length <= 0)
-                return void M.reply(`🤹 No Matching videos found for : *${term}*`);
-            const length = videos.length < 10 ? videos.length : 10;
-            let text = `🔎 *Results for ${term}*\n`;
-            for (let i = 0; i < length; i++) {
-                text += `*#${i + 1}*\n📗 *Title:* ${videos[i].title}\n📕 *Channel:* ${videos[i].author.name}\n 📙 *Duration:* ${videos[i].duration}\n📘 *URL:* ${videos[i].url}\n\n`;
+            yield M.reply(`🔎 Searching YouTube for *${term}*...`);
+            let videos = [];
+            try {
+                const result = yield (0, yt_search_1.default)(term);
+                videos = result.videos;
             }
-            M.reply('Please wait... while the Bot is 🤹 searching...');
-            this.client.sock
+            catch (_b) {
+                return void M.reply('❌ YouTube search failed — try again in a moment');
+            }
+            if (!videos.length)
+                return void M.reply(`No results found for *${term}*`);
+            const top = videos.slice(0, 8);
+            let text = `🔎 *YouTube Results for "${term}"*\n\n`;
+            for (let i = 0; i < top.length; i++) {
+                const v = top[i];
+                text += `*${i + 1}.* ${v.title}\n`;
+                text += `   👤 ${v.author.name}  ⏱ ${v.duration.timestamp}\n`;
+                text += `   🔗 ${v.url}\n\n`;
+            }
+            text += `_Use !ytaudio or !ytvideo with a URL to download_`;
+            yield this.client.sock
                 .sendMessage(M.from, {
                 text,
                 contextInfo: {
                     externalAdReply: {
-                        title: `Search Term: ${term}`,
-                        body: `🤹 Handcrafted for you by M_D's Bot 🤹`,
+                        title: top[0].title.slice(0, 60),
+                        body: `${top[0].author.name} • ${top[0].duration.timestamp}`,
                         mediaType: 2,
-                        thumbnailUrl: videos[0].thumbnail,
-                        mediaUrl: videos[0].url,
-                        sourceUrl: videos[0].url
+                        thumbnailUrl: top[0].thumbnail,
+                        mediaUrl: top[0].url,
+                        sourceUrl: top[0].url
                     }
                 }
             }, { quoted: M.WAMessage })
-                .catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+                .catch(() => M.reply(text));
         });
     }
 }

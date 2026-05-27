@@ -8,10 +8,10 @@ export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
         super(client, handler, {
             command: 'ytsearch',
-            description: 'Searches YT',
+            description: 'Searches YouTube and returns top results',
             category: 'media',
             aliases: ['yts'],
-            usage: `${client.config.prefix}yts [term]`,
+            usage: `${client.config.prefix}ytsearch [search term]`,
             baseXp: 20
         })
     }
@@ -19,30 +19,43 @@ export default class Command extends BaseCommand {
     run = async (M: ISimplifiedMessage, { joined }: IParsedArgs): Promise<void> => {
         if (!joined) return void M.reply('🔎 Provide a search term')
         const term = joined.trim()
-        const { videos } = await yts(term)
-        if (!videos || videos.length <= 0) return void M.reply(`🤹 No Matching videos found for : *${term}*`)
-        const length = videos.length < 10 ? videos.length : 10
-        let text = `🔎 *Results for ${term}*\n`
-        for (let i = 0; i < length; i++) {
-            text += `*#${i + 1}*\n📗 *Title:* ${videos[i].title}\n📕 *Channel:* ${
-                videos[i].author.name
-            }\n 📙 *Duration:* ${videos[i].duration}\n📘 *URL:* ${videos[i].url}\n\n`
+
+        await M.reply(`🔎 Searching YouTube for *${term}*...`)
+
+        let videos: yts.VideoSearchResult[] = []
+        try {
+            const result = await yts(term)
+            videos = result.videos
+        } catch {
+            return void M.reply('❌ YouTube search failed — try again in a moment')
         }
-        M.reply('Please wait... while the Bot is 🤹 searching...')
-        this.client.sock
+
+        if (!videos.length) return void M.reply(`No results found for *${term}*`)
+
+        const top = videos.slice(0, 8)
+        let text = `🔎 *YouTube Results for "${term}"*\n\n`
+        for (let i = 0; i < top.length; i++) {
+            const v = top[i]
+            text += `*${i + 1}.* ${v.title}\n`
+            text += `   👤 ${v.author.name}  ⏱ ${v.duration.timestamp}\n`
+            text += `   🔗 ${v.url}\n\n`
+        }
+        text += `_Use !ytaudio or !ytvideo with a URL to download_`
+
+        await this.client.sock
             .sendMessage(M.from, {
                 text,
                 contextInfo: {
                     externalAdReply: {
-                        title: `Search Term: ${term}`,
-                        body: `🤹 Handcrafted for you by M_D's Bot 🤹`,
+                        title: top[0].title.slice(0, 60),
+                        body: `${top[0].author.name} • ${top[0].duration.timestamp}`,
                         mediaType: 2,
-                        thumbnailUrl: videos[0].thumbnail,
-                        mediaUrl: videos[0].url,
-                        sourceUrl: videos[0].url
+                        thumbnailUrl: top[0].thumbnail,
+                        mediaUrl: top[0].url,
+                        sourceUrl: top[0].url
                     }
                 }
             }, { quoted: M.WAMessage })
-            .catch((reason: any) => M.reply(`❌ an error occurred, Reason: ${reason}`))
+            .catch(() => M.reply(text))
     }
 }
