@@ -21,9 +21,9 @@ export default class DatabaseHandler implements IDBModels {
     connected = false
 
     async connect(): Promise<void> {
-        const uri = process.env.MONGODB_URI
+        const uri = process.env.MONGODB_URL || process.env.MONGODB_URI
         if (!uri) {
-            console.log('[DB] No MONGODB_URI — auth backup disabled, disk store active')
+            console.log('[DB] No MONGODB_URL — auth backup disabled, disk store active')
             return
         }
         try {
