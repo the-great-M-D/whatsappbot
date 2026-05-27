@@ -39,7 +39,7 @@ export default class Server extends EventEmitter {
             })
         })
 
-        this.app.post('/api/pair', async (req, res) => {
+        this.app.post('/api/pair', this.auth, async (req, res) => {
             try {
                 const { phone } = req.body
                 if (!phone) return void res.status(400).json({ error: 'Phone number is required' })
@@ -199,9 +199,9 @@ export default class Server extends EventEmitter {
     }
 
     auth = (req: Request, res: Response, next: NextFunction): void => {
-        const { session } = req.query
-        if (!session) return void res.json({ message: `Session Query not provided` })
-        if (session !== this.client.config.session) return void res.json({ message: `Invalid Session ID` })
+        const session = (req.query.session ?? req.body?.session) as string | undefined
+        if (!session) return void res.status(401).json({ message: `Session not provided` })
+        if (session !== this.client.config.session) return void res.status(403).json({ message: `Invalid session` })
         next()
     }
 }

@@ -16,21 +16,23 @@ const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
+            adminOnly: true,
             command: 'add',
-            description: 'adds participant to group chats',
+            description: 'Adds a participant to the group by number',
             category: 'moderation',
-            usage: `${client.config.prefix}add [numbers/ jid]`,
-            aliases: ['add'],
+            usage: `${client.config.prefix}add [number]`,
             baseXp: 10
         });
         this.run = (M, parsedArgs) => __awaiter(this, void 0, void 0, function* () {
             var _a;
-            const number = parsedArgs.joined.replace(/\D+/g, '').replace(/\s+/g, '').toString();
+            if (!this.client.isBotAdmin(((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) || []))
+                return void M.reply(`❌ Make me admin first before using ${this.config.command}`);
+            if (!M.sender.isAdmin)
+                return void M.reply(`❌ Only admins can add members`);
+            const number = parsedArgs.joined.replace(/\D+/g, '').trim();
+            if (!number.length)
+                return void M.reply(`Please provide the number you want to add`);
             try {
-                if (!this.client.isBotAdmin(((_a = M.groupMetadata) === null || _a === void 0 ? void 0 : _a.admins) || []))
-                    return void M.reply(`❌ Make me admin first before using ${this.config.command}`);
-                if (!number.length)
-                    return void M.reply(`Please provide the number you want to ${this.config.command}`);
                 const onWA = yield this.client.isOnWhatsApp(`${number}@s.whatsapp.net`);
                 if (!onWA)
                     return void M.reply(`❌ That number is not on WhatsApp`);

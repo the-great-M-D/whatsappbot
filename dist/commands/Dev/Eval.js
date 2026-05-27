@@ -13,29 +13,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
+const EVAL_TIMEOUT_MS = 5000;
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
             command: 'eval',
-            description: 'Evaluates JavaScript ➕ ',
+            description: 'Evaluates JavaScript (dev only)',
             category: 'dev',
             dm: true,
-            usage: `${client.config.prefix}eval [JS CODE]`,
-            modsOnly: true,
+            usage: `${client.config.prefix}eval [JS code]`,
+            devOnly: true,
             baseXp: 0
         });
         this.run = (M, parsedArgs) => __awaiter(this, void 0, void 0, function* () {
+            const code = parsedArgs.joined.trim();
+            if (!code)
+                return void M.reply('No code provided');
+            console.log(`[Eval] ${M.sender.jid} → ${code.slice(0, 200)}`);
             let out;
             try {
-                const output = eval(parsedArgs.joined) || 'Executed JS Successfully!';
-                console.log(output);
-                out = JSON.stringify(output);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const result = yield Promise.race([
+                    Promise.resolve().then(() => eval(code)),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error(`Eval timed out after ${EVAL_TIMEOUT_MS}ms`)), EVAL_TIMEOUT_MS))
+                ]);
+                out = result !== undefined ? JSON.stringify(result, null, 2) : 'Executed successfully (no return value)';
             }
             catch (err) {
-                out = err.message;
+                out = `❌ ${err.message}`;
             }
-            return void (yield M.reply(out));
+            return void (yield M.reply(out.slice(0, 4000)));
         });
     }
 }
