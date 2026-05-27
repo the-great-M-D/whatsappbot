@@ -14,27 +14,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const YT_1 = __importDefault(require("../../lib/YT"));
+const MAX_DURATION_VIDEO = 60 * 10;
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
             command: 'ytvideo',
-            description: 'Downloads given YT Video',
+            description: 'Downloads a YouTube video and sends it as MP4 (max 10 min)',
             category: 'media',
             aliases: ['ytv'],
-            usage: `${client.config.prefix}ytv [URL]`,
+            usage: `${client.config.prefix}ytvideo [URL]`,
             baseXp: 10
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
             if (!M.urls.length)
-                return void M.reply('🔎 Provide the URL of the YT video you want to download');
-            const video = new YT_1.default(M.urls[0], 'video');
-            if (!video.validateURL())
-                return void M.reply(`Provide a Valid YT URL`);
-            const { videoDetails } = yield video.getInfo();
-            M.reply('🤹 please wait while video is being Downloaded ... it will be sent when ready thanx 🤹‍♂️ ... ✌️');
-            if (Number(videoDetails.lengthSeconds) > 1800)
-                return void M.reply('✌️ Only Admins can download videos longer than 30 minutes');
-            M.reply(yield video.getBuffer(), 'video').catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+                return void M.reply('🔎 Send a YouTube URL with this command');
+            const yt = new YT_1.default(M.urls[0], 'video');
+            if (!yt.validateURL())
+                return void M.reply('⚓ That doesn\'t look like a valid YouTube URL');
+            let info;
+            try {
+                info = yield yt.getInfo();
+            }
+            catch (_a) {
+                return void M.reply('❌ Could not fetch video info — the video may be unavailable or private');
+            }
+            if (info.lengthSeconds > MAX_DURATION_VIDEO)
+                return void M.reply(`❌ Video is too long (${Math.floor(info.lengthSeconds / 60)}m). Maximum is 10 minutes.\n\nUse *!ytaudio* if you just want the audio.`);
+            yield M.reply(`🎬 *${info.title}*\n👤 ${info.author}\n⏱ ${Math.floor(info.lengthSeconds / 60)}m ${info.lengthSeconds % 60}s\n👁 ${info.viewCount} views\n\n⏳ Downloading...`);
+            try {
+                const buffer = yield yt.getBuffer();
+                yield M.reply(buffer, 'video');
+            }
+            catch (err) {
+                yield M.reply(`❌ Download failed: ${(err === null || err === void 0 ? void 0 : err.message) || 'Unknown error'}`);
+            }
         });
     }
 }

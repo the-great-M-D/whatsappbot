@@ -15,43 +15,57 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const yt_search_1 = __importDefault(require("yt-search"));
 const YT_1 = __importDefault(require("../../lib/YT"));
+const MAX_DURATION = 60 * 10;
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
             command: 'play',
-            description: '🎵 play a song with just search term!',
+            description: 'Search and download a song by name',
             category: 'media',
             aliases: ['music'],
-            usage: `${client.config.prefix}play [term]`,
+            usage: `${client.config.prefix}play [song name]`,
             baseXp: 30
         });
         this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             if (!joined)
-                return void M.reply('🔎 Provide a search term');
+                return void M.reply('🔎 Provide a song name or search term');
             const term = joined.trim();
-            const { videos } = yield (0, yt_search_1.default)(term);
-            if (!videos || videos.length <= 0)
-                return void M.reply(`⚓ No Matching videos found for the term : *${term}*`);
-            const audio = new YT_1.default(videos[0].url, 'audio');
-            if (!audio.url)
-                return;
-            M.reply('🤹 Please while wait... while your track is being sent 🤹‍♂️...');
-            this.client.sock
-                .sendMessage(M.from, {
-                audio: yield audio.getBuffer(),
-                mimetype: 'audio/mp4',
-                contextInfo: {
-                    externalAdReply: {
-                        title: videos[0].title.substr(0, 30),
-                        body: `author : ${videos[0].author.name.substr(0, 20)}\nSent Via : M_D Bot's 🤹`,
-                        mediaType: 2,
-                        thumbnailUrl: `https://i.ytimg.com/vi/${audio.id}/hqdefault.jpg`,
-                        mediaUrl: audio.url,
-                        sourceUrl: audio.url
+            yield M.reply(`🔎 Searching for *${term}*...`);
+            let videos = [];
+            try {
+                const result = yield (0, yt_search_1.default)(term);
+                videos = result.videos;
+            }
+            catch (_b) {
+                return void M.reply('❌ Search failed — try again in a moment');
+            }
+            if (!videos.length)
+                return void M.reply(`❌ No results found for *${term}*`);
+            const video = videos[0];
+            const yt = new YT_1.default(video.url, 'audio');
+            if (video.duration.seconds > MAX_DURATION)
+                return void M.reply(`❌ Track is too long (${video.duration.timestamp}). Max is 10 minutes.\n\nTry a more specific search term.`);
+            yield M.reply(`🎵 *${video.title}*\n👤 ${video.author.name}\n⏱ ${video.duration.timestamp}\n\n⏳ Downloading...`);
+            try {
+                const buffer = yield yt.getBuffer();
+                yield this.client.sock.sendMessage(M.from, {
+                    audio: buffer,
+                    mimetype: 'audio/mpeg',
+                    contextInfo: {
+                        externalAdReply: {
+                            title: video.title.slice(0, 60),
+                            body: `${video.author.name} • via Kaoi Bot`,
+                            mediaType: 2,
+                            thumbnailUrl: video.thumbnail,
+                            mediaUrl: video.url,
+                            sourceUrl: video.url
+                        }
                     }
-                }
-            }, { quoted: M.WAMessage })
-                .catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+                }, { quoted: M.WAMessage });
+            }
+            catch (err) {
+                yield M.reply(`❌ Download failed: ${(err === null || err === void 0 ? void 0 : err.message) || 'Unknown error'}`);
+            }
         });
     }
 }

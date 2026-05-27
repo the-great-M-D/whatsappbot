@@ -4,25 +4,44 @@ import WAClient from '../../lib/WAClient'
 import YT from '../../lib/YT'
 import { ISimplifiedMessage } from '../../typings'
 
+const MAX_DURATION_AUDIO = 60 * 15
+
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
         super(client, handler, {
             command: 'ytaudio',
-            description: 'Downloads given YT Video and sends it as Audio',
+            description: 'Downloads a YouTube video and sends it as audio (MP3)',
             category: 'media',
             aliases: ['yta'],
-            usage: `${client.config.prefix}ytv [URL]`,
+            usage: `${client.config.prefix}ytaudio [URL]`,
             baseXp: 20
         })
     }
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
-        if (!M.urls.length) return void M.reply('🔎 Provide the URL of the YT video you want to download')
-        const audio = new YT(M.urls[0], 'audio')
-        if (!audio.validateURL()) return void M.reply(`⚓ Provide a Valid YT URL`)
-        M.reply('🤹Please wait .. while your Audio is being sent to You 🤹‍♂️ ...')
-        M.reply(await audio.getBuffer(), 'audio').catch((reason: Error) =>
-            M.reply(`❌ an error occurred, Reason: ${reason}`)
+        if (!M.urls.length) return void M.reply('🔎 Send a YouTube URL with this command')
+        const yt = new YT(M.urls[0], 'audio')
+        if (!yt.validateURL()) return void M.reply('⚓ That doesn\'t look like a valid YouTube URL')
+
+        let info: Awaited<ReturnType<typeof yt.getInfo>>
+        try {
+            info = await yt.getInfo()
+        } catch {
+            return void M.reply('❌ Could not fetch video info — the video may be unavailable or private')
+        }
+
+        if (info.lengthSeconds > MAX_DURATION_AUDIO)
+            return void M.reply(`❌ Audio must be under 15 minutes (this is ${Math.floor(info.lengthSeconds / 60)}m)`)
+
+        await M.reply(
+            `🎵 *${info.title}*\n👤 ${info.author}\n⏱ ${Math.floor(info.lengthSeconds / 60)}m ${info.lengthSeconds % 60}s\n\n⏳ Downloading...`
         )
+
+        try {
+            const buffer = await yt.getBuffer()
+            await M.reply(buffer, 'audio')
+        } catch (err: any) {
+            await M.reply(`❌ Download failed: ${err?.message || 'Unknown error'}`)
+        }
     }
 }
