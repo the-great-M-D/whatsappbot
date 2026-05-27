@@ -24,7 +24,7 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}google [query]`,
             baseXp: 10
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             if (!this.client.config.gkey)
                 return void M.reply('No google API key set');
             if (!joined)

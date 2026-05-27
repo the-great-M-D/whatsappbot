@@ -26,7 +26,7 @@ class Command extends BaseCommand_1.default {
             dm: true,
             baseXp: 20
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             if (!joined)
                 return void M.reply('🔎 Provide a search term');
             const term = joined.trim();

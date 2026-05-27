@@ -24,7 +24,7 @@ class Command extends BaseCommand_1.default {
             modsOnly: true,
             baseXp: 0
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             const key = joined.toLowerCase().trim();
             if (!key)
                 return void (yield M.reply(`Provide the command you want to enable`));

@@ -51,9 +51,9 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}(reaction) [tag/quote users]\nExample: ${client.config.prefix}pat`,
             baseXp: 10
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
-            const action = ((_a = M.content) === null || _a === void 0 ? void 0 : _a.split(' ')[0].slice(1).toLowerCase()) || '';
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
+            var _b, _c;
+            const action = ((_b = M.content) === null || _b === void 0 ? void 0 : _b.split(' ')[0].slice(1).toLowerCase()) || '';
             let flag = true;
             if (!(action === 'r' || action === 'react')) {
                 flag = false;
@@ -98,7 +98,7 @@ class Command extends BaseCommand_1.default {
                 if (!Object.keys(Reactions).includes(term))
                     return void M.reply(`🧧 No Reaction Found 🧧\nUse ${this.client.config.prefix}r to see all available reactions`);
             }
-            if ((_b = M.quoted) === null || _b === void 0 ? void 0 : _b.sender)
+            if ((_c = M.quoted) === null || _c === void 0 ? void 0 : _c.sender)
                 M.mentioned.push(M.quoted.sender);
             if (!M.mentioned.length)
                 M.mentioned.push(M.sender.jid);

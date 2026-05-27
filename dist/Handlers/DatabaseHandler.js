@@ -41,8 +41,6 @@ class DatabaseHandler {
             try {
                 yield mongoose_1.default.connect(uri, {
                     serverSelectionTimeoutMS: 8000,
-                    useNewUrlParser: true,
-                    useUnifiedTopology: true,
                 });
                 this.session = Session_1.default;
                 this.connected = true;

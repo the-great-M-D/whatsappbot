@@ -23,8 +23,8 @@ class Command extends BaseCommand_1.default {
             category: 'educative',
             usage: `${client.config.prefix}github`
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
-            var _a;
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
+            var _b;
             const terms = joined.trim().split('/');
             if (terms[0] === '')
                 return void M.reply(`Arguments not found : Use ${this.client.config.prefix}gh (username/repo | username)`);
@@ -69,7 +69,7 @@ class Command extends BaseCommand_1.default {
                 // prepare text information
                 text += `*🐙 Link :* http://github.com/${username}/${repo}\n`;
                 text += `*🎒 Repository Name :* ${repoInfo.name}\n`;
-                text += `*ℹ️ Description:* ${(_a = repoInfo.description) !== null && _a !== void 0 ? _a : '-'}\n`;
+                text += `*ℹ️ Description:* ${(_b = repoInfo.description) !== null && _b !== void 0 ? _b : '-'}\n`;
                 text += `*📜 Licence:* ${repoInfo.license.name}\n`;
                 text += `*🌟 Stars:* ${repoInfo.stargazers_count}\n`;
                 text += `*💻 Language:* ${repoInfo.language}\n`;

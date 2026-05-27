@@ -32,7 +32,7 @@ class Command extends BaseCommand_1.default {
             catch (_g) {
                 return void M.reply('❌ This command is not available in this environment (canvas not supported).');
             }
-            const getImage = (image, timeout = 15) => __awaiter(this, void 0, void 0, function* () {
+            const getImage = (image_1, ...args_1) => __awaiter(this, [image_1, ...args_1], void 0, function* (image, timeout = 15) {
                 const img = yield Canvas.loadImage(image);
                 const GIF = new GIFEncoder(256, 310);
                 GIF.start();

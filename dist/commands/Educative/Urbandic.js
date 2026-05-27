@@ -24,7 +24,7 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}ur [Word you want to search about]`,
             baseXp: 50
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             if (!joined)
                 return void M.reply('Please provide a word .');
             const term = joined.trim();

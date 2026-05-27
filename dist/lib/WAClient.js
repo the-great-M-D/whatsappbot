@@ -15,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -208,16 +218,16 @@ class WAClient extends events_1.default {
                     setTimeout(() => this.connect(), delay);
                 }
             });
-            this.sock.ev.on('messages.upsert', ({ messages, type }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e, _f, _g;
+            this.sock.ev.on('messages.upsert', (_a) => __awaiter(this, [_a], void 0, function* ({ messages, type }) {
+                var _b, _c, _d, _e, _f, _g, _h;
                 for (const msg of messages) {
                     if (!(msg === null || msg === void 0 ? void 0 : msg.message))
                         continue;
-                    if (((_a = msg.key) === null || _a === void 0 ? void 0 : _a.fromMe) && type === 'append')
+                    if (((_b = msg.key) === null || _b === void 0 ? void 0 : _b.fromMe) && type === 'append')
                         continue;
-                    console.log(`[MSG] upsert type=${type} from=${(_b = msg.key) === null || _b === void 0 ? void 0 : _b.remoteJid} fromMe=${(_c = msg.key) === null || _c === void 0 ? void 0 : _c.fromMe}`);
+                    console.log(`[MSG] upsert type=${type} from=${(_c = msg.key) === null || _c === void 0 ? void 0 : _c.remoteJid} fromMe=${(_d = msg.key) === null || _d === void 0 ? void 0 : _d.fromMe}`);
                     // Capture bot's LID from fromMe group messages (key.participant = bot's own LID)
-                    if (((_d = msg.key) === null || _d === void 0 ? void 0 : _d.fromMe) && ((_f = (_e = msg.key) === null || _e === void 0 ? void 0 : _e.remoteJid) === null || _f === void 0 ? void 0 : _f.endsWith('@g.us')) && ((_g = msg.key) === null || _g === void 0 ? void 0 : _g.participant)) {
+                    if (((_e = msg.key) === null || _e === void 0 ? void 0 : _e.fromMe) && ((_g = (_f = msg.key) === null || _f === void 0 ? void 0 : _f.remoteJid) === null || _g === void 0 ? void 0 : _g.endsWith('@g.us')) && ((_h = msg.key) === null || _h === void 0 ? void 0 : _h.participant)) {
                         const p = msg.key.participant;
                         if (p.endsWith('@lid') && !this.botLid) {
                             this.botLid = p;
@@ -333,8 +343,8 @@ class WAClient extends events_1.default {
         });
     }
     fetchGroupMetadataFromWA(jid) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
             const cached = this.groupMetadataCache.get(jid);
             if (cached && Date.now() - cached.ts < CACHE_TTL)
@@ -494,8 +504,8 @@ class WAClient extends events_1.default {
         });
     }
     isOnWhatsApp(jid) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             try {
                 const result = yield this.sock.onWhatsApp(jid);
                 return ((_a = result === null || result === void 0 ? void 0 : result[0]) === null || _a === void 0 ? void 0 : _a.exists) || false;
@@ -578,8 +588,8 @@ class WAClient extends events_1.default {
         return (_a = this.features.get(name)) !== null && _a !== void 0 ? _a : false;
     }
     getFeatures(name) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const feature = yield this.DB.feature.findOne({ feature: name });
             return (_a = feature === null || feature === void 0 ? void 0 : feature.state) !== null && _a !== void 0 ? _a : false;
         });

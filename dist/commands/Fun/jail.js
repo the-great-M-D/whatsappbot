@@ -23,15 +23,15 @@ class Command extends BaseCommand_1.default {
             usage: `${client.config.prefix}jail [(as caption | quote)[image] | @mention]`,
             baseXp: 30
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f;
-            const image = yield (((_b = (_a = M.WAMessage) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.imageMessage)
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
+            var _b, _c, _d, _e, _f, _g;
+            const image = yield (((_c = (_b = M.WAMessage) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.imageMessage)
                 ? this.client.downloadMediaMessage(M.WAMessage)
-                : ((_e = (_d = (_c = M.quoted) === null || _c === void 0 ? void 0 : _c.message) === null || _d === void 0 ? void 0 : _d.message) === null || _e === void 0 ? void 0 : _e.imageMessage)
+                : ((_f = (_e = (_d = M.quoted) === null || _d === void 0 ? void 0 : _d.message) === null || _e === void 0 ? void 0 : _e.message) === null || _f === void 0 ? void 0 : _f.imageMessage)
                     ? this.client.downloadMediaMessage(M.quoted.message)
                     : M.mentioned[0]
                         ? this.client.getProfilePicture(M.mentioned[0])
-                        : this.client.getProfilePicture(((_f = M.quoted) === null || _f === void 0 ? void 0 : _f.sender) || M.sender.jid));
+                        : this.client.getProfilePicture(((_g = M.quoted) === null || _g === void 0 ? void 0 : _g.sender) || M.sender.jid));
             yield axios_1.default.get(`https://some-random-api.ml/canvas/jail?avatar=${image}`)
                 .then((response) => {
                 M.reply(response.data);

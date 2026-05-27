@@ -25,7 +25,7 @@ class Command extends BaseCommand_1.default {
             dm: true,
             usage: `${client.config.prefix}iguser [name]`
         });
-        this.run = (M, { joined }) => __awaiter(this, void 0, void 0, function* () {
+        this.run = (M_1, _a) => __awaiter(this, [M_1, _a], void 0, function* (M, { joined }) {
             if (!joined)
                 return void M.reply('Provide the keywords you wanna search, 🤹 !');
             const term = joined.trim();

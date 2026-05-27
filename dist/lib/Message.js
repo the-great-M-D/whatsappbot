@@ -9,11 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildSimplifiedMessage = void 0;
+exports.buildSimplifiedMessage = buildSimplifiedMessage;
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 function buildSimplifiedMessage(msg, client) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         try {
             const key = msg.key;
             const from = key.remoteJid;
@@ -149,4 +149,3 @@ function buildSimplifiedMessage(msg, client) {
         }
     });
 }
-exports.buildSimplifiedMessage = buildSimplifiedMessage;

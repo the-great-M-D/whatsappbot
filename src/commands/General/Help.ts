@@ -53,7 +53,7 @@ export default class Command extends BaseCommand {
                     ? `\n🍥 *Aliases:* ${command.config.aliases.map(this.client.util.capitalize).join(', ')}`
                     : ''
             }\n🃏 *Group Only:* ${this.client.util.capitalize(
-                JSON.stringify(!command.config.dm ?? true)
+                JSON.stringify(!(command.config.dm ?? true))
             )}\n🎀 *Usage:* ${command.config?.usage || ''}\n\n🔖 *Description:* ${command.config?.description || ''}`
         )
     }
