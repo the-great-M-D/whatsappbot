@@ -39,7 +39,7 @@ export default class Server extends EventEmitter {
             })
         })
 
-        this.app.post('/api/pair', this.auth, async (req, res) => {
+        this.app.post('/api/pair', async (req, res) => {
             try {
                 const { phone } = req.body
                 if (!phone) return void res.status(400).json({ error: 'Phone number is required' })
