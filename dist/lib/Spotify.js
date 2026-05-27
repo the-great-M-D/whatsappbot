@@ -13,11 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spotifydl_core_1 = __importDefault(require("spotifydl-core"));
-/** Using public keys */
-const client = new spotifydl_core_1.default({
-    clientId: 'acc6302297e040aeb6e4ac1fbdfd62c3',
-    clientSecret: '0e8439a1280a43aba9a5bc0a16f3f009'
-});
+const clientId = process.env.SPOTIFY_CLIENT_ID || '';
+const clientSecret = process.env.SPOTIFY_CLIENT_SECRET || '';
+if (!clientId || !clientSecret) {
+    console.warn('[Spotify] SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET env vars not set — spotify commands will fail');
+}
+const client = new spotifydl_core_1.default({ clientId, clientSecret });
 class default_1 {
     constructor(url) {
         this.url = url;
