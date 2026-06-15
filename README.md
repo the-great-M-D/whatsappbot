@@ -22,6 +22,18 @@ If you are deploying and using Railway
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2FPrajjwalDatir%2FKaoi%2F&envs=PREFIX%2CSESSION%2CMODS%2CCRON%2CMONGO_URI%2CGOOGLE_API_KEY%2CCHAT_BOT_URL&optionalEnvs=MODS%2CCRON%2CGOOGLE_API_KEY%2CCHAT_BOT_URL&PREFIXDesc=Prefix+of+your+bot&SESSIONDesc=A+string+for+the+session+to+be+classified+and+to+get+access+to+the+server+endpoints&MODSDesc=The+phone+numbers+of+the+users+who+you+want+to+be+admin+for+the+bot+%28should+be+in+international+format+without+%2B+and+multiple+numbers+must+be+separated+by+a+comma+%5C%22%2C%5C%22%29&CRONDesc=Cron+string+to+clear+chats+in+a+cycle&MONGO_URIDesc=A+secret+String+for+Mongodb+Connection+%28Required%29&GOOGLE_API_KEYDesc=Google+API+key+for+Google+searches+for+MODS+%28Not+Required%29&CHAT_BOT_URLDesc=BrainShop+API+Brain+url)
 
+## Deploy on Fly.io
+
+Fly.io requires the Fly CLI to deploy. It is an excellent platform for WhatsApp bots because it natively supports long-running background workers.
+
+**1. Install the Fly CLI**
+*   **Mac/Linux:** `curl -L https://fly.io/install.sh | sh`
+*   **Windows:** `pwsh -Command "iwr https://fly.io/install.ps1 -useb | iex"`
+
+**2. Login to your account**
+```bash
+fly auth login
+
 Use any one of the above to deploy
 
 </div><br/>
