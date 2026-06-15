@@ -36,7 +36,7 @@ fly auth login
 
 Use any one of the above to deploy
 
-</div><br/>
+<br/>
 <br/>
 
 ## ✨ Highlights
