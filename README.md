@@ -74,3 +74,4 @@ Use any one of the above to deploy
 
 Distributed under the GNU  GENERAL PUBLIC License. See [LICENSE](/LICENSE)
 for more information.
+</div>
