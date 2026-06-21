@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.vips
     pkgs.ffmpeg
     pkgs.yt-dlp
     pkgs.pkg-config
