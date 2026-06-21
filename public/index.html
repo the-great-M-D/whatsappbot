@@ -111,6 +111,17 @@
                 <span class="sidebar-count" id="cmd-total-badge">0</span>
             </div>
             <div id="cmd-list" class="cmd-list"></div>
+
+            <!-- ── Send panel ── -->
+            <div class="send-panel">
+                <div class="send-panel-title">Send Message</div>
+                <input id="send-jid" class="send-input" type="tel" placeholder="Phone e.g. 27731234567" />
+                <div class="send-msg-row">
+                    <input id="send-msg" class="send-input" type="text" placeholder="!help or any text" />
+                    <button id="send-btn" class="send-btn" onclick="sendDashMessage()">➤</button>
+                </div>
+                <div id="send-feedback" class="send-feedback"></div>
+            </div>
         </aside>
 
         <!-- ── Live feed ── -->
@@ -379,7 +390,7 @@ async function loadCommands() {
                     <span class="cat-chevron">▾</span>
                 </div>
                 <div class="cmd-cat-body">
-                    ${cmds.map(c => `<span class="cmd-chip">${c}</span>`).join('')}
+                    ${cmds.map(c => `<span class="cmd-chip" onclick="fillCmd('${c}')" title="Click to fill">${c}</span>`).join('')}
                 </div>
             </div>`
         }
@@ -668,6 +679,48 @@ function cap(str) {
 function catIcon(cat) {
     const icons = { general:'🌐', media:'🎬', fun:'🎉', educative:'📚', dev:'🛠️', moderation:'🛡️', files:'📁', games:'🎮', bots:'🤖', other:'📦' }
     return icons[cat] || '📦'
+}
+
+// ─── Send from dashboard ────────────────────────────────────────────────────
+function fillCmd(cmd) {
+    const prefix = document.getElementById('send-msg').dataset.prefix || '!'
+    document.getElementById('send-msg').value = prefix + cmd
+    document.getElementById('send-msg').focus()
+}
+
+async function sendDashMessage() {
+    const jidRaw = document.getElementById('send-jid').value.trim()
+    const text   = document.getElementById('send-msg').value.trim()
+    const fb     = document.getElementById('send-feedback')
+    if (!jidRaw || !text) {
+        fb.textContent = 'Enter a number and message'
+        fb.className = 'send-feedback err'
+        return
+    }
+    const digits = jidRaw.replace(/\D/g, '')
+    const jid    = digits.includes('@') ? jidRaw : `${digits}@s.whatsapp.net`
+    const btn    = document.getElementById('send-btn')
+    btn.disabled = true
+    fb.textContent = 'Sending…'
+    fb.className = 'send-feedback'
+    try {
+        const res  = await fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jid, text })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed')
+        fb.textContent = '✓ Sent'
+        fb.className = 'send-feedback ok'
+        document.getElementById('send-msg').value = ''
+        setTimeout(() => { fb.textContent = ''; fb.className = 'send-feedback' }, 3000)
+    } catch (e) {
+        fb.textContent = '✗ ' + e.message
+        fb.className = 'send-feedback err'
+    } finally {
+        btn.disabled = false
+    }
 }
 
 // ─── Boot ───────────────────────────────────────────────────────────────────

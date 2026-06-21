@@ -51,6 +51,19 @@ export default class Server extends EventEmitter {
             }
         })
 
+        // ── Send message from dashboard ──────────────────────────────────────
+        this.app.post('/api/send', async (req, res) => {
+            try {
+                const { jid, text } = req.body
+                if (!jid || !text) return void res.status(400).json({ error: 'jid and text are required' })
+                if (this.client.state !== 'open') return void res.status(503).json({ error: 'Bot is not connected' })
+                await this.client.sendMessage(jid, { text: String(text) })
+                res.json({ ok: true })
+            } catch (err: any) {
+                res.status(500).json({ error: err.message || 'Failed to send' })
+            }
+        })
+
         // ── Stats ────────────────────────────────────────────────────────────
         this.app.get('/api/stats', (_req, res) => {
             const commandsLoaded = this.handler ? this.handler.commands.size : 0

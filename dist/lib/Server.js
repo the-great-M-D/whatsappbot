@@ -63,6 +63,18 @@ class Server extends events_1.EventEmitter {
                 res.status(500).json({ error: err.message || 'Failed to generate pairing code' });
             }
         }));
+        // ── Send message from dashboard ──────────────────────────────────────
+        this.app.post('/api/send', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { jid, text } = req.body;
+                if (!jid || !text) return void res.status(400).json({ error: 'jid and text are required' });
+                if (this.client.state !== 'open') return void res.status(503).json({ error: 'Bot is not connected' });
+                yield this.client.sendMessage(jid, { text: String(text) });
+                res.json({ ok: true });
+            } catch (err) {
+                res.status(500).json({ error: err.message || 'Failed to send' });
+            }
+        }));
         // ── Stats ────────────────────────────────────────────────────────────
         this.app.get('/api/stats', (_req, res) => {
             var _a, _b, _c, _d;
