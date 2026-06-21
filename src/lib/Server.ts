@@ -112,6 +112,13 @@ export default class Server extends EventEmitter {
         })
 
         this.app.listen(PORT, '0.0.0.0', () => this.client.log(`Server Started on PORT: ${PORT}`))
+            .on('error', (err: any) => {
+                if (err.code === 'EADDRINUSE') {
+                    this.client.log(`Port ${PORT} already in use — dashboard unavailable`, true)
+                } else {
+                    throw err
+                }
+            })
 
         this.attachClientEvents()
     }

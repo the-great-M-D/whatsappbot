@@ -123,7 +123,14 @@ class Server extends events_1.EventEmitter {
         this.WARouter.get('/qr', (_req, res) => {
             res.json({ message: 'QR disabled — use phone number pairing via the dashboard' });
         });
-        this.app.listen(PORT, '0.0.0.0', () => this.client.log(`Server Started on PORT: ${PORT}`));
+        this.app.listen(PORT, '0.0.0.0', () => this.client.log(`Server Started on PORT: ${PORT}`))
+            .on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    this.client.log(`Port ${PORT} already in use — dashboard unavailable`, true);
+                } else {
+                    throw err;
+                }
+            });
         this.attachClientEvents();
     }
     setHandler(handler) {
