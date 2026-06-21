@@ -43,6 +43,7 @@ class Server extends events_1.EventEmitter {
             var _a, _b, _c, _d;
             res.json({
                 connected: this.client.state === 'open',
+                needsRepair: this.client.needsRepair || false,
                 pairCode: this.client.pairCode || null,
                 pairCodePhone: this.client.pairCodePhone || null,
                 user: this.client.state === 'open'
