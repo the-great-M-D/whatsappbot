@@ -308,10 +308,21 @@ async function poll() {
             if (status.user) document.getElementById('connected-user').textContent = '@' + status.user
             return
         }
-        badge.className = 'badge badge-waiting'
-        stText.textContent = 'Waiting for pairing...'
-        if (status.pairCode && document.getElementById('phone-section').style.display !== 'none') {
-            showPairCode(status.pairCode)
+
+        if (status.needsRepair) {
+            // No auth at all — show pairing UI
+            badge.className = 'badge badge-waiting'
+            stText.textContent = 'Waiting for pairing...'
+            if (status.pairCode && document.getElementById('phone-section').style.display !== 'none') {
+                showPairCode(status.pairCode)
+            }
+        } else {
+            // Has auth files, just not connected yet
+            badge.className = 'badge badge-waiting'
+            stText.textContent = 'Connecting...'
+            document.getElementById('phone-section').style.display = 'none'
+            document.getElementById('code-section').style.display = 'none'
+            document.getElementById('connected-section').style.display = 'none'
         }
     } catch (e) { console.error('Poll error:', e) }
 }

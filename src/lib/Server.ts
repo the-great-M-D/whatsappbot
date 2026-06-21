@@ -31,6 +31,7 @@ export default class Server extends EventEmitter {
         this.app.get('/api/status', (_req, res) => {
             res.json({
                 connected: this.client.state === 'open',
+                needsRepair: (this.client as any).needsRepair || false,
                 pairCode: this.client.pairCode || null,
                 pairCodePhone: this.client.pairCodePhone || null,
                 user: this.client.state === 'open'
