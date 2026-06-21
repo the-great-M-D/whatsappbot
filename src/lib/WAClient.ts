@@ -4,7 +4,8 @@ import makeWASocket, {
     downloadMediaMessage
 } from '@whiskeysockets/baileys'
 import { backupAuthToDB, restoreAuthFromDB, clearAuthFromDB } from './MongoAuthState'
-import { remove as fsRemove } from 'fs-extra'
+import { remove as fsRemove, pathExists } from 'fs-extra'
+import { join } from 'path'
 
 import P from 'pino'
 import EventEmitter from 'events'
@@ -97,9 +98,22 @@ export default class WAClient extends EventEmitter {
         this.intentionalStop = false
         const authDir = `auth/${this.config.session}`
 
-        // If DB is connected and local auth files are missing, restore from MongoDB
-        if (this.DB.connected) {
-            await restoreAuthFromDB(this.DB.session, authDir)
+        // Step 1: check for local auth files
+        const hasLocalAuth = await pathExists(join(authDir, 'creds.json'))
+
+        // Step 2: if missing locally, try to restore from database
+        let restoredFromDB = false
+        if (!hasLocalAuth) {
+            if (this.DB.connected) {
+                restoredFromDB = await restoreAuthFromDB(this.DB.session, authDir)
+                if (!restoredFromDB) {
+                    this.log('No auth found in database — re-pairing required', true)
+                    this.emit('needs-repair')
+                }
+            } else {
+                this.log('No auth files found and no database configured — re-pairing required', true)
+                this.emit('needs-repair')
+            }
         }
 
         const { state, saveCreds } = await useMultiFileAuthState(authDir)

@@ -216,6 +216,15 @@ class Server extends events_1.EventEmitter {
                 ts: Date.now()
             });
         });
+        this.client.on('needs-repair', () => {
+            this.pushEvent({
+                type: 'system',
+                icon: '🔧',
+                title: 'Re-pairing required',
+                detail: 'No auth found locally or in database. Use the dashboard to pair via phone number.',
+                ts: Date.now()
+            });
+        });
     }
 }
 exports.default = Server;

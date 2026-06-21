@@ -203,6 +203,16 @@ export default class Server extends EventEmitter {
                 ts: Date.now()
             })
         })
+
+        this.client.on('needs-repair', () => {
+            this.pushEvent({
+                type: 'system',
+                icon: '🔧',
+                title: 'Re-pairing required',
+                detail: 'No auth found locally or in database. Use the dashboard to pair via phone number.',
+                ts: Date.now()
+            })
+        })
     }
 
     auth = (req: Request, res: Response, next: NextFunction): void => {
