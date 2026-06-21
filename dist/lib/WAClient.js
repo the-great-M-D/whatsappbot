@@ -133,9 +133,22 @@ class WAClient extends events_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             this.intentionalStop = false;
             const authDir = `auth/${this.config.session}`;
-            // If DB is connected and local auth files are missing, restore from MongoDB
-            if (this.DB.connected) {
-                yield (0, MongoAuthState_1.restoreAuthFromDB)(this.DB.session, authDir);
+            // Step 1: check for local auth files
+            const hasLocalAuth = yield (0, fs_extra_1.pathExists)(require('path').join(authDir, 'creds.json'));
+            // Step 2: if missing locally, try to restore from database
+            let restoredFromDB = false;
+            if (!hasLocalAuth) {
+                if (this.DB.connected) {
+                    restoredFromDB = yield (0, MongoAuthState_1.restoreAuthFromDB)(this.DB.session, authDir);
+                    if (!restoredFromDB) {
+                        this.log('No auth found in database \u2014 re-pairing required', true);
+                        this.emit('needs-repair');
+                    }
+                }
+                else {
+                    this.log('No auth files found and no database configured \u2014 re-pairing required', true);
+                    this.emit('needs-repair');
+                }
             }
             const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(authDir);
             if (!this.cachedBaileysVersion) {
