@@ -99,13 +99,8 @@ export default class WAClient extends EventEmitter {
         this.intentionalStop = false
         const authDir = `auth/${this.config.session}`
 
-        // Step 1: check for local auth files (any JSON file in the auth dir counts)
-        const { readdir } = await import('fs/promises')
-        let hasLocalAuth = false
-        try {
-            const files = await readdir(authDir)
-            hasLocalAuth = files.some((f) => f.endsWith('.json'))
-        } catch { /* dir doesn't exist */ }
+        // Step 1: check for local auth files — creds.json is required by Baileys
+        const hasLocalAuth = await pathExists(join(authDir, 'creds.json'))
 
         // Step 2: if missing locally, try to restore from database
         if (!hasLocalAuth) {

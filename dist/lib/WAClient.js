@@ -134,13 +134,8 @@ class WAClient extends events_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             this.intentionalStop = false;
             const authDir = `auth/${this.config.session}`;
-            // Step 1: check for local auth files (any JSON file in the auth dir counts)
-            let hasLocalAuth = false;
-            try {
-                const files = yield require('fs/promises').readdir(authDir);
-                hasLocalAuth = files.some((f) => f.endsWith('.json'));
-            }
-            catch (_) { /* dir doesn't exist */ }
+            // Step 1: check for local auth files — creds.json is required by Baileys
+            const hasLocalAuth = yield (0, fs_extra_1.pathExists)(require('path').join(authDir, 'creds.json'));
             // Step 2: if missing locally, try to restore from database
             if (!hasLocalAuth) {
                 let restoredFromDB = false;
