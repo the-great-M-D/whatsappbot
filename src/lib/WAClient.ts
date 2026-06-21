@@ -40,6 +40,7 @@ export default class WAClient extends EventEmitter {
     private intentionalStop: boolean = false
     private reconnectAttempts: number = 0
     private readonly MAX_RECONNECTS = 5
+    private needsRepair: boolean = false
 
     constructor(config: any) {
         super()
@@ -102,18 +103,23 @@ export default class WAClient extends EventEmitter {
         const hasLocalAuth = await pathExists(join(authDir, 'creds.json'))
 
         // Step 2: if missing locally, try to restore from database
-        let restoredFromDB = false
         if (!hasLocalAuth) {
+            let restoredFromDB = false
             if (this.DB.connected) {
                 restoredFromDB = await restoreAuthFromDB(this.DB.session, authDir)
-                if (!restoredFromDB) {
-                    this.log('No auth found in database — re-pairing required', true)
-                    this.emit('needs-repair')
-                }
-            } else {
-                this.log('No auth files found and no database configured — re-pairing required', true)
+            }
+            if (!restoredFromDB && !this.needsRepair) {
+                // Only log and emit once — not on every reconnect attempt
+                this.needsRepair = true
+                const reason = this.DB.connected
+                    ? 'No auth found in database'
+                    : 'No auth files found and no database configured'
+                this.log(`${reason} — re-pairing required`, true)
                 this.emit('needs-repair')
             }
+        } else {
+            // Auth files exist — clear the repair flag
+            this.needsRepair = false
         }
 
         const { state, saveCreds } = await useMultiFileAuthState(authDir)
@@ -160,6 +166,7 @@ export default class WAClient extends EventEmitter {
             if (connection === 'open') {
                 this.state = 'open'
                 this.reconnectAttempts = 0
+                this.needsRepair = false
                 this.pairCode = null
                 this.pairCodePhone = null
                 this.user = this.sock.user
@@ -186,7 +193,14 @@ export default class WAClient extends EventEmitter {
                         : 'logged out by WhatsApp'
                     this.log(`Disconnected: ${reason}. Clearing credentials and resetting to QR...`, true)
                     this.reconnectAttempts = 0
+                    this.needsRepair = false
                     this.clearAuth().then(() => setTimeout(() => this.connect(), 3000))
+                    return
+                }
+
+                // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action
+                if (statusCode === 408 && this.needsRepair) {
+                    this.log('Waiting for pairing — use the dashboard to pair via phone number')
                     return
                 }
 

@@ -79,6 +79,7 @@ class WAClient extends events_1.default {
         this.intentionalStop = false;
         this.reconnectAttempts = 0;
         this.MAX_RECONNECTS = 5;
+        this.needsRepair = false;
         this.config = config;
     }
     get botJid() {
@@ -136,19 +137,22 @@ class WAClient extends events_1.default {
             // Step 1: check for local auth files
             const hasLocalAuth = yield (0, fs_extra_1.pathExists)(require('path').join(authDir, 'creds.json'));
             // Step 2: if missing locally, try to restore from database
-            let restoredFromDB = false;
             if (!hasLocalAuth) {
+                let restoredFromDB = false;
                 if (this.DB.connected) {
                     restoredFromDB = yield (0, MongoAuthState_1.restoreAuthFromDB)(this.DB.session, authDir);
-                    if (!restoredFromDB) {
-                        this.log('No auth found in database \u2014 re-pairing required', true);
-                        this.emit('needs-repair');
-                    }
                 }
-                else {
-                    this.log('No auth files found and no database configured \u2014 re-pairing required', true);
+                if (!restoredFromDB && !this.needsRepair) {
+                    this.needsRepair = true;
+                    const reason = this.DB.connected
+                        ? 'No auth found in database'
+                        : 'No auth files found and no database configured';
+                    this.log(`${reason} \u2014 re-pairing required`, true);
                     this.emit('needs-repair');
                 }
+            }
+            else {
+                this.needsRepair = false;
             }
             const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(authDir);
             if (!this.cachedBaileysVersion) {
@@ -192,6 +196,7 @@ class WAClient extends events_1.default {
                 if (connection === 'open') {
                     this.state = 'open';
                     this.reconnectAttempts = 0;
+                    this.needsRepair = false;
                     this.pairCode = null;
                     this.pairCodePhone = null;
                     this.user = this.sock.user;
@@ -216,7 +221,13 @@ class WAClient extends events_1.default {
                             : 'logged out by WhatsApp';
                         this.log(`Disconnected: ${reason}. Clearing credentials and resetting to QR...`, true);
                         this.reconnectAttempts = 0;
+                        this.needsRepair = false;
                         this.clearAuth().then(() => setTimeout(() => this.connect(), 3000));
+                        return;
+                    }
+                    // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action
+                    if (statusCode === 408 && this.needsRepair) {
+                        this.log('Waiting for pairing \u2014 use the dashboard to pair via phone number');
                         return;
                     }
                     this.reconnectAttempts++;
