@@ -53,7 +53,7 @@ Use any one of the above to deploy
 
 ### 🟢 WhatsApp Support Group
 
-# [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/JgFnnxRDd4t5luD6DqZQI0?mode=gi_t)
+# [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/GJ4Rxuj1iFD3uUdAxjsgyN?s=cl&p=a&mlu=2)
 
 ## 📄 License
 
