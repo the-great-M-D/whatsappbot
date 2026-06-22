@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: kaoi-bot
+    name: M_D Bot
     runtime: node
     buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm start
