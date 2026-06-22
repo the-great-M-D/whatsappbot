@@ -1,9 +1,8 @@
 services:
   - type: web
     name: kaoi-bot
-    runtime: node
-    buildCommand: npm install --legacy-peer-deps && npm run build
-    startCommand: npm start
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     plan: free
     envVars:
       - key: NODE_ENV
