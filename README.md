@@ -1,6 +1,5 @@
 <div align="center">
-<a href="https://ibb.co/wQ4GK21"><img src="https://i.ibb.co/HPqwr9Q/whatsapp-botto-void-init.png" alt="whatsapp-botto-void-init" border="0"></a>
-
+<a href="https://ibb.co/1GP0NSnN"><img src="https://i.ibb.co/1GP0NSnN/a96c6f2b-c325-4256-92bf-6fd1576b4f0f.png" alt="a96c6f2b-c325-4256-92bf-6fd1576b4f0f" border="0"></a>
 #  WhatsApp Bot
 
 [![CodeFactor](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/badge/main)](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/overview/main)
