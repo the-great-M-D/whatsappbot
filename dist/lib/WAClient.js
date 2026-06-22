@@ -49,6 +49,7 @@ exports.activatableFeatures = exports.toggleableGroupActions = void 0;
 const baileys_1 = __importStar(require("@whiskeysockets/baileys"));
 const MongoAuthState_1 = require("./MongoAuthState");
 const fs_extra_1 = require("fs-extra");
+const path_1 = require("path");
 const pino_1 = __importDefault(require("pino"));
 const events_1 = __importDefault(require("events"));
 const Utils_1 = __importDefault(require("./Utils"));
@@ -136,7 +137,7 @@ class WAClient extends events_1.default {
             this.intentionalStop = false;
             const authDir = `auth/${this.config.session}`;
             // Step 1: check for local auth files — creds.json is required by Baileys
-            const hasLocalAuth = yield (0, fs_extra_1.pathExists)(require('path').join(authDir, 'creds.json'));
+            const hasLocalAuth = yield (0, fs_extra_1.pathExists)((0, path_1.join)(authDir, 'creds.json'));
             // Step 2: if missing locally, try to restore from database
             if (!hasLocalAuth) {
                 let restoredFromDB = false;
@@ -144,15 +145,17 @@ class WAClient extends events_1.default {
                     restoredFromDB = yield (0, MongoAuthState_1.restoreAuthFromDB)(this.DB.session, authDir);
                 }
                 if (!restoredFromDB && !this.needsRepair) {
+                    // Only log and emit once — not on every reconnect attempt
                     this.needsRepair = true;
                     const reason = this.DB.connected
                         ? 'No auth found in database'
                         : 'No auth files found and no database configured';
-                    this.log(`${reason} \u2014 re-pairing required`, true);
+                    this.log(`${reason} — re-pairing required`, true);
                     this.emit('needs-repair');
                 }
             }
             else {
+                // Auth files exist — clear the repair flag
                 this.needsRepair = false;
             }
             const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)(authDir);
@@ -228,7 +231,7 @@ class WAClient extends events_1.default {
                     }
                     // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action
                     if (statusCode === 408 && this.needsRepair) {
-                        this.log('Waiting for pairing \u2014 use the dashboard to pair via phone number');
+                        this.log('Waiting for pairing — use the dashboard to pair via phone number');
                         return;
                     }
                     this.reconnectAttempts++;
@@ -273,6 +276,7 @@ class WAClient extends events_1.default {
                 for (const contact of contacts) {
                     if (contact.id) {
                         this.contacts[contact.id] = contact;
+                        // Build LID → phone JID map: contact.id is phone JID, contact.lid is the @lid
                         if (contact.lid && contact.id.endsWith('@s.whatsapp.net')) {
                             const lid = contact.lid.endsWith('@lid') ? contact.lid : `${contact.lid}@lid`;
                             this.lidToJid[lid] = contact.id;
@@ -560,9 +564,12 @@ class WAClient extends events_1.default {
             }
         });
     }
+    /** Resolve a @lid JID to its phone @s.whatsapp.net JID, if known. Returns input unchanged if not a LID or not in map. */
     resolveJid(jid) {
-        if (!jid) return jid;
-        if (jid.endsWith('@lid')) return this.lidToJid[jid] || jid;
+        if (!jid)
+            return jid;
+        if (jid.endsWith('@lid'))
+            return this.lidToJid[jid] || jid;
         return jid;
     }
     getContact(jid) {
