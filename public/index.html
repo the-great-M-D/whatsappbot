@@ -97,10 +97,16 @@
                     <line x1="12" y1="11" x2="12" y2="15"/>
                     <line x1="10" y1="13" x2="14" y2="13"/>
                 </svg>
-                Pair Device
+                <span class="pair-label">Pair Device</span>
+            </button>
+            <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileSidebar()" title="Commands">
+                <span></span><span></span><span></span>
             </button>
         </div>
     </header>
+
+    <!-- Mobile sidebar overlay -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
     <div class="dash-body">
 
@@ -173,6 +179,29 @@
 
         </main>
 
+    </div>
+
+    <!-- ── Event detail drawer ── -->
+    <div id="drawer-overlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+    <div id="event-drawer" class="event-drawer">
+        <div class="drawer-header">
+            <div class="drawer-title-row">
+                <span id="drawer-type-badge" class="drawer-type-badge"></span>
+                <span id="drawer-time" class="drawer-time"></span>
+            </div>
+            <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        </div>
+        <div class="drawer-body">
+            <div class="drawer-icon-row">
+                <span id="drawer-icon" class="drawer-icon"></span>
+                <span id="drawer-title" class="drawer-main-title"></span>
+            </div>
+            <div id="drawer-detail-section" class="drawer-section">
+                <div class="drawer-section-label">Content</div>
+                <div id="drawer-detail" class="drawer-content"></div>
+            </div>
+            <div id="drawer-meta" class="drawer-meta-grid"></div>
+        </div>
     </div>
 </div>
 
@@ -509,13 +538,21 @@ function renderEvent(evt, animate) {
     const item = document.createElement('div')
     item.className = `event-item event-${evt.type}${animate ? ' event-new' : ''}`
     item.dataset.type = evt.type || 'system'
+    item.dataset.evt  = JSON.stringify(evt)
+    item.setAttribute('role', 'button')
+    item.setAttribute('tabindex', '0')
+    item.onclick = () => openEventDetail(item)
+    item.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') openEventDetail(item) }
     item.innerHTML = `
         <div class="event-icon">${evt.icon}</div>
         <div class="event-body">
             <div class="event-title">${esc(evt.title)}</div>
             ${evt.detail ? `<div class="event-detail">${esc(evt.detail)}</div>` : ''}
         </div>
-        <div class="event-time">${fmtTime(evt.ts)}</div>
+        <div class="event-right">
+            <div class="event-time">${fmtTime(evt.ts)}</div>
+            <div class="event-expand-hint">›</div>
+        </div>
     `
 
     feed.insertBefore(item, feed.firstChild)
@@ -681,6 +718,73 @@ function catIcon(cat) {
     return icons[cat] || '📦'
 }
 
+// ─── Event detail drawer ────────────────────────────────────────────────────
+const typeLabels = { message:'Message', command:'Command', group:'Group', call:'Call', connect:'Connected', disconnect:'Disconnected', system:'System' }
+const typeColors = { message:'var(--blue)', command:'var(--green)', group:'var(--cyan)', call:'var(--red)', connect:'var(--green)', disconnect:'var(--red)', system:'var(--purple)' }
+
+function openEventDetail(el) {
+    const evt = JSON.parse(el.dataset.evt || '{}')
+    const type = evt.type || 'system'
+    const color = typeColors[type] || 'var(--purple)'
+
+    document.getElementById('drawer-icon').textContent   = evt.icon || '📋'
+    document.getElementById('drawer-title').textContent  = evt.title || ''
+    document.getElementById('drawer-time').textContent   = evt.ts ? new Date(evt.ts).toLocaleString() : ''
+
+    const badge = document.getElementById('drawer-type-badge')
+    badge.textContent = typeLabels[type] || type
+    badge.style.background = color + '1a'
+    badge.style.color       = color
+    badge.style.borderColor = color + '44'
+
+    const detailEl = document.getElementById('drawer-detail')
+    const detailSec = document.getElementById('drawer-detail-section')
+    if (evt.detail) {
+        detailEl.textContent = evt.detail
+        detailSec.style.display = 'block'
+    } else {
+        detailSec.style.display = 'none'
+    }
+
+    const meta = document.getElementById('drawer-meta')
+    const rows = []
+    if (evt.id)   rows.push(['ID', evt.id])
+    if (evt.type) rows.push(['Type', type])
+    if (evt.ts)   rows.push(['Time', new Date(evt.ts).toLocaleTimeString()])
+    meta.innerHTML = rows.map(([k,v]) => `
+        <div class="drawer-meta-row">
+            <span class="drawer-meta-key">${k}</span>
+            <span class="drawer-meta-val">${esc(String(v))}</span>
+        </div>`).join('')
+
+    document.getElementById('drawer-overlay').classList.add('open')
+    document.getElementById('event-drawer').classList.add('open')
+    document.querySelectorAll('.event-item').forEach(i => i.classList.remove('drawer-selected'))
+    el.classList.add('drawer-selected')
+}
+
+function closeDrawer() {
+    document.getElementById('drawer-overlay').classList.remove('open')
+    document.getElementById('event-drawer').classList.remove('open')
+    document.querySelectorAll('.event-item').forEach(i => i.classList.remove('drawer-selected'))
+}
+
+// ─── Mobile sidebar ──────────────────────────────────────────────────────────
+function toggleMobileSidebar() {
+    const sidebar = document.querySelector('.cmd-sidebar')
+    const overlay = document.getElementById('sidebar-overlay')
+    const isOpen  = sidebar.classList.contains('mobile-open')
+    if (isOpen) { closeMobileSidebar() } else {
+        sidebar.classList.add('mobile-open')
+        overlay.classList.add('open')
+    }
+}
+
+function closeMobileSidebar() {
+    document.querySelector('.cmd-sidebar').classList.remove('mobile-open')
+    document.getElementById('sidebar-overlay').classList.remove('open')
+}
+
 // ─── Send from dashboard ────────────────────────────────────────────────────
 function fillCmd(cmd) {
     const prefix = document.getElementById('send-msg').dataset.prefix || '!'
@@ -732,7 +836,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.key === 'Enter') modalRequestPairCode()
     })
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') closePairModal()
+        if (e.key === 'Escape') {
+            closePairModal()
+            closeDrawer()
+            closeMobileSidebar()
+        }
     })
     try {
         const res = await fetch('/api/status')
