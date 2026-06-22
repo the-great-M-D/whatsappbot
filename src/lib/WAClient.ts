@@ -26,6 +26,7 @@ export default class WAClient extends EventEmitter {
     public DB = new DatabaseHandler()
     public features = new Map<string, boolean>()
     public contacts: Record<string, any> = {}
+    public lidToJid: Record<string, string> = {}
     public chats: Record<string, any> = {}
     public groupMetadataCache: Map<string, { data: any; ts: number }> = new Map()
     private cachedBaileysVersion: [number, number, number] | null = null
@@ -243,7 +244,14 @@ export default class WAClient extends EventEmitter {
 
         this.sock.ev.on('contacts.upsert', (contacts: any[]) => {
             for (const contact of contacts) {
-                if (contact.id) this.contacts[contact.id] = contact
+                if (contact.id) {
+                    this.contacts[contact.id] = contact
+                    // Build LID → phone JID map: contact.id is phone JID, contact.lid is the @lid
+                    if (contact.lid && contact.id.endsWith('@s.whatsapp.net')) {
+                        const lid = contact.lid.endsWith('@lid') ? contact.lid : `${contact.lid}@lid`
+                        this.lidToJid[lid] = contact.id
+                    }
+                }
             }
         })
 
@@ -251,6 +259,10 @@ export default class WAClient extends EventEmitter {
             for (const contact of contacts) {
                 if (contact.id) {
                     this.contacts[contact.id] = { ...this.contacts[contact.id], ...contact }
+                    if (contact.lid && contact.id.endsWith('@s.whatsapp.net')) {
+                        const lid = contact.lid.endsWith('@lid') ? contact.lid : `${contact.lid}@lid`
+                        this.lidToJid[lid] = contact.id
+                    }
                 }
             }
         })
@@ -492,6 +504,13 @@ export default class WAClient extends EventEmitter {
         } catch {
             return null
         }
+    }
+
+    /** Resolve a @lid JID to its phone @s.whatsapp.net JID, if known. Returns input unchanged if not a LID or not in map. */
+    resolveJid(jid: string): string {
+        if (!jid) return jid
+        if (jid.endsWith('@lid')) return this.lidToJid[jid] || jid
+        return jid
     }
 
     getContact(jid: string): any {

@@ -65,6 +65,7 @@ class WAClient extends events_1.default {
         this.DB = new DatabaseHandler_1.default();
         this.features = new Map();
         this.contacts = {};
+        this.lidToJid = {};
         this.chats = {};
         this.groupMetadataCache = new Map();
         this.cachedBaileysVersion = null;
@@ -270,14 +271,23 @@ class WAClient extends events_1.default {
             });
             this.sock.ev.on('contacts.upsert', (contacts) => {
                 for (const contact of contacts) {
-                    if (contact.id)
+                    if (contact.id) {
                         this.contacts[contact.id] = contact;
+                        if (contact.lid && contact.id.endsWith('@s.whatsapp.net')) {
+                            const lid = contact.lid.endsWith('@lid') ? contact.lid : `${contact.lid}@lid`;
+                            this.lidToJid[lid] = contact.id;
+                        }
+                    }
                 }
             });
             this.sock.ev.on('contacts.update', (contacts) => {
                 for (const contact of contacts) {
                     if (contact.id) {
                         this.contacts[contact.id] = Object.assign(Object.assign({}, this.contacts[contact.id]), contact);
+                        if (contact.lid && contact.id.endsWith('@s.whatsapp.net')) {
+                            const lid = contact.lid.endsWith('@lid') ? contact.lid : `${contact.lid}@lid`;
+                            this.lidToJid[lid] = contact.id;
+                        }
                     }
                 }
             });
@@ -549,6 +559,11 @@ class WAClient extends events_1.default {
                 return null;
             }
         });
+    }
+    resolveJid(jid) {
+        if (!jid) return jid;
+        if (jid.endsWith('@lid')) return this.lidToJid[jid] || jid;
+        return jid;
     }
     getContact(jid) {
         return this.contacts[jid] || { notify: jid.split('@')[0], id: jid };
