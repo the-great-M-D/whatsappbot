@@ -1,10 +1,12 @@
 services:
   - type: web
-    name: kaoi-bot
+    name: M_D Bot
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
     envVars:
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=512"
       - key: NODE_ENV
         value: production
       - key: MONGODB_URL
