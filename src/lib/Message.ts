@@ -20,7 +20,7 @@ export async function buildSimplifiedMessage(
         const rawSenderJid: string = isGroup
             ? (key.participant || msg.participant || '')
             : (key.fromMe ? (client.user?.id || '') : from)
-        const senderJid: string = normalizeJid(rawSenderJid)
+        const senderJid: string = client.resolveJid(normalizeJid(rawSenderJid))
 
         const m = msg.message
         if (!m) return null
@@ -71,7 +71,7 @@ export async function buildSimplifiedMessage(
                         })),
                         admins: raw.participants
                             .filter((p: any) => p.admin)
-                            .map((p: any) => normalizeJid(p.id))
+                            .map((p: any) => client.resolveJid(normalizeJid(p.id)))
                     }
                 }
             } catch { /* ignore */ }

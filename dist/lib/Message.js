@@ -25,7 +25,7 @@ function buildSimplifiedMessage(msg, client) {
             const rawSenderJid = isGroup
                 ? (key.participant || msg.participant || '')
                 : (key.fromMe ? (((_a = client.user) === null || _a === void 0 ? void 0 : _a.id) || '') : from);
-            const senderJid = normalizeJid(rawSenderJid);
+            const senderJid = client.resolveJid(normalizeJid(rawSenderJid));
             const m = msg.message;
             if (!m)
                 return null;
@@ -71,7 +71,7 @@ function buildSimplifiedMessage(msg, client) {
                                 isSuperAdmin: p.admin === 'superadmin'
                             })), admins: raw.participants
                                 .filter((p) => p.admin)
-                                .map((p) => normalizeJid(p.id)) });
+                                .map((p) => client.resolveJid(normalizeJid(p.id))) });
                     }
                 }
                 catch ( /* ignore */_p) { /* ignore */ }
