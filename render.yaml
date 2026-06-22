@@ -6,6 +6,8 @@ services:
     startCommand: npm start
     plan: free
     envVars:
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=512"
       - key: NODE_ENV
         value: production
       - key: MONGODB_URL
