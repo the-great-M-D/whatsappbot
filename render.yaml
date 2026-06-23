@@ -1,12 +1,11 @@
 services:
   - type: web
     name: M_D Bot
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: node
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm start
     plan: free
     envVars:
-      - key: NODE_OPTIONS
-        value: "--max-old-space-size=512"
       - key: NODE_ENV
         value: production
       - key: MONGODB_URL
