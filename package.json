@@ -39,7 +39,6 @@
         "typescript": "^5.3.3"
     },
     "overrides": {
-        "fs": "file:./local_modules/fs",
         "form-data": "^4.0.0"
     },
     "dependencies": {
