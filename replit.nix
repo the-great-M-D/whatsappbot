@@ -1,14 +1,3 @@
-{pkgs}: {
-  deps = [
-    pkgs.vips
-    pkgs.ffmpeg
-    pkgs.yt-dlp
-    pkgs.pkg-config
-    pkgs.pixman
-    pkgs.librsvg
-    pkgs.giflib
-    pkgs.libjpeg
-    pkgs.pango
-    pkgs.cairo
-  ];
-}
+# replit.nix removed — this repo no longer uses Replit
+# The original file was deleted in commit chore: remove Replit config and references
+# If you need to fully remove the file on merge, delete this placeholder.
