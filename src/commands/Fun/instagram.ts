@@ -3,7 +3,6 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
-import axios from 'axios'
 
 export default class Command extends BaseCommand {
 
@@ -23,7 +22,7 @@ export default class Command extends BaseCommand {
         const term = joined.trim()
         console.log(term)
 
-        const { data } = await axios.get(`https://api-xcoders.xyz/api/stalk/ig?username=${term}&apikey=LJowCce5Pn`)
+        const data = await (await fetch(`https://api-xcoders.xyz/api/stalk/ig?username=${term}&apikey=LJowCce5Pn`)).json()
 
         if ((data as { error: string }).error) return void (await M.reply('Sorry, couldn\'t find'))
 
