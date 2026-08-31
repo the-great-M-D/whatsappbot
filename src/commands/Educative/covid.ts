@@ -2,7 +2,6 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
-import axios from 'axios'
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
         super(client, handler, {
@@ -19,10 +18,10 @@ export default class Command extends BaseCommand {
 
         if (!joined) return void M.reply('🔎 Provide a place name')
         const term = joined.trim()
-        await axios.get(`https://api.abirhasan.wtf/covid19/v1?country=${term}`)
-        .then((response) => {
-                // console.log(response);
-                const text = `🦠 Covid Information of the place *${term}* is \n\n 🧪 *TotalTests:* ${response.data.TotalTests} \n 🎗 *ActiveCases:* ${response.data.ActiveCases} \n 🏥 *Confirmed:* ${response.data.Confirmed} \n 😳 *Critical:* ${response.data.Critical} \n ☘ *Recovered:* ${response.data.Recovered} \n 🧫 *NewCases:* ${response.data.NewCases} \n 💀 *NewDeaths:* ${response.data.NewDeaths} \n ✏ *TotalCases:* ${response.data.TotalCases} \n 🚩 *Country:* ${response.data.Country} `
+        await fetch(`https://api.abirhasan.wtf/covid19/v1?country=${term}`)
+        .then((r) => r.json())
+        .then((data) => {
+                const text = `🦠 Covid Information of the place *${term}* is \n\n 🧪 *TotalTests:* ${data.TotalTests} \n 🎗 *ActiveCases:* ${data.ActiveCases} \n 🏥 *Confirmed:* ${data.Confirmed} \n 😳 *Critical:* ${data.Critical} \n ☘ *Recovered:* ${data.Recovered} \n 🧫 *NewCases:* ${data.NewCases} \n 💀 *NewDeaths:* ${data.NewDeaths} \n ✏ *TotalCases:* ${data.TotalCases} \n 🚩 *Country:* ${data.Country} `
                 M.reply(text);
             })
             .catch(err => {
