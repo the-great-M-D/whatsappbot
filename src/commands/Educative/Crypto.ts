@@ -2,7 +2,6 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
-import axios from 'axios'
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -21,12 +20,11 @@ export default class Command extends BaseCommand {
         term = term.map((t) => t.toUpperCase())
 
         let text = ''
-        await axios
-            .get(`https://public.coindcx.com/market_data/current_prices`)
+        await fetch(`https://public.coindcx.com/market_data/current_prices`)
             .then(async (res) => {
-                if (!res) return void M.reply('🟥 ERROR 🟥\nThis might be due to API service being down')
+                if (!res.ok) return void M.reply('🟥 ERROR 🟥\nThis might be due to API service being down')
 
-                const data = res.data
+                const data = await res.json()
                 const count = term.length > 2 ? (isNaN(parseInt(term[2])) ? 1 : parseInt(term[2])) : 1
                 if (term[0] === '') {
                     text = `*Crypto Prices*\n\n`
