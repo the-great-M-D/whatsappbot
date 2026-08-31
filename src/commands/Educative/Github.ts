@@ -1,4 +1,3 @@
-import axios from 'axios'
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
@@ -64,9 +63,8 @@ export default class Command extends BaseCommand {
         const repo = terms.length > 1 ? terms[1] : null
         let text = ''
         if (!repo) {
-            const userInfo = await axios
-                .get<UserInfo>(`https://api.github.com/users/${username}`)
-                .then((res) => res.data)
+            const userInfo = await fetch(`https://api.github.com/users/${username}`)
+                .then((res) => res.json())
                 .catch((err) => {
                     console.log(err)
                     return void M.reply('🟥 ERROR 🟥\n Failed to fetch the User')
@@ -86,9 +84,8 @@ export default class Command extends BaseCommand {
             text += `*🎒 Repositories:* ${userInfo.public_repos}\n`
             return void M.reply(text)
         } else {
-            const repoInfo = await axios
-                .get<RepoInfo>(`https://api.github.com/repos/${username}/${repo}`)
-                .then((res) => res.data)
+            const repoInfo = await fetch(`https://api.github.com/repos/${username}/${repo}`)
+                .then((res) => res.json())
                 .catch((err) => {
                     console.log(err)
                     return void M.reply('🟥 ERROR 🟥\n Failed to fetch the Repo')
