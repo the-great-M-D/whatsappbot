@@ -74,9 +74,8 @@ export default class YT {
     }
 
     getThumbnail = async (): Promise<Buffer> => {
-        const { default: axios } = await import('axios')
-        const resp = await axios.get<Buffer>(`https://i.ytimg.com/vi/${this.id}/hqdefault.jpg`, { responseType: 'arraybuffer' })
-        return Buffer.from(resp.data)
+        const resp = await fetch(`https://i.ytimg.com/vi/${this.id}/hqdefault.jpg`)
+        return Buffer.from(await resp.arrayBuffer())
     }
 
     parseId = (): string => {
