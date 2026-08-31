@@ -2,7 +2,6 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
-import axios from 'axios'
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -20,17 +19,17 @@ export default class Command extends BaseCommand {
         if (this.client.config.chatBotUrl) {
             const myUrl = new URL(this.client.config.chatBotUrl)
             const params = myUrl.searchParams
-            await axios
-                .get(
+            await fetch(
                     `${encodeURI(
                         `http://api.brainshop.ai/get?bid=${params.get('bid')}&key=${params.get('key')}&uid=${
                             M.from
                         }&msg=${M.args.slice(1)}`
                     )}`
                 )
-                .then((res) => {
-                    if (res.status !== 200) return void M.reply(`🔍 Error: ${res.status}`)
-                    return void M.reply(res.data.cnt)
+                .then(async (res) => {
+                    if (!res.ok) return void M.reply(`🔍 Error: ${res.status}`)
+                    const data = await res.json()
+                    return void M.reply(data.cnt)
                 })
                 .catch(() => {
                     M.reply(`use !chat then say something to the Bot here 😌`)
