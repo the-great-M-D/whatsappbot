@@ -5,8 +5,6 @@ data/
 .env
 .env.*
 .git/
-.replit
-replit.nix
 .config/
 .cache/
 .local/
