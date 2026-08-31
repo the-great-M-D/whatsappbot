@@ -2,7 +2,6 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
-import axios from 'axios'
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -16,11 +15,11 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
-        await axios
-            .get(`https://v2.jokeapi.dev/joke/Any`)
+        await fetch(`https://v2.jokeapi.dev/joke/Any`)
+            .then((r) => r.json())
             .then((response) => {
                 // console.log(response);
-                const text = `📝 *Catagory:* ${response.data.category}\n\n*🎃 Joke:* ${response.data.setup}\n\n*💡 Answer:* ${response.data.delivery}`
+                const text = `📝 *Catagory:* ${response.data.category}\n\n*🎃 Joke:* ${response.setup}\n\n*💡 Answer:* ${response.delivery}`
                 M.reply(text)
             })
             .catch((err) => {
