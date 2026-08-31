@@ -2,7 +2,6 @@
 node_modules/
 yarn.lock
 package-lock.json
-yarn.locky
 
 # Build output
 dist/
@@ -12,14 +11,6 @@ auth/
 
 # Runtime data (disk store)
 data/
-
-# Replit internals
-.replit
-replit.nix
-.config/
-.cache/
-.local/
-.upm/
 
 # Environment
 .env
