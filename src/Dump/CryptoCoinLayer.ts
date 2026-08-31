@@ -2,7 +2,6 @@ import MessageHandler from '../Handlers/MessageHandler'
 import BaseCommand from '../lib/BaseCommand'
 import WAClient from '../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../typings'
-import axios from 'axios'
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -584,17 +583,17 @@ export default class Command extends BaseCommand {
         symbol = SymbolOption.includes(term[1]) ? term[0] : ''
         target = TargetOption.includes(term[0]) ? term[0] : ''
         target = TargetOption.includes(term[1]) ? term[1] : ''
-        await axios
-            .get(
+        await fetch(
                 `https://api.coinlayer.com/api/live?access_key=(this.client.config.ckey) &target=${target}&symbols=${symbol}`
             )
             .then(async (res) => {
-                if (!res.data.success) {
-                    text = `🟥 ERROR 🟥\n📍Code: ${res.data.error.code}\n📍Type: ${res.data.error.type}\n📍Info: ${res.data.error.info}`
+                const data = await res.json()
+                if (!data.success) {
+                    text = `🟥 ERROR 🟥\n📍Code: ${data.error.code}\n📍Type: ${data.error.type}\n📍Info: ${data.error.info}`
                 } else {
-                    text = `🟩 Target: ${res.data.target}\n\n${res.data.rates.map((coin: string, index: number) => {
+                    text = `🟩 Target: ${data.target}\n\n${data.rates.map((coin: string, index: number) => {
                         // eslint-disable-next-line @typescript-eslint/no-extra-semi
-                        ;`🪙Coin: ${res.data.rates[index]}   📊Price: ${coin}\n`
+                        ;`🪙Coin: ${data.rates[index]}   📊Price: ${coin}\n`
                     })}`
                 }
             })
