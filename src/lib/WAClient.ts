@@ -518,14 +518,12 @@ export default class WAClient extends EventEmitter {
     }
 
     async fetch(url: string): Promise<any> {
-        const { default: axios } = await import('axios')
-        return axios.get(url)
+        return (await fetch(url)).json()
     }
 
     async getBuffer(url: string): Promise<Buffer> {
-        const { default: axios } = await import('axios')
-        const response = await axios.get(url, { responseType: 'arraybuffer' })
-        return Buffer.from(response.data)
+        const response = await fetch(url)
+        return Buffer.from(await response.arrayBuffer())
     }
 
     async banUser(jid: string): Promise<any> {
