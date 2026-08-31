@@ -5,10 +5,6 @@ data/
 .env
 .env.*
 .git/
-.config/
-.cache/
-.local/
-.upm/
 *.log
 .DS_Store
 Thumbs.db
