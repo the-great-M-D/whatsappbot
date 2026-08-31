@@ -3,7 +3,6 @@ import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
 import request from '../../lib/request'
-import axios from 'axios'
 
 export default class Command extends BaseCommand {
 
@@ -18,7 +17,7 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
-        const { data } = await axios.get('https://ipinfo.io/{term}')
+        const data = await (await fetch('https://ipinfo.io/{term}')).json()
 
         const buffer = await request.buffer(data.url).catch((e) => {
             return void M.reply(e.message)
