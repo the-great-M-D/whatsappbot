@@ -1,62 +1,141 @@
 <div align="center">
-<a href="https://ibb.co/1GP0NSnN"><img src="https://i.ibb.co/1GP0NSnN/a96c6f2b-c325-4256-92bf-6fd1576b4f0f.png" alt="a96c6f2b-c325-4256-92bf-6fd1576b4f0f" border="0"></a>
 
-#  WhatsApp Bot
+<img src="https://i.ibb.co/1GP0NSnN/a96c6f2b-c325-4256-92bf-6fd1576b4f0f.png" alt="M-D Bot" width="200">
+
+# M-D WhatsApp Bot
 
 [![CodeFactor](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/badge/main)](https://www.codefactor.io/repository/github/the-great-m-d/whatsappbot/overview/main)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![License: GPL](https://img.shields.io/badge/License-GPL-blue?style=for-the-badge)](./LICENSE)
 
-## [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/GJ4Rxuj1iFD3uUdAxjsgyN?s=cl&p=a&mlu=2) [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NodeJs](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/en/)
+> A fully modular, object-oriented WhatsApp bot built with TypeScript and Baileys.
 
-> A Fully Modular and Efficient Bot <br>
+</div>
 
- If you are deploying and using Railway
+---
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/the-great-M-D/whatsappbot%2F&envs=PREFIX%2CSESSION%2CMODS%2CCRON%2CMONGO_URI%2CGOOGLE_API_KEY%2CCHAT_BOT_URL&optionalEnvs=MODS%2CCRON%2CGOOGLE_API_KEY%2CCHAT_BOT_URL&PREFIXDesc=Prefix+of+your+bot&SESSIONDesc=A+string+for+the+session+to+be+classified+and+to+get+access+to+the+server+endpoints&MODSDesc=The+phone+numbers+of+the+users+who+you+want+to+be+admin+for+the+bot+%28should+be+in+international+format+without+%2B+and+multiple+numbers+must+be+separated+by+a+comma+%5C%22%2C%5C%22%29&CRONDesc=Cron+string+to+clear+chats+in+a+cycle&MONGO_URIDesc=A+secret+String+for+Mongodb+Connection+%28Required%29&GOOGLE_API_KEYDesc=Google+API+key+for+Google+searches+for+MODS+%28Not+Required%29&CHAT_BOT_URLDesc=BrainShop+API+Brain+url)
+## 🚀 Quick Deploy
 
-If you are deploying and using Render
+### Railway
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/the-great-M-D/whatsappbot&envs=PREFIX,SESSION,MODS,CRON,MONGODB_URL,GOOGLE_API_KEY,CHAT_BOT_URL&optionalEnvs=MODS,CRON,GOOGLE_API_KEY,CHAT_BOT_URL)
+
+### Render
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/the-great-M-D/whatsappbot)
 
-If you are deploying and using Railway
+### Fly.io
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2FPrajjwalDatir%2FKaoi%2F&envs=PREFIX%2CSESSION%2CMODS%2CCRON%2CMONGO_URI%2CGOOGLE_API_KEY%2CCHAT_BOT_URL&optionalEnvs=MODS%2CCRON%2CGOOGLE_API_KEY%2CCHAT_BOT_URL&PREFIXDesc=Prefix+of+your+bot&SESSIONDesc=A+string+for+the+session+to+be+classified+and+to+get+access+to+the+server+endpoints&MODSDesc=The+phone+numbers+of+the+users+who+you+want+to+be+admin+for+the+bot+%28should+be+in+international+format+without+%2B+and+multiple+numbers+must+be+separated+by+a+comma+%5C%22%2C%5C%22%29&CRONDesc=Cron+string+to+clear+chats+in+a+cycle&MONGO_URIDesc=A+secret+String+for+Mongodb+Connection+%28Required%29&GOOGLE_API_KEYDesc=Google+API+key+for+Google+searches+for+MODS+%28Not+Required%29&CHAT_BOT_URLDesc=BrainShop+API+Brain+url)
+```bash
+fly launch
+fly deploy
+```
 
-Use any one of the above to deploy
+### Docker
+
+```bash
+docker build -t m-d-bot .
+docker run -p 4040:4040 --env-file .env m-d-bot
+```
+
+---
 
 ## ✨ Highlights
 
--   Fully Modular Design
--   Object Oriented
--   Written in [TypeScript](https://www.typescriptlang.org/)
--   Self-Restoring Auth
--   Built with [Baileys](https://github.com/adiwajshing/baileys) (The Best
-    WhatsApp Library Out There)
+- **Fully Modular** — each command is a self-contained class
+- **Object-Oriented** — clean inheritance and typed interfaces
+- **TypeScript** — end-to-end type safety
+- **Self-Restoring Auth** — WhatsApp session backed up to MongoDB, auto-restores on restart
+- **Built with [Baileys](https://github.com/WhiskeySockets/Baileys)** — the best WhatsApp library out there
 
-## 💻 Deploy/Hosting Guide
+---
 
-## 🍥 Features of the Repo
+## 📋 Prerequisites
 
--   To view all features, click
-    here➡️[M-D_featuresList.md](https://github.com/the-great-M-D/Kaoi/blob/main/Features.md)
+- Node.js 18+ (native `fetch` support required)
+- MongoDB database (for auth persistence, users, groups, and feature flags)
+- `yt-dlp` installed on the system (for media download commands)
 
-## 🤹 Contribution
+---
 
--   Feel free to open issues regarding any problems or if you have any feature
-    requests
--   Make sure to follow the ESLint Rules while editing the code and run
-    `yarn run prettier-format` before opening PRs
+## ⚙️ Environment Variables
 
-## 🤝 Contributors
--   the-great-M-D
+| Variable | Required | Description |
+|---|---|---|
+| `SESSION` | ✅ | Unique session identifier string |
+| `MONGODB_URL` | ✅ | MongoDB connection string |
+| `PREFIX` | ❌ | Command prefix (default: `!`) |
+| `NAME` | ❌ | Bot display name (default: `M_D BOT`) |
+| `MODS` | ❌ | Comma-separated admin phone numbers (international format, no `+`) |
+| `CRON` | ❌ | Cron string for clearing chats on a schedule |
+| `GOOGLE_API_KEY` | ❌ | Google Custom Search API key for `!google` command |
+| `CHAT_BOT_URL` | ❌ | BrainShop API URL for chatbot feature |
+| `OPENWEATHER_API_KEY` | ❌ | OpenWeather API key for `!weather` command |
 
+---
 
-### 🟢 WhatsApp Support Group
+## 🛠️ Local Development
 
-# [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/GJ4Rxuj1iFD3uUdAxjsgyN?s=cl&p=a&mlu=2)
+```bash
+# Clone the repo
+git clone https://github.com/the-great-M-D/whatsappbot.git
+cd whatsappbot
 
-## 📄 License
+# Install dependencies
+npm install --legacy-peer-deps
 
-Distributed under the GNU  GENERAL PUBLIC License. See [LICENSE](/LICENSE)
-for more information.
+# Build
+npm run build
+
+# Start the bot
+npm start
+```
+
+---
+
+## 🎯 Features
+
+- Group moderation (anti-invite, anti-link)
+- Multi-command categories: educative, fun, media, files, dev
+- Crypto price tracking
+- Weather, jokes, facts, advice
+- YouTube media download (audio & video)
+- Instagram stalking
+- Google search
+- Chatbot integration
+- XP & leveling system
+- Database-backed feature toggles
+- QR code or phone pairing authentication
+
+📄 **Full feature list:** [Features.md](./Features.md)
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feat/amazing-feature`)
+5. Open a Pull Request
+
+Make sure to follow ESLint rules and run `npm run prettier-format` before opening PRs.
+
+---
+
+## 📜 License
+
+Distributed under the **GNU General Public License**. See [LICENSE](./LICENSE) for details.
+
+---
+
+<div align="center">
+
+### 💬 Support
+
+[![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/GJ4Rxuj1iFD3uUdAxjsgyN)
+
+**Maintained by [@the-great-M-D](https://github.com/the-great-M-D)**
+
 </div>
