@@ -1,4 +1,3 @@
-import axios from 'axios'
 import chalk from 'chalk'
 import { join } from 'path'
 import BaseCommand from '../lib/BaseCommand'
@@ -27,17 +26,17 @@ export default class MessageHandler {
             if (this.client.config.chatBotUrl) {
                 const myUrl = new URL(this.client.config.chatBotUrl)
                 const params = myUrl.searchParams
-                await axios
-                    .get(
+                await fetch(
                         `${encodeURI(
                             `http://api.brainshop.ai/get?bid=${params.get('bid')}&key=${params.get('key')}&uid=${
                                 M.sender.jid
                             }&msg=${M.args}`
                         )}`
                     )
-                    .then((res) => {
-                        if (res.status !== 200) return void M.reply(`🔍 Error: ${res.status}`)
-                        return void M.reply(res.data.cnt)
+                    .then(async (res) => {
+                        if (!res.ok) return void M.reply(`🔍 Error: ${res.status}`)
+                        const data = await res.json()
+                        return void M.reply(data.cnt)
                     })
                     .catch(() => {
                         M.reply(`Ummmmmmmmm.`)
