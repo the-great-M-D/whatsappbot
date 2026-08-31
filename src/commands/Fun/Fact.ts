@@ -2,7 +2,6 @@ import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
-import axios from 'axios'
 
 export default class Command extends BaseCommand {
     constructor(client: WAClient, handler: MessageHandler) {
@@ -17,11 +16,11 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
-        await axios
-            .get(`https://nekos.life/api/v2/fact`)
+        await fetch(`https://nekos.life/api/v2/fact`)
+            .then((r) => r.json())
             .then((response) => {
                 // console.log(response);
-                const text = `📝 *Fact:* ${response.data.fact}`
+                const text = `📝 *Fact:* ${response.fact}`
                 M.reply(text)
             })
             .catch((err) => {
