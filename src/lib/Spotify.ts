@@ -1,4 +1,4 @@
-import Spotify from 'spotifydl-core'
+import Spotify from 'spotifydl-music'
 
 const clientId = process.env.SPOTIFY_CLIENT_ID || ''
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET || ''
