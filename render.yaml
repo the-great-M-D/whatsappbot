@@ -5,6 +5,7 @@ services:
     buildCommand: "./build.sh"
     startCommand: npm start
     plan: free
+    healthCheckPath: /api/status
     envVars:
       - key: NODE_ENV
         value: production
@@ -18,3 +19,7 @@ services:
         sync: false
       - key: NAME
         value: M_D BOT
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+      - key: PORT
+        value: 10000
