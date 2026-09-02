@@ -4,6 +4,7 @@ import WAClient from './WAClient'
 import { join } from 'path'
 import MessageHandler from '../Handlers/MessageHandler'
 
+import DiscordLogger from './DiscordLogger'
 export interface DashEvent {
     id: string
     type: 'message' | 'command' | 'group' | 'call' | 'connect' | 'disconnect' | 'system'
@@ -21,6 +22,7 @@ export default class Server extends EventEmitter {
     private stats = { messages: 0, commands: 0 }
     private startTime = Date.now()
     private handler: MessageHandler | null = null
+    private discord = new DiscordLogger()
 
     constructor(public PORT: number, public client: WAClient) {
         super()
@@ -168,6 +170,7 @@ export default class Server extends EventEmitter {
                     detail: (M.content || '').slice(0, 120),
                     ts: Date.now()
                 })
+                this.discord.onMessage(sender, group, M.content || '')
             }
         })
 
@@ -180,6 +183,7 @@ export default class Server extends EventEmitter {
                 detail: group || 'DM',
                 ts: Date.now()
             })
+            this.discord.onCommand(command, sender, group)
         })
 
         this.client.on('group-participants-update', ({ jid, participants, action, actor }: any) => {
@@ -187,13 +191,15 @@ export default class Server extends EventEmitter {
             const labels: Record<string, string> = { add: 'joined', remove: 'left', promote: 'promoted in', demote: 'demoted in' }
             const names = (participants || []).map((p: string) => p.split('@')[0]).join(', ')
             const groupName = Object.values(this.client.chats || {}).find((c: any) => c.id === jid) as any
+            const groupLabel = groupName?.name || groupName?.subject || jid?.split('@')[0] || jid
             this.pushEvent({
                 type: 'group',
                 icon: icons[action] || '👥',
                 title: `${names} ${labels[action] || action}`,
-                detail: (groupName?.name || groupName?.subject || jid?.split('@')[0] || jid) + (actor ? `  ·  by ${actor.split('@')[0]}` : ''),
+                detail: groupLabel + (actor ? `  ·  by ${actor.split('@')[0]}` : ''),
                 ts: Date.now()
             })
+            this.discord.onGroupEvent(names, labels[action] || action, groupLabel, actor ? actor.split('@')[0] : null)
         })
 
         this.client.on('CB:Call', (call: any) => {
@@ -205,6 +211,7 @@ export default class Server extends EventEmitter {
                 detail: 'Auto-rejected',
                 ts: Date.now()
             })
+            this.discord.onCall(from)
         })
 
         this.client.on('open', () => {
@@ -216,6 +223,7 @@ export default class Server extends EventEmitter {
                 detail: 'WhatsApp session active',
                 ts: Date.now()
             })
+            this.discord.onConnect(name)
         })
 
         this.client.on('needs-repair', () => {
@@ -226,9 +234,9 @@ export default class Server extends EventEmitter {
                 detail: 'No auth found locally or in database. Use the dashboard to pair via phone number.',
                 ts: Date.now()
             })
+            this.discord.onSystem('Re-pairing required', 'No auth found locally or in database. Use the dashboard to pair via phone number.')
         })
     }
-
     auth = (req: Request, res: Response, next: NextFunction): void => {
         const session = (req.query.session ?? req.body?.session) as string | undefined
         if (!session) return void res.status(401).json({ message: `Session not provided` })
