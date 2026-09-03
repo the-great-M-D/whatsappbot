@@ -66,6 +66,70 @@ export default class Server extends EventEmitter {
             }
         })
 
+
+        // ── Execute command from Discord bridge ─────────────────────────────
+        this.app.post('/api/execute', async (req, res) => {
+            try {
+                const { command, jid } = req.body
+                if (!command) return void res.status(400).json({ error: 'command is required' })
+                if (this.client.state !== 'open') return void res.status(503).json({ error: 'Bot is not connected' })
+                if (!this.handler) return void res.status(500).json({ error: 'Handler not ready' })
+
+                const prefix = this.client.config?.prefix || '!'
+                const text = command.startsWith(prefix) ? command : `${prefix}${command}`
+                const args = text.trim().split(/\s+/).filter(Boolean)
+                const cmdName = args[0].slice(prefix.length).toLowerCase()
+
+                const commandObj = this.handler.commands.get(cmdName) || this.handler.aliases.get(cmdName)
+                if (!commandObj) return void res.json({ ok: false, reply: 'No Command Found! Try using one from the help list.' })
+
+                // Build a simulated message
+                const senderJid = (this.client.user?.id || '').split(':')[0] + '@s.whatsapp.net'
+                const targetJid = jid || senderJid
+                const isGroup = targetJid.endsWith('@g.us')
+
+                let replies: string[] = []
+                const captureReply = async (replyContent: string | Buffer): Promise<unknown> => {
+                    if (typeof replyContent === 'string') {
+                        replies.push(replyContent)
+                    } else {
+                        replies.push('[media response]')
+                    }
+                    // Also send to WhatsApp if jid is provided
+                    return this.client.sendMessage(targetJid, { text: typeof replyContent === 'string' ? replyContent : '' })
+                }
+
+                const simM: any = {
+                    type: 'text',
+                    content: text,
+                    args,
+                    mentioned: [],
+                    groupMetadata: null,
+                    chat: isGroup ? 'group' : 'dm',
+                    from: targetJid,
+                    sender: {
+                        jid: senderJid,
+                        username: 'Discord Bridge',
+                        isAdmin: true
+                    },
+                    quoted: null,
+                    WAMessage: { key: { remoteJid: targetJid, fromMe: true, id: 'discord-bridge-' + Date.now() } },
+                    urls: [],
+                    reply: captureReply
+                }
+
+                try {
+                    await commandObj.run(simM, { joined: args.slice(1).join(' '), args: args.slice(1), flags: [] })
+                } catch (err: any) {
+                    replies.push(`Error: ${err.message}`)
+                }
+
+                res.json({ ok: true, command: cmdName, replies })
+            } catch (err: any) {
+                res.status(500).json({ error: err.message || 'Failed to execute' })
+            }
+        })
+
         // ── Stats ────────────────────────────────────────────────────────────
         this.app.get('/api/stats', (_req, res) => {
             const commandsLoaded = this.handler ? this.handler.commands.size : 0
