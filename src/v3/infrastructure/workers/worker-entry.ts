@@ -53,6 +53,20 @@ function parseConfig(): Record<string, unknown> {
   }
 }
 
+async function handleCommand(message: { id?: string; type?: string; action?: string; instanceId?: string; payload?: unknown }): Promise<void> {
+  if (message.type !== 'command' || message.instanceId !== instanceId || !message.id) return
+  if (message.action === 'pair') {
+    try {
+      const payload = (message.payload ?? {}) as { method?: 'qr' | 'phone'; phoneNumber?: string }
+      if (payload.method !== 'qr' && payload.method !== 'phone') throw new Error('Invalid pairing method')
+      await provider?.pair(payload.method, payload.phoneNumber)
+      socket?.send(JSON.stringify({ id: message.id, type: 'response', action: 'pair', instanceId, timestamp: new Date().toISOString() }))
+    } catch (error) {
+      socket?.send(JSON.stringify({ id: message.id, type: 'response', action: 'pair', instanceId, timestamp: new Date().toISOString(), error: error instanceof Error ? error.message : String(error) }))
+    }
+  }
+}
+
 async function main(): Promise<void> {
   socket = new WebSocket(wsUrl!)
   await new Promise<void>((resolvePromise, reject) => {
@@ -64,8 +78,9 @@ async function main(): Promise<void> {
   })
   socket.on('message', (raw) => {
     try {
-      const message = JSON.parse(raw.toString()) as { type?: string; instanceId?: string }
+      const message = JSON.parse(raw.toString()) as { id?: string; type?: string; action?: string; instanceId?: string; payload?: unknown }
       if (message.instanceId === instanceId && message.type === 'shutdown') void shutdown()
+      else void handleCommand(message)
     } catch { /* ignore malformed manager messages */ }
   })
 
