@@ -1,8 +1,1 @@
-{
-  "id": "v3-initial-schema",
-  "prevId": "",
-  "version": "7",
-  "dialect": "postgresql",
-  "tables": ["users","roles","permissions","user_roles","role_permissions","bot_instances","instance_users","whatsapp_identities","whatsapp_sessions","groups","group_settings","commands","instance_commands","features","instance_features","messages","scanner_events","scanner_configs","jobs","tasks","logs","audit_logs","dashboard_sessions"],
-  "enums": ["user_status","instance_status","desired_state","scanner_event_status","task_status"]
-}
+PLACEHOLDER
