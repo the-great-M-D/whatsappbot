@@ -2,24 +2,21 @@ import { fork, type ChildProcess } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { join } from 'node:path'
-import { WebSocketServer, type WebSocket } from 'ws'
+import { WebSocketServer, WebSocket, type WebSocket as WebSocketType } from 'ws'
 import type { WorkerEventSource, WorkerLifecycleEvent, WorkerManager as WorkerManagerContract, WorkerSnapshot, WorkerStartOptions } from '../../application/instances/WorkerManager'
 import type { WhatsAppProviderEvent } from '../../domain/whatsapp/WhatsAppProvider'
 
-interface ManagedWorker { child: ChildProcess; token: string; socket?: WebSocket; snapshot: WorkerSnapshot }
+interface ManagedWorker { child: ChildProcess; token: string; socket?: WebSocketType; snapshot: WorkerSnapshot }
 
 export class ProcessWorkerManager extends EventEmitter implements WorkerManagerContract, WorkerEventSource {
   private readonly workers = new Map<string, ManagedWorker>()
   private readonly entryPath = join(__dirname, 'worker-entry.js')
-  private readonly server = new WebSocketServer({ port: 0 })
+  private readonly server = new WebSocketServer({ host: '127.0.0.1', port: 0 })
   private serverReady: Promise<void>
 
   constructor() {
     super()
-    this.serverReady = new Promise((resolve, reject) => {
-      this.server.once('listening', () => resolve())
-      this.server.once('error', reject)
-    })
+    this.serverReady = new Promise((resolve, reject) => { this.server.once('listening', () => resolve()); this.server.once('error', reject) })
     this.server.on('connection', (socket) => {
       socket.once('message', (raw) => {
         try {
@@ -43,12 +40,8 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
     const snapshot: WorkerSnapshot = { instanceId: options.instanceId, pid: null, state: 'STARTING', startedAt: new Date(), restartCount: existing?.snapshot.restartCount ?? 0, lastExitCode: null, lastExitSignal: null }
     const address = this.server.address()
     if (!address || typeof address === 'string') throw new Error('Worker WebSocket server is not listening')
-    const child = fork(this.entryPath, [], {
-      env: { ...process.env, V3_WORKER_INSTANCE_ID: options.instanceId, V3_WORKER_TOKEN: token, V3_WORKER_WS_URL: `ws://127.0.0.1:${address.port}`, V3_WORKER_CONFIG: JSON.stringify(options.config) },
-      stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
-    })
+    const child = fork(this.entryPath, [], { env: { ...process.env, V3_WORKER_INSTANCE_ID: options.instanceId, V3_WORKER_TOKEN: token, V3_WORKER_WS_URL: `ws://127.0.0.1:${address.port}`, V3_WORKER_CONFIG: JSON.stringify(options.config) }, stdio: ['ignore', 'inherit', 'inherit', 'ipc'] })
     snapshot.pid = child.pid ?? null
-    snapshot.state = 'RUNNING'
     const managed: ManagedWorker = { child, token, snapshot }
     this.workers.set(options.instanceId, managed)
     child.on('error', (error) => this.emitEvent({ type: 'error', instanceId: options.instanceId, error }))
@@ -61,14 +54,11 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
     const worker = this.workers.get(instanceId)
     if (!worker) return
     worker.snapshot.state = 'STOPPING'
-    if (worker.socket?.readyState === worker.socket.OPEN) worker.socket.send(JSON.stringify({ type: 'shutdown', instanceId }))
+    if (worker.socket?.readyState === WebSocket.OPEN) worker.socket.send(JSON.stringify({ type: 'shutdown', instanceId }))
     await new Promise<void>((resolve) => {
       let done = false
       const finish = () => { if (done) return; done = true; clearTimeout(timer); resolve() }
-      const timer = setTimeout(() => {
-        if (!worker.child.killed) worker.child.kill('SIGTERM')
-        setTimeout(() => { if (!worker.child.killed) worker.child.kill('SIGKILL'); finish() }, 1000).unref()
-      }, timeoutMs)
+      const timer = setTimeout(() => { if (!worker.child.killed) worker.child.kill('SIGTERM'); setTimeout(() => { if (!worker.child.killed) worker.child.kill('SIGKILL'); finish() }, 1000).unref() }, timeoutMs)
       worker.child.once('exit', finish)
     })
   }
