@@ -9,6 +9,7 @@ import { AuthService } from '../../application/auth/AuthService'
 import { SessionService } from '../../application/auth/SessionService'
 import { InstanceManager } from '../../application/instances/InstanceManager'
 import { InstanceService } from '../../application/instances/InstanceService'
+import type { InstanceRepository } from '../../application/instances/InstanceRepository'
 import { PairingService } from '../../application/instances/PairingService'
 import { LiveMessageFeed } from '../../application/messages/LiveMessageFeed'
 import { ProcessWorkerManager } from '../../infrastructure/workers/ProcessWorkerManager'
@@ -18,6 +19,7 @@ export interface V3Application {
   app: Express
   config: ConfigService
   database: DatabaseHandle
+  instanceRepository: InstanceRepository
   instances: InstanceService
   instanceManager: InstanceManager
   pairing: PairingService
@@ -58,6 +60,7 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
     app,
     config,
     database,
+    instanceRepository,
     instances,
     instanceManager,
     pairing,
