@@ -1,0 +1,1 @@
+Dashboard stage: build a mobile-first React/TypeScript/Vite/Tailwind shell consuming `/api/v1`, with authenticated session bootstrap, instance lifecycle controls, and an authenticated versioned WebSocket client. Keep provider and Baileys implementation details outside the UI.
