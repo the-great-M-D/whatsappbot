@@ -1,0 +1,1 @@
+Production gate: replace the development scrypt adapter with Argon2id before enabling account authentication.
