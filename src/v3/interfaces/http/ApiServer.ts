@@ -5,6 +5,9 @@ import type { InstanceService } from '../../application/instances/InstanceServic
 import type { CreateInstanceInput } from '../../application/instances/InstanceRepository'
 import type { AuthService } from '../../application/auth/AuthService'
 import type { SessionCookieConfig } from '../../application/auth/SessionService'
+import type { PairingService } from '../../application/instances/PairingService'
+import type { LiveMessageFeed } from '../../application/messages/LiveMessageFeed'
+import { createPairingRoutes } from './PairingRoutes'
 import { clearSessionCookie, readSessionCookie, setSessionCookie } from '../../application/auth/SessionCookie'
 import { createAuthMiddleware, csrfProtection, getPrincipal, issueCsrfCookie, requirePermission } from './AuthMiddleware'
 
@@ -32,6 +35,8 @@ export interface ApiServerOptions {
   auth: AuthService
   sessionCookie: SessionCookieConfig
   csrfSecret: string
+  pairing: PairingService
+  liveFeed: LiveMessageFeed
 }
 
 export function createApiServer(options: ApiServerOptions) {
@@ -71,6 +76,8 @@ export function createApiServer(options: ApiServerOptions) {
     res.json({ user: { id: principal.userId, username: principal.username, roles: [...principal.roles], permissions: [...principal.permissions] } })
   })
   app.use('/api/v1', authenticate, csrfProtection(options.csrfSecret))
+
+  app.use('/api/v1', requirePermission('instances:read'), createPairingRoutes(options.pairing, options.liveFeed))
 
   app.get('/api/v1/instances', requirePermission('instances:read'), async (req, res, next) => {
     try {
