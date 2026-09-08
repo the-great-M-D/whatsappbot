@@ -1,0 +1,1 @@
+Authentication foundation added. Do not expose login in production until Argon2id, CSRF protection, rate limiting, and V3 bootstrap wiring are complete.
