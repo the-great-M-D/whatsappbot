@@ -1,0 +1,1 @@
+V3 authentication stage: PostgreSQL user/RBAC lookup, opaque dashboard sessions, revocation/expiry, and injectable password hashing. Production login remains gated until Argon2id, CSRF, rate limiting, and V3 composition wiring are enabled.
