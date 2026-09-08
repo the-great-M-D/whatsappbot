@@ -1,5 +1,5 @@
 import { fork, type ChildProcess } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { join } from 'node:path'
 import { WebSocketServer, WebSocket, type WebSocket as WebSocketType } from 'ws'
@@ -7,9 +7,11 @@ import type { WorkerEventSource, WorkerLifecycleEvent, WorkerManager as WorkerMa
 import type { WhatsAppProviderEvent } from '../../domain/whatsapp/WhatsAppProvider'
 
 interface ManagedWorker { child: ChildProcess; token: string; socket?: WebSocketType; snapshot: WorkerSnapshot }
+interface PendingRequest { resolve: () => void; reject: (error: Error) => void; timer: NodeJS.Timeout }
 
 export class ProcessWorkerManager extends EventEmitter implements WorkerManagerContract, WorkerEventSource {
   private readonly workers = new Map<string, ManagedWorker>()
+  private readonly pending = new Map<string, PendingRequest>()
   private readonly entryPath = join(__dirname, 'worker-entry.js')
   private readonly server = new WebSocketServer({ host: '127.0.0.1', port: 0 })
   private serverReady: Promise<void>
@@ -73,6 +75,18 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
     return next
   }
 
+  async pair(instanceId: string, options: { method: 'qr' | 'phone'; phoneNumber?: string }): Promise<void> {
+    const worker = this.workers.get(instanceId)
+    if (!worker) throw new Error('Instance worker is not running')
+    if (worker.socket?.readyState !== WebSocket.OPEN) throw new Error('Instance worker is not connected')
+    const id = randomUUID()
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('Worker pairing request timed out')) }, 15_000)
+      this.pending.set(id, { resolve, reject, timer })
+      worker.socket!.send(JSON.stringify({ id, type: 'command', action: 'pair', instanceId, timestamp: new Date().toISOString(), payload: options }))
+    })
+  }
+
   has(instanceId: string): boolean { return this.workers.has(instanceId) }
   get(instanceId: string): WorkerSnapshot | null { const worker = this.workers.get(instanceId); return worker ? { ...worker.snapshot } : null }
   onEvent(listener: (event: WorkerLifecycleEvent) => void): () => void { this.on('worker-event', listener); return () => this.off('worker-event', listener) }
@@ -80,7 +94,15 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
 
   private handleWorkerMessage(instanceId: string, raw: string): void {
     try {
-      const message = JSON.parse(raw) as { type?: string; state?: unknown; event?: WhatsAppProviderEvent }
+      const message = JSON.parse(raw) as { id?: string; type?: string; state?: unknown; event?: WhatsAppProviderEvent; error?: string }
+      if (message.type === 'response' && message.id) {
+        const pending = this.pending.get(message.id)
+        if (!pending) return
+        this.pending.delete(message.id)
+        clearTimeout(pending.timer)
+        if (message.error) pending.reject(new Error(message.error)); else pending.resolve()
+        return
+      }
       if (message.type === 'state' && typeof message.state === 'string') this.emitEvent({ type: 'state', instanceId, state: message.state as any })
       else if (message.type === 'provider' && message.event) this.emitEvent({ type: 'provider', instanceId, event: message.event })
     } catch { /* malformed worker messages are ignored */ }
