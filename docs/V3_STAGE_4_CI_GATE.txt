@@ -1,0 +1,1 @@
+Required CI: npm ci, npm run build, npm run db:check.
