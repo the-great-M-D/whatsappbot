@@ -1,0 +1,1 @@
+Authentication contracts and PostgreSQL session/user repositories are staged for V3 integration. Production enablement requires the documented security gates.
