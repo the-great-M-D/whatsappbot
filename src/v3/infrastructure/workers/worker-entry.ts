@@ -76,6 +76,7 @@ async function main(): Promise<void> {
     : join(process.cwd(), 'data', 'v3', 'sessions', instanceId)
 
   provider = new BaileysProvider({
+    instanceId,
     sessionDir,
     browserName: typeof config.browserName === 'string' ? config.browserName : 'Kaoi V3',
   })
