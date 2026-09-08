@@ -63,12 +63,23 @@ export class WebSocketGateway {
   }
 
   private publish(event: WorkerLifecycleEvent): void {
-    const envelope = { type: 'event', id: randomUUID(), instanceId: event.instanceId, timestamp: new Date().toISOString(), payload: this.safeEvent(event) }
+    const payload = this.safeEvent(event)
+    if (payload === null) return
+    const envelope = { type: 'event', id: randomUUID(), instanceId: event.instanceId, timestamp: new Date().toISOString(), payload }
     for (const client of this.clients) if (client.instances.has(event.instanceId) || client.permissions.has('*')) this.send(client, envelope)
   }
 
-  private safeEvent(event: WorkerLifecycleEvent): unknown {
+  private safeEvent(event: WorkerLifecycleEvent): unknown | null {
     if (event.type === 'error') return { type: 'error', message: event.error.message }
+    if (event.type === 'provider') {
+      if (event.event.type === 'message') {
+        if (event.event.message.chatType !== 'group') return null
+        return { type: 'message', message: event.event.message }
+      }
+      if (event.event.type === 'qr') return { type: 'qr', qr: event.event.qr }
+      if (event.event.type === 'pairing-code') return { type: 'pairing-code', code: event.event.code }
+      return { type: 'connection', state: event.event.state, reason: event.event.reason }
+    }
     return event
   }
 
