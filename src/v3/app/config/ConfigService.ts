@@ -5,6 +5,10 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(5),
   SESSION_BACKUP_KEY: z.string().min(32).optional(),
+  SESSION_COOKIE_NAME: z.string().min(1).max(64).default('v3_session'),
+  SESSION_TTL_MS: z.coerce.number().int().min(300_000).max(2_592_000_000).default(86_400_000),
+  SESSION_SECURE: z.enum(['true', 'false']).default('true').transform((v) => v === 'true'),
+  CSRF_SECRET: z.string().min(32),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 })
