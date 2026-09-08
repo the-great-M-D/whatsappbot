@@ -71,16 +71,15 @@ export class WebSocketGateway {
 
   private safeEvent(event: WorkerLifecycleEvent): unknown | null {
     if (event.type === 'error') return { type: 'error', message: event.error.message }
-    if (event.type === 'provider') {
-      if (event.event.type === 'message') {
-        if (event.event.message.chatType !== 'group') return null
-        return { type: 'message', message: event.event.message }
-      }
-      if (event.event.type === 'qr') return { type: 'qr', qr: event.event.qr }
-      if (event.event.type === 'pairing-code') return { type: 'pairing-code', code: event.event.code }
-      return { type: 'connection', state: event.event.state, reason: event.event.reason }
+    if (event.type !== 'provider') return event
+    if (event.event.type === 'message') {
+      if (event.event.message.chatType !== 'group') return null
+      return { type: 'message', message: event.event.message }
     }
-    return event
+    if (event.event.type === 'qr') return { type: 'qr', qr: event.event.qr }
+    if (event.event.type === 'pairing-code') return { type: 'pairing-code', code: event.event.code }
+    if (event.event.type === 'connection') return { type: 'connection', state: event.event.state, reason: event.event.reason }
+    return event.event
   }
 
   private send(client: Client, value: unknown): void {
