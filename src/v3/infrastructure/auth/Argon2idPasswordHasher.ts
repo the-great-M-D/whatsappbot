@@ -5,17 +5,17 @@ export class Argon2idPasswordHasher implements PasswordHasher {
   async hash(password: string): Promise<string> {
     if (password.length < 12) throw new Error('Password must be at least 12 characters')
     return argon2.hash(password, {
-      type: argon2.argon2id,
       memoryCost: 19_456,
       timeCost: 2,
       parallelism: 1,
+      type: argon2.argon2id,
     })
   }
 
   async verify(password: string, encodedHash: string): Promise<boolean> {
     if (!password || !encodedHash) return false
     try {
-      return await argon2.verify(encodedHash, password, { type: argon2.argon2id })
+      return await argon2.verify(encodedHash, password)
     } catch {
       return false
     }
