@@ -1,0 +1,1 @@
+The V3 CI workflow installs with npm ci, runs the full TypeScript build, and runs Drizzle schema validation. This prevents merging a migration branch that cannot compile or whose migration metadata is inconsistent with the checked-in schema.
