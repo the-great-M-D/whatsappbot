@@ -1,5 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
-import type { RequestHandler, Request, Response, NextFunction } from 'express'
+import type { RequestHandler, Request, Response } from 'express'
 import type { AuthService } from '../../application/auth/AuthService'
 import type { Principal } from '../../application/auth/AuthTypes'
 import type { SessionCookieConfig } from '../../application/auth/SessionService'
@@ -45,7 +45,10 @@ export function csrfProtection(secret: string): RequestHandler {
     if (!principal) return res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Authentication required', requestId: res.locals.requestId } })
     const cookieToken = readCookie(req, csrfCookieName)
     const headerToken = typeof req.headers['x-csrf-token'] === 'string' ? req.headers['x-csrf-token'] : ''
-    if (!cookieToken || !headerToken || !timingSafeEqual(Buffer.from(cookieToken), Buffer.from(headerToken)) || !verifyCsrf(secret, principal.sessionId, cookieToken)) {
+    const cookieBytes = Buffer.from(cookieToken ?? '')
+    const headerBytes = Buffer.from(headerToken)
+    const sameToken = cookieBytes.length === headerBytes.length && cookieBytes.length > 0 && timingSafeEqual(cookieBytes, headerBytes)
+    if (!sameToken || !verifyCsrf(secret, principal.sessionId, cookieToken ?? '')) {
       return res.status(403).json({ error: { code: 'CSRF_INVALID', message: 'Invalid CSRF token', requestId: res.locals.requestId } })
     }
     next()
