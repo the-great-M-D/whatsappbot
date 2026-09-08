@@ -77,7 +77,7 @@ export function createApiServer(options: ApiServerOptions) {
   })
   app.use('/api/v1', authenticate, csrfProtection(options.csrfSecret))
 
-  app.use('/api/v1', requirePermission('instances:read'), createPairingRoutes(options.pairing, options.liveFeed))
+  app.use('/api/v1', requirePermission('instances:read'), createPairingRoutes(options.pairing, options.liveFeed, requirePermission('instances:start')))
 
   app.get('/api/v1/instances', requirePermission('instances:read'), async (req, res, next) => {
     try {
