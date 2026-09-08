@@ -1,0 +1,60 @@
+name: V3 Integration
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'architecture/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v3-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  postgres:
+    name: PostgreSQL integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: kaoi
+          POSTGRES_PASSWORD: kaoi
+          POSTGRES_DB: kaoi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kaoi -d kaoi_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://kaoi:kaoi@localhost:5432/kaoi_test
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Verify PostgreSQL
+        run: pg_isready -h localhost -p 5432 -U kaoi -d kaoi_test
+
+      - name: Check Drizzle migrations
+        run: npm run db:check
+
+      - name: Apply migrations
+        run: npm run db:migrate
