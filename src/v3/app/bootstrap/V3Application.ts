@@ -36,7 +36,7 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
   const workers = new ProcessWorkerManager()
   const instanceManager = new InstanceManager(instanceRepository, workers)
   const instances = new InstanceService(instanceRepository, instanceManager)
-  const pairing = new PairingService(workers)
+  const pairing = new PairingService(workers, (instanceId, request) => workers.pair(instanceId, request))
   const liveFeed = new LiveMessageFeed(workers)
   const users = new DrizzleUserStore(database.db)
   const sessions = new SessionService(new DrizzleSessionStore(database.db), {
