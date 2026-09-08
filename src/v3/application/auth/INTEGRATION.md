@@ -1,0 +1,1 @@
+Next integration: compose AuthService with the V3 API, add cookie authentication middleware, CSRF checks, and rate limiting. Keep production account authentication disabled until Argon2id is wired.
