@@ -4,6 +4,7 @@ import { EventEmitter } from 'node:events'
 import { join } from 'node:path'
 import { WebSocketServer, type WebSocket } from 'ws'
 import type { WorkerEventSource, WorkerLifecycleEvent, WorkerManager as WorkerManagerContract, WorkerSnapshot, WorkerStartOptions } from '../../application/instances/WorkerManager'
+import type { WhatsAppProviderEvent } from '../../domain/whatsapp/WhatsAppProvider'
 
 interface ManagedWorker { child: ChildProcess; token: string; socket?: WebSocket; snapshot: WorkerSnapshot }
 
@@ -38,12 +39,10 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
     const existing = this.workers.get(options.instanceId)
     if (existing?.child.connected) return { ...existing.snapshot }
     if (existing) this.workers.delete(options.instanceId)
-
     const token = randomBytes(32).toString('hex')
     const snapshot: WorkerSnapshot = { instanceId: options.instanceId, pid: null, state: 'STARTING', startedAt: new Date(), restartCount: existing?.snapshot.restartCount ?? 0, lastExitCode: null, lastExitSignal: null }
     const address = this.server.address()
     if (!address || typeof address === 'string') throw new Error('Worker WebSocket server is not listening')
-
     const child = fork(this.entryPath, [], {
       env: { ...process.env, V3_WORKER_INSTANCE_ID: options.instanceId, V3_WORKER_TOKEN: token, V3_WORKER_WS_URL: `ws://127.0.0.1:${address.port}`, V3_WORKER_CONFIG: JSON.stringify(options.config) },
       stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
@@ -62,11 +61,14 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
     const worker = this.workers.get(instanceId)
     if (!worker) return
     worker.snapshot.state = 'STOPPING'
-    worker.socket?.send(JSON.stringify({ type: 'shutdown', instanceId }))
+    if (worker.socket?.readyState === worker.socket.OPEN) worker.socket.send(JSON.stringify({ type: 'shutdown', instanceId }))
     await new Promise<void>((resolve) => {
       let done = false
       const finish = () => { if (done) return; done = true; clearTimeout(timer); resolve() }
-      const timer = setTimeout(() => { if (!worker.child.killed) worker.child.kill('SIGTERM'); setTimeout(() => { if (!worker.child.killed) worker.child.kill('SIGKILL'); finish() }, 1000).unref() }, timeoutMs)
+      const timer = setTimeout(() => {
+        if (!worker.child.killed) worker.child.kill('SIGTERM')
+        setTimeout(() => { if (!worker.child.killed) worker.child.kill('SIGKILL'); finish() }, 1000).unref()
+      }, timeoutMs)
       worker.child.once('exit', finish)
     })
   }
@@ -84,13 +86,13 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
   has(instanceId: string): boolean { return this.workers.has(instanceId) }
   get(instanceId: string): WorkerSnapshot | null { const worker = this.workers.get(instanceId); return worker ? { ...worker.snapshot } : null }
   onEvent(listener: (event: WorkerLifecycleEvent) => void): () => void { this.on('worker-event', listener); return () => this.off('worker-event', listener) }
-
   async shutdown(timeoutMs = 10_000): Promise<void> { await Promise.all([...this.workers.keys()].map((id) => this.stop(id, timeoutMs))); await new Promise<void>((resolve) => this.server.close(() => resolve())) }
 
   private handleWorkerMessage(instanceId: string, raw: string): void {
     try {
-      const message = JSON.parse(raw) as { type?: string; state?: any }
-      if (message.type === 'state' && message.state) this.emitEvent({ type: 'state', instanceId, state: message.state })
+      const message = JSON.parse(raw) as { type?: string; state?: unknown; event?: WhatsAppProviderEvent }
+      if (message.type === 'state' && typeof message.state === 'string') this.emitEvent({ type: 'state', instanceId, state: message.state as any })
+      else if (message.type === 'provider' && message.event) this.emitEvent({ type: 'provider', instanceId, event: message.event })
     } catch { /* malformed worker messages are ignored */ }
   }
   private emitEvent(event: WorkerLifecycleEvent): void { this.emit('worker-event', event) }
