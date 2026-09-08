@@ -9,6 +9,8 @@ import { AuthService } from '../../application/auth/AuthService'
 import { SessionService } from '../../application/auth/SessionService'
 import { InstanceManager } from '../../application/instances/InstanceManager'
 import { InstanceService } from '../../application/instances/InstanceService'
+import { PairingService } from '../../application/instances/PairingService'
+import { LiveMessageFeed } from '../../application/messages/LiveMessageFeed'
 import { ProcessWorkerManager } from '../../infrastructure/workers/ProcessWorkerManager'
 import { createApiServer } from '../../interfaces/http/ApiServer'
 
@@ -18,6 +20,9 @@ export interface V3Application {
   database: DatabaseHandle
   instances: InstanceService
   instanceManager: InstanceManager
+  pairing: PairingService
+  liveFeed: LiveMessageFeed
+  workers: ProcessWorkerManager
   auth: AuthService
   shutdown(): Promise<void>
 }
@@ -29,6 +34,8 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
   const workers = new ProcessWorkerManager()
   const instanceManager = new InstanceManager(instanceRepository, workers)
   const instances = new InstanceService(instanceRepository, instanceManager)
+  const pairing = new PairingService(workers)
+  const liveFeed = new LiveMessageFeed(workers)
   const users = new DrizzleUserStore(database.db)
   const sessions = new SessionService(new DrizzleSessionStore(database.db), {
     name: config.value.SESSION_COOKIE_NAME,
@@ -41,6 +48,8 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
   const app = createApiServer({
     instances,
     auth,
+    pairing,
+    liveFeed,
     sessionCookie: { name: config.value.SESSION_COOKIE_NAME, ttlMs: config.value.SESSION_TTL_MS, secure: config.value.SESSION_SECURE, sameSite: 'lax', path: '/' },
     csrfSecret: config.value.CSRF_SECRET,
   })
@@ -51,6 +60,9 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
     database,
     instances,
     instanceManager,
+    pairing,
+    liveFeed,
+    workers,
     auth,
     async shutdown() {
       await instanceManager.shutdown()
