@@ -1,0 +1,1 @@
+Handoff: once CI is green, implement the React/Vite/Tailwind dashboard shell against `/api/v1` and the authenticated WebSocket gateway. Keep the dashboard operational and mobile-first. Do not couple UI code to Baileys types.
