@@ -1,0 +1,1 @@
+Implemented: initial V3 PostgreSQL migration SQL, migration safety/rollout documentation, idempotent RBAC seed, explicit migration-runner contract, and GitHub Actions validation for build plus Drizzle checks.
