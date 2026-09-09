@@ -64,6 +64,7 @@ class TestHttpClient {
     const headers = new Headers(init.headers)
     if (this.cookies.size) headers.set('cookie', [...this.cookies.entries()].map(([k, v]) => `${k}=${v}`).join('; '))
     const method = (init.method ?? 'GET').toUpperCase()
+    if (typeof init.body === 'string') headers.set('content-type', 'application/json')
     if (method !== 'GET' && this.cookie(CSRF_COOKIE)) headers.set('x-csrf-token', this.cookie(CSRF_COOKIE)!)
     const response = await fetch(`${this.baseUrl}${path}`, { ...init, method, headers })
     for (const raw of response.headers.getSetCookie?.() ?? []) {
@@ -74,6 +75,7 @@ class TestHttpClient {
     const text = await response.text()
     let body: T | string = text
     if (text) { try { body = JSON.parse(text) as T } catch { /* keep text */ } }
+    if (response.status >= 400) console.error(`  http ${method} ${path} -> ${response.status}: ${text.slice(0, 300)}`)
     return { status: response.status, body, headers: response.headers }
   }
 
