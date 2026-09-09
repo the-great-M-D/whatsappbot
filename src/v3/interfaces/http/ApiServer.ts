@@ -7,7 +7,7 @@ import type { AuthService } from '../../application/auth/AuthService'
 import type { SessionCookieConfig } from '../../application/auth/SessionService'
 import type { PairingService } from '../../application/instances/PairingService'
 import type { LiveMessageFeed } from '../../application/messages/LiveMessageFeed'
-import type { ScannerService } from '../../application/scanner/ScannerService'
+import type { ScannerConfig, ScannerService } from '../../application/scanner/ScannerService'
 import { createPairingRoutes } from './PairingRoutes'
 import { clearSessionCookie, readSessionCookie, setSessionCookie } from '../../application/auth/SessionCookie'
 import { createAuthMiddleware, csrfProtection, getPrincipal, issueCsrfCookie, requirePermission } from './AuthMiddleware'
@@ -101,7 +101,7 @@ export function createApiServer(options: ApiServerOptions) {
     try { res.json(await options.scanner.getConfig(idSchema.parse(req.params.id))) } catch (e) { next(e) }
   })
   app.put('/api/v1/instances/:id/scanner', requirePermission('instances:update'), async (req, res, next) => {
-    try { res.json(await options.scanner.setConfig(idSchema.parse(req.params.id), scannerSchema.parse(req.body))) } catch (e) { next(e) }
+    try { res.json(await options.scanner.setConfig(idSchema.parse(req.params.id), scannerSchema.parse(req.body) as ScannerConfig)) } catch (e) { next(e) }
   })
   app.get('/api/v1/instances/:id/scanner/matches', requirePermission('instances:read'), async (req, res, next) => {
     try { const limit = Number(req.query.limit ?? 100); if (!Number.isInteger(limit) || limit < 1 || limit > 500) return error(res, 400, 'VALIDATION_ERROR', 'limit must be an integer between 1 and 500'); res.json({ items: await options.scanner.listMatches(idSchema.parse(req.params.id), limit) }) } catch (e) { next(e) }
