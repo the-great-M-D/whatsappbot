@@ -9,6 +9,7 @@ export interface BaileysProviderOptions {
   browserName?: string
   reconnectBaseMs?: number
   reconnectMaxMs?: number
+  onCredentialsSaved?: () => Promise<void>
 }
 
 const PERMANENT_DISCONNECT_CODES = new Set([401, 403, 411, 440])
@@ -19,12 +20,14 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
   private readonly browserName: string
   private readonly reconnectBaseMs: number
   private readonly reconnectMaxMs: number
+  private readonly onCredentialsSaved?: () => Promise<void>
   private socket: ReturnType<typeof makeWASocket> | null = null
   private connection: WhatsAppConnection = { state: 'STARTING' }
   private stopping = false
   private reconnectTimer?: NodeJS.Timeout
   private reconnectAttempt = 0
   private generation = 0
+  private backupPromise: Promise<void> = Promise.resolve()
 
   constructor(options: BaileysProviderOptions) {
     super()
@@ -33,6 +36,7 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
     this.browserName = options.browserName ?? 'Kaoi V3'
     this.reconnectBaseMs = Math.max(250, options.reconnectBaseMs ?? 1_000)
     this.reconnectMaxMs = Math.max(this.reconnectBaseMs, options.reconnectMaxMs ?? 30_000)
+    this.onCredentialsSaved = options.onCredentialsSaved
   }
 
   getConnection(): WhatsAppConnection { return { ...this.connection } }
@@ -55,7 +59,11 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
       printQRInTerminal: false,
     })
     this.socket = socket
-    socket.ev.on('creds.update', saveCreds)
+    socket.ev.on('creds.update', (creds: any) => {
+      void saveCreds(creds).then(() => {
+        if (this.onCredentialsSaved) this.backupPromise = this.backupPromise.then(() => this.onCredentialsSaved!()).catch(() => undefined)
+      }).catch(() => undefined)
+    })
     socket.ev.on('connection.update', (update: any) => {
       if (generation !== this.generation) return
       this.handleConnection(update)
@@ -97,6 +105,7 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
     if (socket) {
       try { socket.end(undefined) } catch { /* socket may already be closed */ }
     }
+    await this.backupPromise.catch(() => undefined)
     this.reconnectAttempt = 0
     this.setConnection('STOPPED')
   }
