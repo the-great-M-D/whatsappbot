@@ -35,4 +35,5 @@ jobs:
       - name: TypeScript build
         run: npm run build
       - name: Drizzle schema check
+        if: ${{ hashFiles('drizzle.config.ts') != '' }}
         run: npm run db:check
