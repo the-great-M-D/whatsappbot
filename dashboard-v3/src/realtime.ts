@@ -14,7 +14,9 @@ export class RealtimeClient {
   private closed = false
 
   connect(): void {
-    if (this.socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(this.socket.readyState)) return
+    const readyState = this.socket?.readyState
+    if (readyState === WebSocket.OPEN || readyState === WebSocket.CONNECTING) return
+    this.closed = false
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     this.socket = new WebSocket(`${protocol}//${window.location.host}/api/v1/ws`)
     this.socket.onopen = () => {
