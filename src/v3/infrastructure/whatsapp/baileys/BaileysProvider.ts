@@ -3,15 +3,7 @@ import P from 'pino'
 import { EventEmitter } from 'node:events'
 import type { WhatsAppConnection, WhatsAppMessage, WhatsAppProvider, WhatsAppProviderEvent } from '../../../domain/whatsapp/WhatsAppProvider'
 
-export interface BaileysProviderOptions {
-  instanceId: string
-  sessionDir: string
-  browserName?: string
-  reconnectBaseMs?: number
-  reconnectMaxMs?: number
-  onCredentialsSaved?: () => Promise<void>
-}
-
+export interface BaileysProviderOptions { instanceId: string; sessionDir: string; browserName?: string; reconnectBaseMs?: number; reconnectMaxMs?: number; onCredentialsSaved?: () => Promise<void> }
 const PERMANENT_DISCONNECT_CODES = new Set([401, 403, 411, 440])
 
 export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
@@ -29,22 +21,9 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
   private generation = 0
   private backupPromise: Promise<void> = Promise.resolve()
 
-  constructor(options: BaileysProviderOptions) {
-    super()
-    this.instanceId = options.instanceId
-    this.sessionDir = options.sessionDir
-    this.browserName = options.browserName ?? 'Kaoi V3'
-    this.reconnectBaseMs = Math.max(250, options.reconnectBaseMs ?? 1_000)
-    this.reconnectMaxMs = Math.max(this.reconnectBaseMs, options.reconnectMaxMs ?? 30_000)
-    this.onCredentialsSaved = options.onCredentialsSaved
-  }
-
+  constructor(options: BaileysProviderOptions) { super(); this.instanceId = options.instanceId; this.sessionDir = options.sessionDir; this.browserName = options.browserName ?? 'Kaoi V3'; this.reconnectBaseMs = Math.max(250, options.reconnectBaseMs ?? 1000); this.reconnectMaxMs = Math.max(this.reconnectBaseMs, options.reconnectMaxMs ?? 30000); this.onCredentialsSaved = options.onCredentialsSaved }
   getConnection(): WhatsAppConnection { return { ...this.connection } }
-
-  onEvent(listener: (event: WhatsAppProviderEvent) => void): () => void {
-    this.on('provider-event', listener)
-    return () => this.off('provider-event', listener)
-  }
+  onEvent(listener: (event: WhatsAppProviderEvent) => void): () => void { this.on('provider-event', listener); return () => this.off('provider-event', listener) }
 
   async start(): Promise<void> {
     if (this.socket) return
@@ -52,132 +31,41 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
     if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = undefined }
     const generation = ++this.generation
     const { state, saveCreds } = await useMultiFileAuthState(this.sessionDir)
-    const socket = makeWASocket({
-      auth: state,
-      logger: P({ level: 'silent' }),
-      browser: [this.browserName, 'Chrome', '1.0.0'],
-      printQRInTerminal: false,
-    })
+    const socket = makeWASocket({ auth: state, logger: P({ level: 'silent' }), browser: [this.browserName, 'Chrome', '1.0.0'], printQRInTerminal: false })
     this.socket = socket
-    socket.ev.on('creds.update', (creds: any) => {
-      void saveCreds(creds).then(() => {
-        if (this.onCredentialsSaved) this.backupPromise = this.backupPromise.then(() => this.onCredentialsSaved!()).catch(() => undefined)
-      }).catch(() => undefined)
+    socket.ev.on('creds.update', () => {
+      void saveCreds().then(() => { if (this.onCredentialsSaved) this.backupPromise = this.backupPromise.then(() => this.onCredentialsSaved!()).catch(() => undefined) }).catch(() => undefined)
     })
-    socket.ev.on('connection.update', (update: any) => {
-      if (generation !== this.generation) return
-      this.handleConnection(update)
-    })
-    socket.ev.on('messages.upsert', ({ messages }: any) => {
-      if (generation !== this.generation) return
-      for (const message of messages ?? []) {
-        const normalized = this.normalizeMessage(message)
-        if (normalized) this.emitProvider({ type: 'message', message: normalized })
-      }
-    })
+    socket.ev.on('connection.update', (update: any) => { if (generation === this.generation) this.handleConnection(update) })
+    socket.ev.on('messages.upsert', ({ messages }: any) => { if (generation === this.generation) for (const message of messages ?? []) { const normalized = this.normalizeMessage(message); if (normalized) this.emitProvider({ type: 'message', message: normalized }) } })
   }
 
   async pair(method: 'qr' | 'phone', phoneNumber?: string): Promise<void> {
-    if (method !== 'phone') {
-      if (!this.socket) await this.start()
-      return
-    }
+    if (method === 'qr') { if (!this.socket) await this.start(); return }
     const phone = (phoneNumber ?? '').replace(/\D/g, '')
     if (!phone) throw new Error('Invalid phone number')
     if (!this.socket) await this.start()
     const socket = this.socket
     if (!socket) throw new Error('WhatsApp socket unavailable')
-    const code = await socket.requestPairingCode(phone)
-    this.emitProvider({ type: 'pairing-code', code })
+    this.emitProvider({ type: 'pairing-code', code: await socket.requestPairingCode(phone) })
   }
-
-  async sendText(chatId: string, text: string): Promise<void> {
-    if (!this.socket) throw new Error('WhatsApp is not started')
-    await this.socket.sendMessage(chatId, { text })
-  }
-
-  async stop(): Promise<void> {
-    this.stopping = true
-    ++this.generation
-    if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = undefined }
-    const socket = this.socket
-    this.socket = null
-    if (socket) {
-      try { socket.end(undefined) } catch { /* socket may already be closed */ }
-    }
-    await this.backupPromise.catch(() => undefined)
-    this.reconnectAttempt = 0
-    this.setConnection('STOPPED')
-  }
+  async sendText(chatId: string, text: string): Promise<void> { if (!this.socket) throw new Error('WhatsApp is not started'); await this.socket.sendMessage(chatId, { text }) }
+  async stop(): Promise<void> { this.stopping = true; ++this.generation; if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = undefined }; const socket = this.socket; this.socket = null; if (socket) try { socket.end(undefined) } catch { /* already closed */ }; await this.backupPromise.catch(() => undefined); this.reconnectAttempt = 0; this.setConnection('STOPPED') }
 
   private handleConnection(update: any): void {
-    if (update.qr) this.emitProvider({ type: 'qr', qr: update.qr })
-    if (update.connection === 'open') {
-      this.reconnectAttempt = 0
-      this.setConnection('CONNECTED')
-      return
-    }
-    if (update.connection === 'connecting') {
-      this.setConnection('CONNECTING')
-      return
-    }
-    if (update.connection === 'close') {
-      const status = Number(update.lastDisconnect?.error?.output?.statusCode ?? 0) || undefined
-      this.socket = null
-      if (this.stopping) { this.setConnection('STOPPED'); return }
-      if (status && PERMANENT_DISCONNECT_CODES.has(status)) {
-        this.reconnectAttempt = 0
-        this.setConnection('DISCONNECTED', `Authentication/session ended (${status})`)
-        return
-      }
-      const reason = status ? `Connection lost (${status})` : 'Connection closed'
-      this.setConnection('RECONNECTING', reason)
-      this.scheduleReconnect()
-    }
+    if (update.qr) { this.setConnection('PAIRING'); this.emitProvider({ type: 'qr', qr: update.qr }) }
+    if (update.connection === 'open') { this.reconnectAttempt = 0; this.setConnection('CONNECTED'); return }
+    if (update.connection === 'connecting') { this.setConnection('CONNECTING'); return }
+    if (update.connection !== 'close') return
+    const status = Number(update.lastDisconnect?.error?.output?.statusCode ?? 0) || undefined
+    this.socket = null
+    if (this.stopping) return
+    if (status && PERMANENT_DISCONNECT_CODES.has(status)) { this.reconnectAttempt = 0; this.setConnection('DISCONNECTED', `Authentication/session ended (${status})`); return }
+    this.setConnection('DISCONNECTED', status ? `Connection lost (${status})` : 'Connection closed')
+    this.scheduleReconnect()
   }
-
-  private scheduleReconnect(): void {
-    if (this.stopping || this.reconnectTimer) return
-    const attempt = ++this.reconnectAttempt
-    const exponential = Math.min(this.reconnectMaxMs, this.reconnectBaseMs * 2 ** Math.min(attempt - 1, 8))
-    const jitter = Math.floor(Math.random() * Math.max(250, exponential * 0.25))
-    const delay = Math.min(this.reconnectMaxMs, exponential + jitter)
-    this.reconnectTimer = setTimeout(() => {
-      this.reconnectTimer = undefined
-      if (this.stopping || this.socket) return
-      void this.start().catch((error) => {
-        this.setConnection('RECONNECTING', error instanceof Error ? error.message : String(error))
-        this.scheduleReconnect()
-      })
-    }, delay)
-    this.reconnectTimer.unref()
-  }
-
-  private setConnection(state: WhatsAppConnection['state'], reason?: string): void {
-    this.connection = { state, ...(reason ? { reason } : {}) }
-    this.emitProvider({ type: 'connection', state, ...(reason ? { reason } : {}) })
-  }
-
+  private scheduleReconnect(): void { if (this.stopping || this.reconnectTimer) return; const attempt = ++this.reconnectAttempt; const exponential = Math.min(this.reconnectMaxMs, this.reconnectBaseMs * 2 ** Math.min(attempt - 1, 8)); const delay = Math.min(this.reconnectMaxMs, exponential + Math.floor(Math.random() * Math.max(250, exponential * 0.25))); this.reconnectTimer = setTimeout(() => { this.reconnectTimer = undefined; if (!this.stopping && !this.socket) void this.start().catch((e) => { this.setConnection('DISCONNECTED', e instanceof Error ? e.message : String(e)); this.scheduleReconnect() }) }, delay); this.reconnectTimer.unref() }
+  private setConnection(state: WhatsAppConnection['state'], reason?: string): void { this.connection = { state, ...(reason ? { reason } : {}) }; this.emitProvider({ type: 'connection', state, ...(reason ? { reason } : {}) }) }
   private emitProvider(event: WhatsAppProviderEvent): void { this.emit('provider-event', event) }
-
-  private normalizeMessage(message: any): WhatsAppMessage | null {
-    const chatId = message?.key?.remoteJid
-    if (typeof chatId !== 'string') return null
-    const chatType: WhatsAppMessage['chatType'] = chatId.endsWith('@g.us') ? 'group' : 'private'
-    const content = message?.message
-    if (!content) return null
-    const text = content.conversation
-      ?? content.extendedTextMessage?.text
-      ?? content.imageMessage?.caption
-      ?? content.videoMessage?.caption
-    return {
-      id: String(message?.key?.id ?? `${chatId}:${message?.messageTimestamp ?? Date.now()}`),
-      chatId,
-      senderId: String(message?.key?.participant ?? message?.key?.remoteJid ?? ''),
-      chatType,
-      timestamp: Number(message?.messageTimestamp ?? Math.floor(Date.now() / 1000)) * 1000,
-      ...(typeof text === 'string' ? { text } : {}),
-      isFromMe: Boolean(message?.key?.fromMe),
-    }
-  }
+  private normalizeMessage(message: any): WhatsAppMessage | null { const chatId = message?.key?.remoteJid; if (typeof chatId !== 'string') return null; const content = message?.message; if (!content) return null; const text = content.conversation ?? content.extendedTextMessage?.text ?? content.imageMessage?.caption ?? content.videoMessage?.caption; return { id: String(message?.key?.id ?? `${chatId}:${message?.messageTimestamp ?? Date.now()}`), chatId, senderId: String(message?.key?.participant ?? chatId), chatType: chatId.endsWith('@g.us') ? 'group' : 'private', timestamp: Number(message?.messageTimestamp ?? Math.floor(Date.now() / 1000)) * 1000, ...(typeof text === 'string' ? { text } : {}), isFromMe: Boolean(message?.key?.fromMe) } }
 }
