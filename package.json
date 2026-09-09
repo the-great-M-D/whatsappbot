@@ -54,7 +54,7 @@
     "chess-node": "^1.1.0",
     "discord.js": "^14.27.0",
     "dotenv": "^16.3.1",
-    "drizzle-orm": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
     "express": "^4.21.0",
     "fs-extra": "^11.3.5",
     "get-urls": "^12.1.0",
