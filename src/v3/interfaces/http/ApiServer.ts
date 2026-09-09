@@ -7,6 +7,7 @@ import type { AuthService } from '../../application/auth/AuthService'
 import type { SessionCookieConfig } from '../../application/auth/SessionService'
 import type { PairingService } from '../../application/instances/PairingService'
 import type { LiveMessageFeed } from '../../application/messages/LiveMessageFeed'
+import type { ScannerService } from '../../application/scanner/ScannerService'
 import { createPairingRoutes } from './PairingRoutes'
 import { clearSessionCookie, readSessionCookie, setSessionCookie } from '../../application/auth/SessionCookie'
 import { createAuthMiddleware, csrfProtection, getPrincipal, issueCsrfCookie, requirePermission } from './AuthMiddleware'
@@ -15,6 +16,7 @@ const createSchema = z.object({ slug: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,98
 const updateSchema = z.object({ name: z.string().trim().min(1).max(160).optional(), config: z.record(z.unknown()).optional() }).refine((v) => v.name !== undefined || v.config !== undefined)
 const idSchema = z.string().uuid()
 const loginSchema = z.object({ username: z.string().trim().min(1).max(120), password: z.string().min(1).max(1024) })
+const scannerSchema = z.object({ enabled: z.boolean(), keywords: z.array(z.string().trim().min(1).max(160)).max(100), caseSensitive: z.boolean().optional() })
 
 class LoginRateLimiter {
   private readonly hits = new Map<string, number[]>()
@@ -37,6 +39,7 @@ export interface ApiServerOptions {
   csrfSecret: string
   pairing: PairingService
   liveFeed: LiveMessageFeed
+  scanner: ScannerService
 }
 
 export function createApiServer(options: ApiServerOptions) {
@@ -88,14 +91,21 @@ export function createApiServer(options: ApiServerOptions) {
     } catch (e) { next(e) }
   })
   app.post('/api/v1/instances', requirePermission('instances:create'), async (req, res, next) => {
-    try {
-      const input: CreateInstanceInput = createSchema.parse(req.body) as CreateInstanceInput
-      res.status(201).json(await options.instances.create(input))
-    } catch (e) { next(e) }
+    try { res.status(201).json(await options.instances.create(createSchema.parse(req.body) as CreateInstanceInput)) } catch (e) { next(e) }
   })
   app.get('/api/v1/instances/:id', requirePermission('instances:read'), async (req, res, next) => { try { res.json(await options.instances.get(idSchema.parse(req.params.id))) } catch (e) { next(e) } })
   app.patch('/api/v1/instances/:id', requirePermission('instances:update'), async (req, res, next) => { try { res.json(await options.instances.update(idSchema.parse(req.params.id), updateSchema.parse(req.body))) } catch (e) { next(e) } })
   app.delete('/api/v1/instances/:id', requirePermission('instances:delete'), async (req, res, next) => { try { await options.instances.delete(idSchema.parse(req.params.id)); res.status(204).send() } catch (e) { next(e) } })
+
+  app.get('/api/v1/instances/:id/scanner', requirePermission('instances:read'), async (req, res, next) => {
+    try { res.json(await options.scanner.getConfig(idSchema.parse(req.params.id))) } catch (e) { next(e) }
+  })
+  app.put('/api/v1/instances/:id/scanner', requirePermission('instances:update'), async (req, res, next) => {
+    try { res.json(await options.scanner.setConfig(idSchema.parse(req.params.id), scannerSchema.parse(req.body))) } catch (e) { next(e) }
+  })
+  app.get('/api/v1/instances/:id/scanner/matches', requirePermission('instances:read'), async (req, res, next) => {
+    try { const limit = Number(req.query.limit ?? 100); if (!Number.isInteger(limit) || limit < 1 || limit > 500) return error(res, 400, 'VALIDATION_ERROR', 'limit must be an integer between 1 and 500'); res.json({ items: await options.scanner.listMatches(idSchema.parse(req.params.id), limit) }) } catch (e) { next(e) }
+  })
 
   const lifecycle = (action: (id: string) => Promise<unknown>): express.RequestHandler => async (req, res, next) => {
     try { res.status(202).json(await action(idSchema.parse(req.params.id))) } catch (e) { next(e) }
