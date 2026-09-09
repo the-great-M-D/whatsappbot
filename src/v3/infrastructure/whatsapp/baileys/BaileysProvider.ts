@@ -7,21 +7,32 @@ export interface BaileysProviderOptions {
   instanceId: string
   sessionDir: string
   browserName?: string
+  reconnectBaseMs?: number
+  reconnectMaxMs?: number
 }
+
+const PERMANENT_DISCONNECT_CODES = new Set([401, 403, 411, 440])
 
 export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
   readonly instanceId: string
   private readonly sessionDir: string
   private readonly browserName: string
+  private readonly reconnectBaseMs: number
+  private readonly reconnectMaxMs: number
   private socket: ReturnType<typeof makeWASocket> | null = null
   private connection: WhatsAppConnection = { state: 'STARTING' }
   private stopping = false
+  private reconnectTimer?: NodeJS.Timeout
+  private reconnectAttempt = 0
+  private generation = 0
 
   constructor(options: BaileysProviderOptions) {
     super()
     this.instanceId = options.instanceId
     this.sessionDir = options.sessionDir
     this.browserName = options.browserName ?? 'Kaoi V3'
+    this.reconnectBaseMs = Math.max(250, options.reconnectBaseMs ?? 1_000)
+    this.reconnectMaxMs = Math.max(this.reconnectBaseMs, options.reconnectMaxMs ?? 30_000)
   }
 
   getConnection(): WhatsAppConnection { return { ...this.connection } }
@@ -34,6 +45,8 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
   async start(): Promise<void> {
     if (this.socket) return
     this.stopping = false
+    if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = undefined }
+    const generation = ++this.generation
     const { state, saveCreds } = await useMultiFileAuthState(this.sessionDir)
     const socket = makeWASocket({
       auth: state,
@@ -43,8 +56,12 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
     })
     this.socket = socket
     socket.ev.on('creds.update', saveCreds)
-    socket.ev.on('connection.update', (update: any) => this.handleConnection(update))
+    socket.ev.on('connection.update', (update: any) => {
+      if (generation !== this.generation) return
+      this.handleConnection(update)
+    })
     socket.ev.on('messages.upsert', ({ messages }: any) => {
+      if (generation !== this.generation) return
       for (const message of messages ?? []) {
         const normalized = this.normalizeMessage(message)
         if (normalized) this.emitProvider({ type: 'message', message: normalized })
@@ -73,17 +90,21 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
 
   async stop(): Promise<void> {
     this.stopping = true
+    ++this.generation
+    if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = undefined }
     const socket = this.socket
     this.socket = null
     if (socket) {
       try { socket.end(undefined) } catch { /* socket may already be closed */ }
     }
+    this.reconnectAttempt = 0
     this.setConnection('STOPPED')
   }
 
   private handleConnection(update: any): void {
     if (update.qr) this.emitProvider({ type: 'qr', qr: update.qr })
     if (update.connection === 'open') {
+      this.reconnectAttempt = 0
       this.setConnection('CONNECTED')
       return
     }
@@ -92,11 +113,35 @@ export class BaileysProvider extends EventEmitter implements WhatsAppProvider {
       return
     }
     if (update.connection === 'close') {
+      const status = Number(update.lastDisconnect?.error?.output?.statusCode ?? 0) || undefined
+      this.socket = null
       if (this.stopping) { this.setConnection('STOPPED'); return }
-      const status = update.lastDisconnect?.error?.output?.statusCode
-      const reason = status ? `Disconnected (${status})` : 'Connection closed'
-      this.setConnection('DISCONNECTED', reason)
+      if (status && PERMANENT_DISCONNECT_CODES.has(status)) {
+        this.reconnectAttempt = 0
+        this.setConnection('DISCONNECTED', `Authentication/session ended (${status})`)
+        return
+      }
+      const reason = status ? `Connection lost (${status})` : 'Connection closed'
+      this.setConnection('RECONNECTING', reason)
+      this.scheduleReconnect()
     }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.stopping || this.reconnectTimer) return
+    const attempt = ++this.reconnectAttempt
+    const exponential = Math.min(this.reconnectMaxMs, this.reconnectBaseMs * 2 ** Math.min(attempt - 1, 8))
+    const jitter = Math.floor(Math.random() * Math.max(250, exponential * 0.25))
+    const delay = Math.min(this.reconnectMaxMs, exponential + jitter)
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined
+      if (this.stopping || this.socket) return
+      void this.start().catch((error) => {
+        this.setConnection('RECONNECTING', error instanceof Error ? error.message : String(error))
+        this.scheduleReconnect()
+      })
+    }, delay)
+    this.reconnectTimer.unref()
   }
 
   private setConnection(state: WhatsAppConnection['state'], reason?: string): void {
