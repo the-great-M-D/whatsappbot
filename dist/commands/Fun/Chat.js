@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -28,13 +27,13 @@ class Command extends BaseCommand_1.default {
             if (this.client.config.chatBotUrl) {
                 const myUrl = new URL(this.client.config.chatBotUrl);
                 const params = myUrl.searchParams;
-                yield axios_1.default
-                    .get(`${encodeURI(`http://api.brainshop.ai/get?bid=${params.get('bid')}&key=${params.get('key')}&uid=${M.from}&msg=${M.args.slice(1)}`)}`)
-                    .then((res) => {
-                    if (res.status !== 200)
+                yield fetch(`${encodeURI(`http://api.brainshop.ai/get?bid=${params.get('bid')}&key=${params.get('key')}&uid=${M.from}&msg=${M.args.slice(1)}`)}`)
+                    .then((res) => __awaiter(this, void 0, void 0, function* () {
+                    if (!res.ok)
                         return void M.reply(`🔍 Error: ${res.status}`);
-                    return void M.reply(res.data.cnt);
-                })
+                    const data = yield res.json();
+                    return void M.reply(data.cnt);
+                }))
                     .catch(() => {
                     M.reply(`use !chat then say something to the Bot here 😌`);
                 });

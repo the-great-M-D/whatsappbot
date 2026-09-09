@@ -577,15 +577,13 @@ class WAClient extends events_1.default {
     }
     fetch(url) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { default: axios } = yield Promise.resolve().then(() => __importStar(require('axios')));
-            return axios.get(url);
+            return (yield fetch(url)).json();
         });
     }
     getBuffer(url) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { default: axios } = yield Promise.resolve().then(() => __importStar(require('axios')));
-            const response = yield axios.get(url, { responseType: 'arraybuffer' });
-            return Buffer.from(response.data);
+            const response = yield fetch(url);
+            return Buffer.from(yield response.arrayBuffer());
         });
     }
     banUser(jid) {

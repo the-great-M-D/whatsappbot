@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -593,17 +592,17 @@ class Command extends BaseCommand_1.default {
             symbol = SymbolOption.includes(term[1]) ? term[0] : '';
             target = TargetOption.includes(term[0]) ? term[0] : '';
             target = TargetOption.includes(term[1]) ? term[1] : '';
-            yield axios_1.default
-                .get(`https://api.coinlayer.com/api/live?access_key=(this.client.config.ckey) &target=${target}&symbols=${symbol}`)
+            yield fetch(`https://api.coinlayer.com/api/live?access_key=(this.client.config.ckey) &target=${target}&symbols=${symbol}`)
                 .then((res) => __awaiter(this, void 0, void 0, function* () {
-                if (!res.data.success) {
-                    text = `🟥 ERROR 🟥\n📍Code: ${res.data.error.code}\n📍Type: ${res.data.error.type}\n📍Info: ${res.data.error.info}`;
+                const data = yield res.json();
+                if (!data.success) {
+                    text = `🟥 ERROR 🟥\n📍Code: ${data.error.code}\n📍Type: ${data.error.type}\n📍Info: ${data.error.info}`;
                 }
                 else {
-                    text = `🟩 Target: ${res.data.target}\n\n${res.data.rates.map((coin, index) => {
+                    text = `🟩 Target: ${data.target}\n\n${data.rates.map((coin, index) => {
                         // eslint-disable-next-line @typescript-eslint/no-extra-semi
                         ;
-                        `🪙Coin: ${res.data.rates[index]}   📊Price: ${coin}\n`;
+                        `🪙Coin: ${data.rates[index]}   📊Price: ${coin}\n`;
                     })}`;
                 }
             }));

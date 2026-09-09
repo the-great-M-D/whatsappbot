@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -30,21 +29,20 @@ class Command extends BaseCommand_1.default {
             if (!joined)
                 return void M.reply('🔎 Provide a search term');
             const term = joined.trim();
-            yield axios_1.default
-                .get(`https://www.googleapis.com/customsearch/v1?q=${term}&key=${this.client.config.gkey}&cx=baf9bdb0c631236e5`)
-                .then((res) => {
-                var _a;
-                if (res.status !== 200)
+            yield fetch(`https://www.googleapis.com/customsearch/v1?q=${term}&key=${this.client.config.gkey}&cx=baf9bdb0c631236e5`)
+                .then((res) => __awaiter(this, void 0, void 0, function* () {
+                if (!res.ok)
                     return void M.reply(`🔍 Error: ${res.status}`);
+                const data = yield res.json();
                 let result = ``;
                 let index = 1;
-                for (const item of (_a = res.data) === null || _a === void 0 ? void 0 : _a.items) {
+                for (const item of data === null || data === void 0 ? void 0 : data.items) {
                     result += `*🤹${index}.Title* : ${item.title}\n*🔗Link* : ${item.link}\n*📖Snippet* : ${item.snippet}\n\n`;
                     index++;
                 }
                 // return void M.reply(`🔍Command Used : ${Command.count} times\n Result for *${term}*\n\n\n ${result}`)
                 return void M.reply(`🔍 Result for *${term}*\n\n\n ${result}`);
-            })
+            }))
                 .catch((err) => {
                 M.reply(`🔍 Error: ${err}`);
             });

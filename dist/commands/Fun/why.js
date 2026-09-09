@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -24,11 +23,11 @@ class Command extends BaseCommand_1.default {
             baseXp: 10
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            yield axios_1.default
-                .get(`https://nekos.life/api/v2/why`)
+            yield fetch(`https://nekos.life/api/v2/why`)
+                .then((r) => r.json())
                 .then((response) => {
                 // console.log(response);
-                const text = `📝 *Question:* ${response.data.why}`;
+                const text = `📝 *Question:* ${response.why}`;
                 M.reply(text);
             })
                 .catch((err) => {

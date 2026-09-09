@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const request_1 = __importDefault(require("../../lib/request"));
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -30,7 +29,7 @@ class Command extends BaseCommand_1.default {
                 return void M.reply('Provide the keywords you wanna search, 🤹 !');
             const term = joined.trim();
             console.log(term);
-            const { data } = yield axios_1.default.get(`https://api-xcoders.xyz/api/stalk/ig?username=${term}&apikey=LJowCce5Pn`);
+            const data = yield (yield fetch(`https://api-xcoders.xyz/api/stalk/ig?username=${term}&apikey=LJowCce5Pn`)).json();
             if (data.error)
                 return void (yield M.reply('Sorry, couldn\'t find'));
             const buffer = yield request_1.default.buffer(data.result.profile_url).catch((e) => {

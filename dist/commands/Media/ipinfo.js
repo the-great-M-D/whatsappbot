@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const request_1 = __importDefault(require("../../lib/request"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -25,7 +24,7 @@ class Command extends BaseCommand_1.default {
             baseXp: 30
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            const { data } = yield axios_1.default.get('https://ipinfo.io/{term}');
+            const data = yield (yield fetch('https://ipinfo.io/{term}')).json();
             const buffer = yield request_1.default.buffer(data.url).catch((e) => {
                 return void M.reply(e.message);
             });

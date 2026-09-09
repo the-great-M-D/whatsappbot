@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const axios_1 = __importDefault(require("axios"));
 const chalk_1 = __importDefault(require("chalk"));
 const path_1 = require("path");
 class MessageHandler {
@@ -39,13 +38,13 @@ class MessageHandler {
                 if (this.client.config.chatBotUrl) {
                     const myUrl = new URL(this.client.config.chatBotUrl);
                     const params = myUrl.searchParams;
-                    yield axios_1.default
-                        .get(`${encodeURI(`http://api.brainshop.ai/get?bid=${params.get('bid')}&key=${params.get('key')}&uid=${M.sender.jid}&msg=${M.args}`)}`)
-                        .then((res) => {
-                        if (res.status !== 200)
+                    yield fetch(`${encodeURI(`http://api.brainshop.ai/get?bid=${params.get('bid')}&key=${params.get('key')}&uid=${M.sender.jid}&msg=${M.args}`)}`)
+                        .then((res) => __awaiter(this, void 0, void 0, function* () {
+                        if (!res.ok)
                             return void M.reply(`🔍 Error: ${res.status}`);
-                        return void M.reply(res.data.cnt);
-                    })
+                        const data = yield res.json();
+                        return void M.reply(data.cnt);
+                    }))
                         .catch(() => {
                         M.reply(`Ummmmmmmmm.`);
                     });

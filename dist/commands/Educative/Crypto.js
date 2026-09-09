@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -29,12 +28,11 @@ class Command extends BaseCommand_1.default {
             // upper case
             term = term.map((t) => t.toUpperCase());
             let text = '';
-            yield axios_1.default
-                .get(`https://public.coindcx.com/market_data/current_prices`)
+            yield fetch(`https://public.coindcx.com/market_data/current_prices`)
                 .then((res) => __awaiter(this, void 0, void 0, function* () {
-                if (!res)
+                if (!res.ok)
                     return void M.reply('🟥 ERROR 🟥\nThis might be due to API service being down');
-                const data = res.data;
+                const data = yield res.json();
                 const count = term.length > 2 ? (isNaN(parseInt(term[2])) ? 1 : parseInt(term[2])) : 1;
                 if (term[0] === '') {
                     text = `*Crypto Prices*\n\n`;

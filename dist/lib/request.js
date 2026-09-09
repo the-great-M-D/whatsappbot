@@ -8,18 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.post = void 0;
-const axios_1 = __importDefault(require("axios"));
 const request = {
-    json: (url) => __awaiter(void 0, void 0, void 0, function* () { return (yield axios_1.default.get(url)).data; }),
-    buffer: (url) => __awaiter(void 0, void 0, void 0, function* () { return (yield axios_1.default.get(url, { responseType: 'arraybuffer' })).data; })
+    json: (url) => __awaiter(void 0, void 0, void 0, function* () { return yield (yield fetch(url)).json(); }),
+    buffer: (url) => __awaiter(void 0, void 0, void 0, function* () { return Buffer.from(yield (yield fetch(url)).arrayBuffer()); })
 };
 const post = (url, 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-data, config) => __awaiter(void 0, void 0, void 0, function* () { return yield axios_1.default.post(url, data, config); });
+data, config) => __awaiter(void 0, void 0, void 0, function* () {
+    const res = yield fetch(url, {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, ((config === null || config === void 0 ? void 0 : config.headers) || {})),
+        body: typeof data === 'string' ? data : JSON.stringify(data)
+    });
+    return (yield res.json());
+});
 exports.post = post;
 exports.default = request;

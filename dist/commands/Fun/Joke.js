@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -24,11 +23,11 @@ class Command extends BaseCommand_1.default {
             baseXp: 30
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            yield axios_1.default
-                .get(`https://v2.jokeapi.dev/joke/Any`)
+            yield fetch(`https://v2.jokeapi.dev/joke/Any`)
+                .then((r) => r.json())
                 .then((response) => {
                 // console.log(response);
-                const text = `📝 *Catagory:* ${response.data.category}\n\n*🎃 Joke:* ${response.data.setup}\n\n*💡 Answer:* ${response.data.delivery}`;
+                const text = `📝 *Catagory:* ${response.data.category}\n\n*🎃 Joke:* ${response.setup}\n\n*💡 Answer:* ${response.delivery}`;
                 M.reply(text);
             })
                 .catch((err) => {

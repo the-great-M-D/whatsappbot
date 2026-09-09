@@ -14,7 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 const yt_search_1 = __importDefault(require("yt-search"));
-const ultra_lyrics_1 = require("ultra-lyrics");
+// @ts-ignore
+const lyrics_monarch_api_1 = __importDefault(require("lyrics-monarch-api"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -22,7 +23,7 @@ class Command extends BaseCommand_1.default {
             description: 'Gives you lyrics with song playable on WhatsApp',
             category: 'media',
             aliases: ['ly'],
-            usage: `${client.config.prefix}yts [term]`,
+            usage: `${client.config.prefix}lyrics [term]`,
             dm: true,
             baseXp: 20
         });
@@ -34,28 +35,32 @@ class Command extends BaseCommand_1.default {
             if (!videos || videos.length <= 0)
                 return void M.reply(`🤹‍♂️ No Matching videos found for the term *${term}*`);
             const video = videos[0];
-            const song = yield (0, ultra_lyrics_1.getSong)(term);
-            if (song.error || !song.data)
-                return void M.reply(`❌ Could Not find any Matching songs: *${term}*`);
-            const { error, data } = yield (0, ultra_lyrics_1.getLyrics)(song.data);
-            if (error || !data)
-                return void M.reply(`❌ Could Not find any Matching Lyrics: *${song.data.title}*`);
-            this.client.sock
-                .sendMessage(M.from, {
-                text: `*Lyrics of: ${term}*\n\n ${data}`,
-                contextInfo: {
-                    externalAdReply: {
-                        title: `${song.data.artist.name} - ${song.data.title}`,
-                        body: video.url,
-                        mediaType: 2,
-                        thumbnailUrl: video.thumbnail,
-                        mediaUrl: video.url,
-                        sourceUrl: video.url
-                    },
-                    mentionedJid: [M.sender.jid]
-                }
-            })
-                .catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+            const lyricsApi = new lyrics_monarch_api_1.default();
+            try {
+                const response = yield lyricsApi.getLyrics(term);
+                if (!response || !response.data)
+                    return void M.reply(`❌ Could Not find any Matching Lyrics: *${term}*`);
+                const lyricsText = typeof response.data === 'string' ? response.data : (response.data.lyrics || JSON.stringify(response.data));
+                this.client.sock
+                    .sendMessage(M.from, {
+                    text: `*Lyrics of: ${term}*\n\n ${lyricsText}`,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: `Lyrics: ${term}`,
+                            body: video.url,
+                            mediaType: 2,
+                            thumbnailUrl: video.thumbnail,
+                            mediaUrl: video.url,
+                            sourceUrl: video.url
+                        },
+                        mentionedJid: [M.sender.jid]
+                    }
+                })
+                    .catch((reason) => M.reply(`❌ an error occurred, Reason: ${reason}`));
+            }
+            catch (_b) {
+                M.reply(`❌ Could Not find any Matching Lyrics: *${term}*`);
+            }
         });
     }
 }

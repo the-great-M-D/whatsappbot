@@ -127,13 +127,10 @@ async function seedAdminUser(): Promise<void> {
   await database.close()
 }
 
-function listen(server: Server): Promise<number> {
-  return new Promise((resolve) => {
-    server.listen(0, '127.0.0.1', () => {
-      const address = server.address()
-      resolve(typeof address === 'object' && address ? address.port : 0)
-    })
-  })
+function resolvePort(server: Server): number {
+  const address = server.address()
+  if (typeof address === 'object' && address) return address.port
+  throw new Error('Server did not bind to an ephemeral port')
 }
 
 async function main(): Promise<void> {
@@ -148,8 +145,9 @@ async function main(): Promise<void> {
 
   console.log('booting V3 application')
   const application: V3Application = createV3Application()
-  const server: Server = application.app.listen(0)
-  const port = await listen(server)
+  const server: Server = application.app.listen(0, '127.0.0.1')
+  await new Promise<void>((resolve) => server.once('listening', resolve))
+  const port = resolvePort(server)
   const baseUrl = `http://127.0.0.1:${port}`
 
   const websocket = new WebSocketGateway(server, application.instanceRepository, async (request) => {
