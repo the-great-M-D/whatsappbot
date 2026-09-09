@@ -3,6 +3,9 @@ import { join, resolve } from 'node:path'
 import type { InstanceState } from '../../domain/instances/InstanceLifecycle'
 import type { WhatsAppProviderEvent } from '../../domain/whatsapp/WhatsAppProvider'
 import { BaileysProvider } from '../whatsapp/baileys/BaileysProvider'
+import { createDatabase } from '../database/client'
+import { DrizzleSessionBackupStore } from '../database/repositories/DrizzleSessionBackupStore'
+import { SessionBackupService } from '../whatsapp/SessionBackupService'
 
 const instanceId = process.env.V3_WORKER_INSTANCE_ID
 const token = process.env.V3_WORKER_TOKEN
@@ -16,6 +19,8 @@ if (!instanceId || !token || !wsUrl) {
 let socket: WebSocket | undefined
 let provider: BaileysProvider | undefined
 let stopping = false
+let backupTimer: NodeJS.Timeout | undefined
+let database: ReturnType<typeof createDatabase> | undefined
 
 function setState(state: InstanceState): void {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'state', instanceId, state }))
@@ -30,7 +35,13 @@ function emitProvider(event: WhatsAppProviderEvent): void {
         ? 'CONNECTING'
         : event.state === 'CONNECTED'
           ? 'CONNECTED'
-          : 'DISCONNECTED'
+          : event.state === 'RECONNECTING'
+            ? 'RECONNECTING'
+            : event.state === 'STOPPING'
+              ? 'STOPPING'
+              : event.state === 'STOPPED'
+                ? 'STOPPED'
+                : 'DISCONNECTED'
     setState(mapped)
   }
 }
@@ -38,8 +49,10 @@ function emitProvider(event: WhatsAppProviderEvent): void {
 async function shutdown(): Promise<void> {
   if (stopping) return
   stopping = true
+  if (backupTimer) clearTimeout(backupTimer)
   setState('STOPPING')
   await provider?.stop().catch(() => undefined)
+  await database?.close().catch(() => undefined)
   setState('STOPPED')
   socket?.close(1000, 'shutdown')
   process.exitCode = 0
@@ -90,13 +103,33 @@ async function main(): Promise<void> {
     ? resolve(configuredSessionDir)
     : join(process.cwd(), 'data', 'v3', 'sessions', instanceId)
 
-  provider = new BaileysProvider({
-    instanceId,
-    sessionDir,
-    browserName: typeof config.browserName === 'string' ? config.browserName : 'Kaoi V3',
-  })
-  provider.onEvent(emitProvider)
+  const backupKey = process.env.SESSION_BACKUP_KEY
+  if (backupKey && process.env.DATABASE_URL) {
+    database = createDatabase(process.env.DATABASE_URL, 2)
+    const backups = new SessionBackupService(new DrizzleSessionBackupStore(database.db), backupKey)
+    await backups.restoreIfMissing(instanceId, sessionDir)
+    const scheduleBackup = (): Promise<void> => new Promise((resolveBackup) => {
+      if (backupTimer) clearTimeout(backupTimer)
+      backupTimer = setTimeout(() => {
+        backupTimer = undefined
+        void backups.backup(instanceId, sessionDir).catch(() => undefined).finally(resolveBackup)
+      }, 1000)
+    })
+    provider = new BaileysProvider({
+      instanceId,
+      sessionDir,
+      browserName: typeof config.browserName === 'string' ? config.browserName : 'Kaoi V3',
+      onCredentialsSaved: scheduleBackup,
+    })
+  } else {
+    provider = new BaileysProvider({
+      instanceId,
+      sessionDir,
+      browserName: typeof config.browserName === 'string' ? config.browserName : 'Kaoi V3',
+    })
+  }
 
+  provider.onEvent(emitProvider)
   setState('STARTING')
   await provider.start()
 }
