@@ -4,6 +4,7 @@ import { createDatabase, type DatabaseHandle } from '../../infrastructure/databa
 import { DrizzleInstanceRepository } from '../../infrastructure/database/repositories/DrizzleInstanceRepository'
 import { DrizzleSessionStore } from '../../infrastructure/database/repositories/DrizzleSessionStore'
 import { DrizzleUserStore } from '../../infrastructure/database/repositories/DrizzleUserStore'
+import { DrizzleScannerStore } from '../../infrastructure/database/repositories/DrizzleScannerStore'
 import { Argon2idPasswordHasher } from '../../infrastructure/auth/Argon2idPasswordHasher'
 import { AuthService } from '../../application/auth/AuthService'
 import { SessionService } from '../../application/auth/SessionService'
@@ -12,6 +13,7 @@ import { InstanceService } from '../../application/instances/InstanceService'
 import type { InstanceRepository } from '../../application/instances/InstanceRepository'
 import { PairingService } from '../../application/instances/PairingService'
 import { LiveMessageFeed } from '../../application/messages/LiveMessageFeed'
+import { ScannerService } from '../../application/scanner/ScannerService'
 import { ProcessWorkerManager } from '../../infrastructure/workers/ProcessWorkerManager'
 import { createApiServer } from '../../interfaces/http/ApiServer'
 
@@ -24,6 +26,7 @@ export interface V3Application {
   instanceManager: InstanceManager
   pairing: PairingService
   liveFeed: LiveMessageFeed
+  scanner: ScannerService
   workers: ProcessWorkerManager
   auth: AuthService
   shutdown(): Promise<void>
@@ -38,6 +41,7 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
   const instances = new InstanceService(instanceRepository, instanceManager)
   const pairing = new PairingService(workers, (instanceId, request) => workers.pair(instanceId, request))
   const liveFeed = new LiveMessageFeed(workers)
+  const scanner = new ScannerService(new DrizzleScannerStore(database.db), workers)
   const users = new DrizzleUserStore(database.db)
   const sessions = new SessionService(new DrizzleSessionStore(database.db), {
     name: config.value.SESSION_COOKIE_NAME,
@@ -52,24 +56,13 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
     auth,
     pairing,
     liveFeed,
+    scanner,
     sessionCookie: { name: config.value.SESSION_COOKIE_NAME, ttlMs: config.value.SESSION_TTL_MS, secure: config.value.SESSION_SECURE, sameSite: 'lax', path: '/' },
     csrfSecret: config.value.CSRF_SECRET,
   })
 
   return {
-    app,
-    config,
-    database,
-    instanceRepository,
-    instances,
-    instanceManager,
-    pairing,
-    liveFeed,
-    workers,
-    auth,
-    async shutdown() {
-      await instanceManager.shutdown()
-      await database.close()
-    },
+    app, config, database, instanceRepository, instances, instanceManager, pairing, liveFeed, scanner, workers, auth,
+    async shutdown() { await instanceManager.shutdown(); await database.close() },
   }
 }
