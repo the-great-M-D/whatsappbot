@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 export type TaskStatus = 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'TIMED_OUT'
 
 export interface TaskRecord<T = unknown> {
@@ -20,12 +22,11 @@ export class TaskManager {
     private readonly tasks = new Map<string, TaskRecord>()
     private readonly queue: Array<{ record: TaskRecord; work: () => Promise<unknown>; options: TaskOptions }> = []
     private running = 0
-    private sequence = 0
 
     constructor(private readonly maxConcurrency = 20, private readonly onTransition?: (record: TaskRecord) => void) {}
 
     submit<T>(instanceId: string, type: string, work: () => Promise<T>, options: TaskOptions = {}): string {
-        const id = `${Date.now()}-${++this.sequence}`
+        const id = randomUUID()
         const record: TaskRecord<T> = { id, instanceId, type, status: 'QUEUED', createdAt: Date.now() }
         this.tasks.set(id, record)
         this.notify(record)

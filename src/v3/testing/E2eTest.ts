@@ -232,9 +232,10 @@ async function main(): Promise<void> {
       return ((after.body as { items: Array<{ text?: string }> }).items ?? []).some((m) => m.text === 'scheduled hello from jobs')
     }, 10_000), 'scheduled send-message job produced a persisted outbound message')
 
-    const tasks = await http.get<{ items?: Array<{ type?: string; status?: string }> }>(`/api/v1/instances/${instanceId}/tasks`)
-    const taskItems = (tasks.body as { items: Array<{ type?: string; status?: string }> }).items ?? []
-    assert(taskItems.some((t) => t.type === 'job:send-message' && t.status === 'SUCCEEDED'), 'job run recorded as a SUCCEEDED task')
+    assert(await waitFor('job task SUCCEEDED in the tasks table', async () => {
+      const tasks = await http.get<{ items?: Array<{ type?: string; status?: string }> }>(`/api/v1/instances/${instanceId}/tasks`)
+      return ((tasks.body as { items: Array<{ type?: string; status?: string }> }).items ?? []).some((t) => t.type === 'job:send-message' && t.status === 'SUCCEEDED')
+    }, 10_000), 'job run recorded as a SUCCEEDED task')
     assert(realtime.eventsOf('TaskUpdated').length > 0, 'TaskUpdated events streamed to dashboard')
 
     console.log('7. audit trail')
