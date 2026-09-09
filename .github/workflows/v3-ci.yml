@@ -21,30 +21,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 20
           package-manager-cache: false
-
       - name: Install native build dependencies
         run: |
+          # The hosted runner includes a Google Chrome APT source which can
+          # occasionally serve a stale Packages index. It is not required by
+          # this build, so exclude it from APT operations.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            pkg-config \
-            libcairo2-dev \
-            libpango1.0-dev \
-            libjpeg-dev \
-            libgif-dev \
-            librsvg2-dev \
-            libpixman-1-dev
-
+          sudo apt-get install -y --no-install-recommends pkg-config libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
-
       - name: TypeScript build
         run: npm run build
-
       - name: Drizzle schema check
         run: npm run db:check
