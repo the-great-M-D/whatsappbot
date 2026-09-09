@@ -11,23 +11,27 @@ export function createTaskRecorder(store: DrizzleTaskStore, events: EventBus): (
   // a fast SUCCEEDED can never overtake its own QUEUED insert.
   const pending = new Map<string, Promise<void>>()
   return (record: TaskRecord) => {
+    // TaskManager mutates the same record object across transitions; snapshot it
+    // so each mirrored write sees the state at its own transition.
+    const snapshot: TaskRecord = { ...record }
     const write = (previous: Promise<void>) =>
       previous
         .catch(() => undefined)
         .then(async () => {
           try {
-            if (record.status === 'QUEUED') await store.create({ ...record })
-            else await store.update({ ...record })
+            if (snapshot.status === 'QUEUED') await store.create({ ...snapshot })
+            else await store.update({ ...snapshot })
           } catch (error) {
             // Task persistence must never break task execution, but stay visible.
-            console.error(`task store mirror failed for ${record.id} (${record.status})`, error instanceof Error ? error.message : String(error))
+            console.error(`task store mirror failed for ${snapshot.id} (${snapshot.status})`, error instanceof Error ? error.message : String(error))
           }
         })
-    const chained = write(pending.get(record.id) ?? Promise.resolve())
-    pending.set(record.id, chained)
-    if (record.status === 'SUCCEEDED' || record.status === 'FAILED' || record.status === 'CANCELLED' || record.status === 'TIMED_OUT') void chained.then(() => pending.delete(record.id))
+    const chained = write(pending.get(snapshot.id) ?? Promise.resolve())
+    pending.set(snapshot.id, chained)
+    if (['SUCCEEDED', 'FAILED', 'CANCELLED', 'TIMED_OUT'].includes(snapshot.status)) void chained.then(() => pending.delete(snapshot.id))
     // The dashboard event reflects the authoritative in-memory transition and
-    // is published even if the mirror write failed.
-    events.emit('TaskUpdated', { instanceId: record.instanceId, taskId: record.id, type: record.type, status: record.status, error: record.error ?? null })
+    // is published even if the mirror write failed. The field is `taskType` so
+    // the gateway's `payload.type` stays the event name.
+    events.emit('TaskUpdated', { instanceId: snapshot.instanceId, taskId: snapshot.id, taskType: snapshot.type, status: snapshot.status, error: snapshot.error ?? null })
   }
 }

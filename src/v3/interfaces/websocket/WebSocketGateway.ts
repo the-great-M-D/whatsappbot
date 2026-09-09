@@ -87,7 +87,7 @@ export class WebSocketGateway {
   }
 
   private publishDomain(name: string, payload: Record<string, unknown>): void {
-    const envelope = { type: 'event', id: randomUUID(), instanceId: payload.instanceId as string, timestamp: new Date().toISOString(), payload: { type: name, ...payload } }
+    const envelope = { type: 'event', id: randomUUID(), instanceId: payload.instanceId as string, timestamp: new Date().toISOString(), payload: { ...payload, type: name } }
     for (const client of this.clients) if (client.instances.has(payload.instanceId as string) || client.permissions.has('*')) this.send(client, envelope)
   }
 

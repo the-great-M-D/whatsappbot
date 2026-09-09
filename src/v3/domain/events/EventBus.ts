@@ -3,7 +3,8 @@ export type EventHandler<T> = (event: T) => void | Promise<void>
 export interface TaskEventPayload {
   instanceId: string
   taskId: string
-  type: string
+  /** The task's type (e.g. job:send-message); the wire `type` stays TaskUpdated. */
+  taskType: string
   status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'TIMED_OUT'
   error?: string
 }
