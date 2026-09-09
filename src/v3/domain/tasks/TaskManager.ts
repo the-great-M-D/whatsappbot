@@ -22,12 +22,13 @@ export class TaskManager {
     private running = 0
     private sequence = 0
 
-    constructor(private readonly maxConcurrency = 20) {}
+    constructor(private readonly maxConcurrency = 20, private readonly onTransition?: (record: TaskRecord) => void) {}
 
     submit<T>(instanceId: string, type: string, work: () => Promise<T>, options: TaskOptions = {}): string {
         const id = `${Date.now()}-${++this.sequence}`
         const record: TaskRecord<T> = { id, instanceId, type, status: 'QUEUED', createdAt: Date.now() }
         this.tasks.set(id, record)
+        this.notify(record)
         this.queue.push({ record, work, options })
         this.pump()
         return id
@@ -41,7 +42,12 @@ export class TaskManager {
         if (!task || task.status !== 'QUEUED') return false
         task.status = 'CANCELLED'
         task.finishedAt = Date.now()
+        this.notify(task)
         return true
+    }
+
+    private notify(record: TaskRecord): void {
+        try { this.onTransition?.(record) } catch { /* persistence hooks must never break task execution */ }
     }
 
     private pump(): void {
@@ -57,6 +63,7 @@ export class TaskManager {
         const { record, work, options } = item
         record.status = 'RUNNING'
         record.startedAt = Date.now()
+        this.notify(record)
         let timer: ReturnType<typeof setTimeout> | undefined
         try {
             const operation = work()
@@ -71,6 +78,7 @@ export class TaskManager {
         } finally {
             if (timer) clearTimeout(timer)
             record.finishedAt = Date.now()
+            this.notify(record)
         }
     }
 }

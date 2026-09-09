@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { IncomingMessage, Server as HttpServer } from 'node:http'
 import { WebSocketServer, WebSocket, type RawData } from 'ws'
 import type { WorkerEventSource, WorkerLifecycleEvent } from '../../application/instances/WorkerManager'
+import type { DomainEventMap, EventBus } from '../../domain/events/EventBus'
 import type { InstanceRepository } from '../../application/instances/InstanceRepository'
 
 export interface WebSocketPrincipal { userId: string; permissions: Set<string> }
@@ -13,6 +14,7 @@ export class WebSocketGateway {
   private readonly clients = new Set<Client>()
   private readonly wss: WebSocketServer
   private unsubscribe?: () => void
+  private domainUnsubscribe?: () => void
   private readonly maxQueue = 500
 
   constructor(server: HttpServer, private readonly repository: InstanceRepository, private readonly principalResolver: WebSocketPrincipalResolver) {
@@ -26,8 +28,23 @@ export class WebSocketGateway {
     return this.unsubscribe
   }
 
+  /** Publishes domain events (scanner matches, command runs, tasks, jobs) to subscribed clients. */
+  attachEventBus(events: EventBus): () => void {
+    this.domainUnsubscribe?.()
+    const handlers: Array<[keyof DomainEventMap, (payload: never) => void]> = [
+      ['CommandExecuted', (payload) => this.publishDomain('CommandExecuted', payload as unknown as Record<string, unknown>)],
+      ['ScannerMatch', (payload) => this.publishDomain('ScannerMatch', payload as unknown as Record<string, unknown>)],
+      ['TaskUpdated', (payload) => this.publishDomain('TaskUpdated', payload as unknown as Record<string, unknown>)],
+      ['JobExecuted', (payload) => this.publishDomain('JobExecuted', payload as unknown as Record<string, unknown>)],
+    ]
+    const unsubscribers = handlers.map(([name, handler]) => events.on(name, handler))
+    this.domainUnsubscribe = () => { for (const off of unsubscribers) off(); this.domainUnsubscribe = undefined }
+    return this.domainUnsubscribe
+  }
+
   async close(): Promise<void> {
     this.unsubscribe?.()
+    this.domainUnsubscribe?.()
     for (const client of this.clients) client.socket.close(1001, 'server shutdown')
     await new Promise<void>((resolve) => this.wss.close(() => resolve()))
   }
@@ -67,6 +84,11 @@ export class WebSocketGateway {
     if (payload === null) return
     const envelope = { type: 'event', id: randomUUID(), instanceId: event.instanceId, timestamp: new Date().toISOString(), payload }
     for (const client of this.clients) if (client.instances.has(event.instanceId) || client.permissions.has('*')) this.send(client, envelope)
+  }
+
+  private publishDomain(name: string, payload: Record<string, unknown>): void {
+    const envelope = { type: 'event', id: randomUUID(), instanceId: payload.instanceId as string, timestamp: new Date().toISOString(), payload: { type: name, ...payload } }
+    for (const client of this.clients) if (client.instances.has(payload.instanceId as string) || client.permissions.has('*')) this.send(client, envelope)
   }
 
   private safeEvent(event: WorkerLifecycleEvent): unknown | null {

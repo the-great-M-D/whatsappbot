@@ -1,5 +1,5 @@
-import type { WorkerEventSource } from '../instances/WorkerManager'
-import type { WhatsAppProviderEvent, WhatsAppMessage } from '../../domain/whatsapp/WhatsAppProvider'
+import type { EventBus } from '../../domain/events/EventBus'
+import type { WhatsAppMessage } from '../../domain/whatsapp/WhatsAppProvider'
 import type { ScannerEventStore } from '../../infrastructure/database/repositories/DrizzleScannerStore'
 
 export interface ScannerConfig {
@@ -9,12 +9,10 @@ export interface ScannerConfig {
 }
 
 export class ScannerService {
-  constructor(private readonly store: ScannerEventStore, source: WorkerEventSource) {
-    source.onEvent((event) => {
-      if (event.type !== 'provider') return
-      const provider = event.event as WhatsAppProviderEvent
-      if (provider.type !== 'message' || provider.message.chatType !== 'group') return
-      void this.scan(event.instanceId, provider.message).catch(() => undefined)
+  constructor(private readonly store: ScannerEventStore, private readonly events?: EventBus) {
+    events?.on('MessageReceived', (event) => {
+      if (event.chatType !== 'group' || event.isFromMe) return
+      void this.scan(event.instanceId, { id: event.messageId, chatId: event.chatId, senderId: event.senderId, chatType: event.chatType, timestamp: event.timestamp, text: event.text, isFromMe: event.isFromMe }).catch(() => undefined)
     })
   }
 
@@ -37,6 +35,8 @@ export class ScannerService {
     if (!config.enabled || !config.keywords.length || !message.text) return
     const haystack = config.caseSensitive ? message.text : message.text.toLowerCase()
     const keyword = config.keywords.find((value) => haystack.includes(config.caseSensitive ? value : value.toLowerCase()))
-    if (keyword) await this.store.recordMatch(instanceId, message, keyword)
+    if (!keyword) return
+    const eventId = await this.store.recordMatch(instanceId, message, keyword)
+    this.events?.emit('ScannerMatch', { instanceId, source: 'whatsapp-group', eventId: eventId ?? '', matchedText: keyword, timestamp: message.timestamp })
   }
 }

@@ -17,6 +17,30 @@ Infrastructure adapters implement domain/application contracts and are not impor
 - WhatsApp provider abstraction so Baileys is isolated behind an adapter.
 - Granular permission constants.
 
+## End-to-end integration
+
+The full vertical slice is wired and covered by `npm run v3:e2e`
+(see `.github/workflows/v3-integration.yml`):
+
+    Dashboard (REST + WebSocket)
+      -> ApiServer -> InstanceManager -> ProcessWorkerManager (fork)
+      -> worker-entry -> BaileysProvider | MockProvider -> WhatsApp
+      -> worker events -> WorkerEventBridge -> EventBus
+      -> MessageRecorder / ScannerService / WebSocketGateway / AuditService
+      -> PostgreSQL: messages, scanner_events, audit_logs, tasks, jobs
+
+- `EventBus` is the single domain stream; workers bridge onto it.
+- Command execution runs in the worker (`!ping`, `!help`, `!uptime` built in,
+  per-instance allow-list via `config.commands`); `CommandExecuted` flows back
+  to the dashboard.
+- `JobScheduler` polls the `jobs` table (interval schedules only in this phase)
+  and executes jobs as TaskManager tasks; outcomes land on the job row and as
+  `JobExecuted` events.
+- Audit records are written for every mutating REST action (login, instance
+  lifecycle, scanner config, job management).
+- RBAC seed permissions are aligned with the actual route guards; the OWNER
+  role carries the `*` wildcard at role level.
+
 ## Migration rules
 
 1. Do not rewrite all existing commands at once.
