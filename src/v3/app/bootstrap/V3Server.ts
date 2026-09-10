@@ -37,7 +37,12 @@ async function main(): Promise<void> {
     console.log(`V3 shutdown requested by ${signal}`)
     const force = setTimeout(() => process.exit(1), 30_000)
     force.unref()
+    // idle keep-alive sockets would hold server.close open until the force
+    // exit; drop lingering connections after a 10s drain grace instead
+    const drain = setTimeout(() => server.closeAllConnections(), 10_000)
+    drain.unref()
     server.close(async () => {
+      clearTimeout(drain)
       try {
         await websocket.close()
         await application.shutdown()

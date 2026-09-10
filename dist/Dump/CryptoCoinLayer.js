@@ -600,7 +600,6 @@ class Command extends BaseCommand_1.default {
                 }
                 else {
                     text = `🟩 Target: ${data.target}\n\n${data.rates.map((coin, index) => {
-                        // eslint-disable-next-line @typescript-eslint/no-extra-semi
                         ;
                         `🪙Coin: ${data.rates[index]}   📊Price: ${coin}\n`;
                     })}`;

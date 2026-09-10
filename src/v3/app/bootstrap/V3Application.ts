@@ -113,6 +113,17 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
     debug: { mockIncoming: async (instanceId, message) => { workers.mockIncoming(instanceId, message) } },
     csrfSecret: config.value.CSRF_SECRET,
     sessionCookie: { name: config.value.SESSION_COOKIE_NAME, ttlMs: config.value.SESSION_TTL_MS, secure: config.value.SESSION_SECURE, sameSite: 'lax', path: '/' },
+    readiness: async () => {
+      const checks: Record<string, { ok: boolean; detail?: string }> = {}
+      try {
+        const started = Date.now()
+        await database.pool.query('SELECT 1')
+        checks.database = { ok: true, detail: `${Date.now() - started}ms` }
+      } catch (error) {
+        checks.database = { ok: false, detail: error instanceof Error ? error.message : 'database unavailable' }
+      }
+      return checks
+    },
   })
 
   return {

@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
 import { promises as fs } from 'node:fs'
-import { join, relative, sep } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import type { DrizzleSessionBackupStore } from '../database/repositories/DrizzleSessionBackupStore'
 
 interface BackupFile { path: string; data: string }
@@ -41,14 +41,30 @@ export class SessionBackupService {
     const envelope = JSON.parse(Buffer.concat([decipher.update(packed.subarray(28)), decipher.final()]).toString('utf8')) as BackupEnvelope
     if (envelope.version !== 1 || !Array.isArray(envelope.files)) throw new Error('Invalid session backup payload')
     await fs.mkdir(sessionDir, { recursive: true })
-    const root = join(sessionDir, sep)
     for (const file of envelope.files) {
-      const resolved = join(sessionDir, file.path)
-      if (!resolved.startsWith(root)) throw new Error('Invalid session backup path')
-      await fs.mkdir(join(resolved, '..'), { recursive: true })
-      await fs.writeFile(resolved, Buffer.from(file.data, 'base64'), { mode: 0o600 })
+      await this.writeRestoredFile(sessionDir, file.path, file.data)
     }
     return true
+  }
+
+  /**
+   * Hardened restore write: rejects null bytes, absolute paths, '..' escapes
+   * and any resolved location outside sessionDir (relative()-based, so no
+   * prefix tricks like `/sessions/inst-evil` passing a `/sessions/inst` prefix).
+   */
+  private async writeRestoredFile(sessionDir: string, filePath: string, data: string): Promise<void> {
+    if (typeof filePath !== 'string' || filePath.length === 0 || filePath.includes('\0')) {
+      throw new Error('Invalid session backup path')
+    }
+    if (isAbsolute(filePath) || filePath.split(/[\\/]/).includes('..')) {
+      throw new Error('Invalid session backup path')
+    }
+    const resolved = resolve(sessionDir, filePath)
+    const rel = relative(resolve(sessionDir), resolved)
+    if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) throw new Error('Invalid session backup path')
+    const parent = dirname(resolved)
+    await fs.mkdir(parent, { recursive: true })
+    await fs.writeFile(resolved, Buffer.from(data, 'base64'), { mode: 0o600 })
   }
 
   private async readFiles(root: string): Promise<BackupFile[]> {

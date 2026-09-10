@@ -43,6 +43,8 @@ export interface ApiDebugHooks {
   mockIncoming(instanceId: string, message: { chatId: string; text?: string; senderId?: string; chatType?: 'private' | 'group' }): Promise<void>
 }
 
+export type ReadinessChecks = () => Promise<Record<string, { ok: boolean; detail?: string }>>
+
 export interface ApiServerOptions {
   instances: InstanceService
   auth: AuthService
@@ -57,6 +59,8 @@ export interface ApiServerOptions {
   taskStore: DrizzleTaskStore
   jobs: DrizzleJobStore
   debug?: ApiDebugHooks
+  /** Optional deep checks for /health/ready (DB pool, downstream services). */
+  readiness?: ReadinessChecks
 }
 
 export function createApiServer(options: ApiServerOptions) {
@@ -70,7 +74,22 @@ export function createApiServer(options: ApiServerOptions) {
     res.setHeader('x-request-id', requestId); res.locals.requestId = requestId; next()
   })
   app.get('/health/live', (_req, res) => res.json({ status: 'ok' }))
-  app.get('/health/ready', (_req, res) => res.json({ status: 'ok' }))
+  app.get('/health/ready', (_req, res) => {
+    if (!options.readiness) { res.json({ status: 'ok', checks: {} }); return }
+    const timeout = new Promise<never>((_, reject) => { setTimeout(() => reject(new Error('readiness timeout')), 3_000).unref() })
+    void Promise.race([options.readiness(), timeout])
+      .then((checks) => {
+        const failed = Object.entries(checks).filter(([, result]) => !result.ok)
+        const body = {
+          status: failed.length ? 'unavailable' : 'ok',
+          checks: Object.fromEntries(Object.entries(checks).map(([name, result]) => [name, result.ok ? 'ok' : (result.detail ?? 'unavailable')])),
+        }
+        res.status(failed.length ? 503 : 200).json(body)
+      })
+      .catch((error: unknown) => {
+        res.status(503).json({ status: 'unavailable', checks: { probe: error instanceof Error ? error.message : 'unavailable' } })
+      })
+  })
   app.get('/health/version', (_req, res) => res.json({ version: process.env.npm_package_version ?? 'unknown' }))
 
   const auditOf = (req: Request, res: Response) => ({
