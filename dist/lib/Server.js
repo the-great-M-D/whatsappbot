@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const events_1 = require("events");
 const path_1 = require("path");
+const DiscordLogger_1 = __importDefault(require("./DiscordLogger"));
 class Server extends events_1.EventEmitter {
     constructor(PORT, client) {
         super();
@@ -27,6 +28,7 @@ class Server extends events_1.EventEmitter {
         this.stats = { messages: 0, commands: 0 };
         this.startTime = Date.now();
         this.handler = null;
+        this.discord = new DiscordLogger_1.default();
         this.auth = (req, res, next) => {
             var _a, _b;
             const session = ((_a = req.query.session) !== null && _a !== void 0 ? _a : (_b = req.body) === null || _b === void 0 ? void 0 : _b.session);
@@ -76,6 +78,69 @@ class Server extends events_1.EventEmitter {
             }
             catch (err) {
                 res.status(500).json({ error: err.message || 'Failed to send' });
+            }
+        }));
+        // ── Execute command from Discord bridge ─────────────────────────────
+        this.app.post('/api/execute', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
+            try {
+                const { command, jid } = req.body;
+                if (!command)
+                    return void res.status(400).json({ error: 'command is required' });
+                if (this.client.state !== 'open')
+                    return void res.status(503).json({ error: 'Bot is not connected' });
+                if (!this.handler)
+                    return void res.status(500).json({ error: 'Handler not ready' });
+                const prefix = ((_a = this.client.config) === null || _a === void 0 ? void 0 : _a.prefix) || '!';
+                const text = command.startsWith(prefix) ? command : `${prefix}${command}`;
+                const args = text.trim().split(/\s+/).filter(Boolean);
+                const cmdName = args[0].slice(prefix.length).toLowerCase();
+                const commandObj = this.handler.commands.get(cmdName) || this.handler.aliases.get(cmdName);
+                if (!commandObj)
+                    return void res.json({ ok: false, reply: 'No Command Found! Try using one from the help list.' });
+                // Build a simulated message
+                const senderJid = (((_b = this.client.user) === null || _b === void 0 ? void 0 : _b.id) || '').split(':')[0] + '@s.whatsapp.net';
+                const targetJid = jid || senderJid;
+                const isGroup = targetJid.endsWith('@g.us');
+                let replies = [];
+                const captureReply = (replyContent) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof replyContent === 'string') {
+                        replies.push(replyContent);
+                    }
+                    else {
+                        replies.push('[media response]');
+                    }
+                    // Also send to WhatsApp if jid is provided
+                    return this.client.sendMessage(targetJid, { text: typeof replyContent === 'string' ? replyContent : '' });
+                });
+                const simM = {
+                    type: 'text',
+                    content: text,
+                    args,
+                    mentioned: [],
+                    groupMetadata: null,
+                    chat: isGroup ? 'group' : 'dm',
+                    from: targetJid,
+                    sender: {
+                        jid: senderJid,
+                        username: 'Discord Bridge',
+                        isAdmin: true
+                    },
+                    quoted: null,
+                    WAMessage: { key: { remoteJid: targetJid, fromMe: true, id: 'discord-bridge-' + Date.now() } },
+                    urls: [],
+                    reply: captureReply
+                };
+                try {
+                    yield commandObj.run(simM, { joined: args.slice(1).join(' '), args: args.slice(1), flags: [] });
+                }
+                catch (err) {
+                    replies.push(`Error: ${err.message}`);
+                }
+                res.json({ ok: true, command: cmdName, replies });
+            }
+            catch (err) {
+                res.status(500).json({ error: err.message || 'Failed to execute' });
             }
         }));
         // ── Stats ────────────────────────────────────────────────────────────
@@ -185,6 +250,7 @@ class Server extends events_1.EventEmitter {
                     detail: (M.content || '').slice(0, 120),
                     ts: Date.now()
                 });
+                this.discord.onMessage(sender, group, M.content || '');
             }
         });
         this.client.on('command-executed', ({ command, sender, group }) => {
@@ -197,19 +263,22 @@ class Server extends events_1.EventEmitter {
                 detail: group || 'DM',
                 ts: Date.now()
             });
+            this.discord.onCommand(command, sender, group);
         });
         this.client.on('group-participants-update', ({ jid, participants, action, actor }) => {
             const icons = { add: '👋', remove: '🚪', promote: '⭐', demote: '⬇️' };
             const labels = { add: 'joined', remove: 'left', promote: 'promoted in', demote: 'demoted in' };
             const names = (participants || []).map((p) => p.split('@')[0]).join(', ');
             const groupName = Object.values(this.client.chats || {}).find((c) => c.id === jid);
+            const groupLabel = (groupName === null || groupName === void 0 ? void 0 : groupName.name) || (groupName === null || groupName === void 0 ? void 0 : groupName.subject) || (jid === null || jid === void 0 ? void 0 : jid.split('@')[0]) || jid;
             this.pushEvent({
                 type: 'group',
                 icon: icons[action] || '👥',
                 title: `${names} ${labels[action] || action}`,
-                detail: ((groupName === null || groupName === void 0 ? void 0 : groupName.name) || (groupName === null || groupName === void 0 ? void 0 : groupName.subject) || (jid === null || jid === void 0 ? void 0 : jid.split('@')[0]) || jid) + (actor ? `  ·  by ${actor.split('@')[0]}` : ''),
+                detail: groupLabel + (actor ? `  ·  by ${actor.split('@')[0]}` : ''),
                 ts: Date.now()
             });
+            this.discord.onGroupEvent(names, labels[action] || action, groupLabel, actor ? actor.split('@')[0] : null);
         });
         this.client.on('CB:Call', (call) => {
             var _a;
@@ -221,6 +290,7 @@ class Server extends events_1.EventEmitter {
                 detail: 'Auto-rejected',
                 ts: Date.now()
             });
+            this.discord.onCall(from);
         });
         this.client.on('open', () => {
             var _a, _b, _c;
@@ -232,6 +302,7 @@ class Server extends events_1.EventEmitter {
                 detail: 'WhatsApp session active',
                 ts: Date.now()
             });
+            this.discord.onConnect(name);
         });
         this.client.on('needs-repair', () => {
             this.pushEvent({
@@ -241,6 +312,7 @@ class Server extends events_1.EventEmitter {
                 detail: 'No auth found locally or in database. Use the dashboard to pair via phone number.',
                 ts: Date.now()
             });
+            this.discord.onSystem('Re-pairing required', 'No auth found locally or in database. Use the dashboard to pair via phone number.');
         });
     }
 }

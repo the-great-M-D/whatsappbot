@@ -24,3 +24,4 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 .agents/
+dashboard-v3/tsconfig.tsbuildinfo

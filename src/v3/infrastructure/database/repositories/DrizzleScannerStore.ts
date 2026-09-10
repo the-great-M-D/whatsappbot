@@ -7,7 +7,7 @@ import type { WhatsAppMessage } from '../../../domain/whatsapp/WhatsAppProvider'
 export interface ScannerEventStore {
   getConfig(instanceId: string): Promise<ScannerConfig>
   setConfig(instanceId: string, config: ScannerConfig): Promise<ScannerConfig>
-  recordMatch(instanceId: string, message: WhatsAppMessage, keyword: string): Promise<void>
+  recordMatch(instanceId: string, message: WhatsAppMessage, keyword: string): Promise<string | null>
   listMatches(instanceId: string, limit: number): Promise<Record<string, unknown>[]>
 }
 
@@ -30,8 +30,9 @@ export class DrizzleScannerStore implements ScannerEventStore {
     return config
   }
 
-  async recordMatch(instanceId: string, message: WhatsAppMessage, keyword: string): Promise<void> {
-    await this.db.insert(scannerEvents).values({ instanceId, source: 'whatsapp-group', externalId: message.id, status: 'MATCHED', payload: { chatId: message.chatId, senderId: message.senderId, text: message.text, keyword, timestamp: message.timestamp } })
+  async recordMatch(instanceId: string, message: WhatsAppMessage, keyword: string): Promise<string | null> {
+    const [row] = await this.db.insert(scannerEvents).values({ instanceId, source: 'whatsapp-group', externalId: message.id, status: 'MATCHED', payload: { chatId: message.chatId, senderId: message.senderId, text: message.text, keyword, timestamp: message.timestamp } }).returning({ id: scannerEvents.id })
+    return row?.id ?? null
   }
 
   async listMatches(instanceId: string, limit: number): Promise<Record<string, unknown>[]> {

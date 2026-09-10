@@ -1,17 +1,25 @@
 import { permissions, roles, rolePermissions } from './schema'
 import type { V3Database } from './client'
 
+// Keep in sync with the permission strings required by ApiServer route guards
+// and WebSocketGateway checks (src/v3/interfaces/*).
+const INSTANCE_PERMISSIONS = [
+  'instances:read', 'instances:create', 'instances:update', 'instances:delete',
+  'instances:start', 'instances:stop', 'instances:restart', 'instances:reconnect',
+]
 const DEFAULT_PERMISSIONS = [
-  'dashboard:read', 'instances:read', 'instances:manage', 'commands:manage',
-  'scanner:read', 'scanner:manage', 'tasks:read', 'tasks:manage', 'audit:read',
-  'users:manage', 'system:manage',
+  'dashboard:read',
+  ...INSTANCE_PERMISSIONS,
+  'scanner:read', 'scanner:manage',
+  'tasks:read', 'jobs:read', 'jobs:manage',
+  'audit:read', 'users:manage', 'system:manage',
 ]
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   OWNER: ['*'],
   ADMIN: DEFAULT_PERMISSIONS,
-  OPERATOR: ['dashboard:read', 'instances:read', 'instances:manage', 'commands:manage', 'scanner:read', 'scanner:manage', 'tasks:read', 'tasks:manage'],
-  VIEWER: ['dashboard:read', 'instances:read', 'scanner:read', 'tasks:read'],
+  OPERATOR: ['dashboard:read', ...INSTANCE_PERMISSIONS, 'scanner:read', 'scanner:manage', 'tasks:read', 'jobs:read'],
+  VIEWER: ['dashboard:read', 'instances:read', 'scanner:read', 'tasks:read', 'jobs:read'],
 }
 
 export async function seedDefaultRbac(db: V3Database): Promise<void> {

@@ -16,14 +16,16 @@ const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
-            command: 'cellc',
-            description: 'sends an HC file for cell c .',
-            category: 'files',
-            usage: `${client.config.prefix}cellc`,
-            baseXp: 30
+            command: 'boom',
+            description: 'Generally used to say hie 🤗',
+            category: 'dev',
+            usage: `${client.config.prefix}boom`,
+            baseXp: 0
         });
         this.run = (M) => __awaiter(this, void 0, void 0, function* () {
-            return void M.reply(`🤹 Cell C Is Blocked\n`).catch((reason) => M.reply(`an error occurred, Reason: ${reason}`));
+            for (let i = 0; i > 5; i++) {
+                return void (yield M.reply(`🤹‍♂️ Ey Mother Fucker 🥃 ${M.sender.username}!`));
+            }
         });
     }
 }

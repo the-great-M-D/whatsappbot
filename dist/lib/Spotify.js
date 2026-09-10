@@ -8,29 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const spotifydl_core_1 = __importDefault(require("spotifydl-core"));
 const clientId = process.env.SPOTIFY_CLIENT_ID || '';
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET || '';
 if (!clientId || !clientSecret) {
     console.warn('[Spotify] SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET env vars not set — spotify commands will fail');
 }
-const client = new spotifydl_core_1.default({ clientId, clientSecret });
 class default_1 {
     constructor(url) {
         this.url = url;
         this.getInfo = () => __awaiter(this, void 0, void 0, function* () {
-            try {
-                return yield client.getTrack(this.url);
-            }
-            catch (_a) {
-                return { error: `Error Fetching ${this.url}` };
-            }
+            return { error: `Spotify download is not configured. URL: ${this.url}` };
         });
-        this.getAudio = () => __awaiter(this, void 0, void 0, function* () { return yield client.downloadTrack(this.url); });
+        this.getAudio = () => __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Spotify download is not configured');
+        });
     }
 }
 exports.default = default_1;

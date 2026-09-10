@@ -87,6 +87,25 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
     })
   }
 
+  async sendText(instanceId: string, chatId: string, text: string): Promise<void> {
+    const worker = this.workers.get(instanceId)
+    if (!worker) throw new Error('Instance worker is not running')
+    if (worker.socket?.readyState !== WebSocket.OPEN) throw new Error('Instance worker is not connected')
+    const id = randomUUID()
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('Worker send request timed out')) }, 15_000)
+      this.pending.set(id, { resolve, reject, timer })
+      worker.socket!.send(JSON.stringify({ id, type: 'command', action: 'send', instanceId, timestamp: new Date().toISOString(), payload: { chatId, text } }))
+    })
+  }
+
+  /** Test hook: forwards a mock inbound message to a worker running the mock provider. */
+  mockIncoming(instanceId: string, message: { chatId: string; text?: string; senderId?: string; chatType?: 'private' | 'group' }): void {
+    const worker = this.workers.get(instanceId)
+    if (!worker || worker.socket?.readyState !== WebSocket.OPEN) throw new Error('Instance worker is not connected')
+    worker.socket.send(JSON.stringify({ type: 'command', id: randomUUID(), action: 'mock-incoming', instanceId, timestamp: new Date().toISOString(), payload: message }))
+  }
+
   has(instanceId: string): boolean { return this.workers.has(instanceId) }
   get(instanceId: string): WorkerSnapshot | null { const worker = this.workers.get(instanceId); return worker ? { ...worker.snapshot } : null }
   onEvent(listener: (event: WorkerLifecycleEvent) => void): () => void { this.on('worker-event', listener); return () => this.off('worker-event', listener) }
@@ -94,7 +113,7 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
 
   private handleWorkerMessage(instanceId: string, raw: string): void {
     try {
-      const message = JSON.parse(raw) as { id?: string; type?: string; state?: unknown; event?: WhatsAppProviderEvent; error?: string }
+      const message = JSON.parse(raw) as { id?: string; type?: string; state?: unknown; event?: WhatsAppProviderEvent; name?: string; payload?: unknown; error?: string }
       if (message.type === 'response' && message.id) {
         const pending = this.pending.get(message.id)
         if (!pending) return
@@ -105,6 +124,7 @@ export class ProcessWorkerManager extends EventEmitter implements WorkerManagerC
       }
       if (message.type === 'state' && typeof message.state === 'string') this.emitEvent({ type: 'state', instanceId, state: message.state as any })
       else if (message.type === 'provider' && message.event) this.emitEvent({ type: 'provider', instanceId, event: message.event })
+      else if (message.type === 'domain' && typeof message.name === 'string') this.emitEvent({ type: 'domain', instanceId, name: message.name, payload: (message as { payload?: unknown }).payload })
     } catch { /* malformed worker messages are ignored */ }
   }
   private emitEvent(event: WorkerLifecycleEvent): void { this.emit('worker-event', event) }

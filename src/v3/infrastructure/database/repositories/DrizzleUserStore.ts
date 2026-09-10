@@ -25,13 +25,17 @@ export class DrizzleUserStore implements UserStore {
       .leftJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
       .where(eq(userRoles.userId, user.id))
 
+    const roleNames = [...new Set(rows.map((row) => row.role).filter(Boolean) as RoleName[])]
+    const permissionNames = new Set(rows.map((row) => row.permission).filter(Boolean) as string[])
+    // OWNER holds the wildcard grant at role level; role_permissions rows skip '*'.
+    if (roleNames.includes('OWNER')) permissionNames.add('*')
     return {
       id: user.id,
       username: user.username,
       passwordHash: user.passwordHash,
       status: user.status,
-      roles: [...new Set(rows.map((row) => row.role).filter(Boolean) as RoleName[])],
-      permissions: [...new Set(rows.map((row) => row.permission).filter(Boolean))],
+      roles: roleNames,
+      permissions: [...permissionNames],
     }
   }
 }

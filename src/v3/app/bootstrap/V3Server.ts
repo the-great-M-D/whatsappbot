@@ -27,6 +27,8 @@ async function main(): Promise<void> {
     return { userId: principal.userId, permissions: principal.permissions }
   })
   websocket.attachWorkerEvents(application.workers)
+  websocket.attachEventBus(application.events)
+  application.scheduler.start()
 
   let shuttingDown = false
   const shutdown = async (signal: string) => {

@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const axios_1 = __importDefault(require("axios"));
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
@@ -32,9 +31,8 @@ class Command extends BaseCommand_1.default {
             const repo = terms.length > 1 ? terms[1] : null;
             let text = '';
             if (!repo) {
-                const userInfo = yield axios_1.default
-                    .get(`https://api.github.com/users/${username}`)
-                    .then((res) => res.data)
+                const userInfo = yield fetch(`https://api.github.com/users/${username}`)
+                    .then((res) => res.json())
                     .catch((err) => {
                     console.log(err);
                     return void M.reply('🟥 ERROR 🟥\n Failed to fetch the User');
@@ -56,9 +54,8 @@ class Command extends BaseCommand_1.default {
                 return void M.reply(text);
             }
             else {
-                const repoInfo = yield axios_1.default
-                    .get(`https://api.github.com/repos/${username}/${repo}`)
-                    .then((res) => res.data)
+                const repoInfo = yield fetch(`https://api.github.com/repos/${username}/${repo}`)
+                    .then((res) => res.json())
                     .catch((err) => {
                     console.log(err);
                     return void M.reply('🟥 ERROR 🟥\n Failed to fetch the Repo');

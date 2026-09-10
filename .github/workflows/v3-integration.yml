@@ -4,7 +4,8 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, 'architecture/**']
+    branches: [main, 'architecture/**', 'v3/**']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -58,3 +59,14 @@ jobs:
 
       - name: Apply migrations
         run: npm run db:migrate
+
+      - name: Build
+        run: npm run build
+
+      - name: End-to-end integration test
+        env:
+          NODE_ENV: test
+          SESSION_SECURE: 'false'
+          CSRF_SECRET: e2e-csrf-secret-0123456789abcdef0123456789
+          SCHEDULER_INTERVAL_MS: '2000'
+        run: npm run v3:e2e

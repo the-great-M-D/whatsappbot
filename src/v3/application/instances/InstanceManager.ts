@@ -8,10 +8,25 @@ export class InstanceNotFoundError extends Error {
 
 export class InstanceManager {
   private readonly crashHistory = new Map<string, number[]>()
+  private readonly eventQueues = new Map<string, Promise<void>>()
   private unsubscribe?: () => void
 
   constructor(private readonly repository: InstanceRepository, private readonly workers: WorkerManager & WorkerEventSource) {
-    this.unsubscribe = workers.onEvent((event) => void this.handleWorkerEvent(event))
+    this.unsubscribe = workers.onEvent((event) => this.enqueueWorkerEvent(event))
+  }
+
+  /**
+   * Providers emit rapid state bursts (CONNECTING -> CONNECTED in the same
+   * tick); handle each instance's events strictly in order so lifecycle
+   * transitions never read a stale status concurrently.
+   */
+  private enqueueWorkerEvent(event: WorkerLifecycleEvent): void {
+    const queue = this.eventQueues.get(event.instanceId) ?? Promise.resolve()
+    const next = queue.then(() => this.handleWorkerEvent(event)).catch(() => undefined)
+    this.eventQueues.set(event.instanceId, next)
+    void next.then(() => {
+      if (this.eventQueues.get(event.instanceId) === next) this.eventQueues.delete(event.instanceId)
+    })
   }
 
   async start(instanceId: string): Promise<InstanceRecord> {

@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseCommand_1 = __importDefault(require("../../lib/BaseCommand"));
-const axios_1 = __importDefault(require("axios"));
 class Command extends BaseCommand_1.default {
     constructor(client, handler) {
         super(client, handler, {
@@ -32,10 +31,11 @@ class Command extends BaseCommand_1.default {
                     : M.mentioned[0]
                         ? this.client.getProfilePicture(M.mentioned[0])
                         : this.client.getProfilePicture(((_g = M.quoted) === null || _g === void 0 ? void 0 : _g.sender) || M.sender.jid));
-            yield axios_1.default.get(`https://some-random-api.ml/canvas/jail?avatar=${image}`)
-                .then((response) => {
-                M.reply(response.data);
-            }).catch((e) => {
+            yield fetch(`https://some-random-api.ml/canvas/jail?avatar=${image}`)
+                .then((response) => __awaiter(this, void 0, void 0, function* () {
+                const buffer = Buffer.from(yield response.arrayBuffer());
+                M.reply(buffer);
+            })).catch((e) => {
                 M.reply('sorry couldn\'t send the image');
             });
         });
