@@ -27,7 +27,8 @@ RUN npm install --legacy-peer-deps --omit=dev --omit=optional
 RUN addgroup -S kaoi && adduser -S kaoi -G kaoi
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/data ./data
+# data/ is runtime state (dockerignored, never in the build context): create it
+RUN mkdir -p ./data
 COPY --from=builder /app/assets ./assets
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/local_modules ./local_modules

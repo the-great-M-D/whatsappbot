@@ -592,7 +592,6 @@ export default class Command extends BaseCommand {
                     text = `🟥 ERROR 🟥\n📍Code: ${data.error.code}\n📍Type: ${data.error.type}\n📍Info: ${data.error.info}`
                 } else {
                     text = `🟩 Target: ${data.target}\n\n${data.rates.map((coin: string, index: number) => {
-                        // eslint-disable-next-line @typescript-eslint/no-extra-semi
                         ;`🪙Coin: ${data.rates[index]}   📊Price: ${coin}\n`
                     })}`
                 }

@@ -12,7 +12,8 @@
     "prettier-format": "prettier --config .prettierrc \"src/**/*.ts\" --write",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:check": "drizzle-kit check"
+    "db:check": "drizzle-kit check",
+    "test:unit": "npm run build && node --test dist/v3/testing/unit/"
   },
   "repository": {
     "type": "git",
