@@ -13,6 +13,14 @@ RUN npm install --legacy-peer-deps --include=dev --omit=optional
 COPY . .
 RUN npm run build
 
+# Dashboard build (vite, no native deps)
+FROM node:20-alpine AS dashboard-builder
+WORKDIR /dashboard
+COPY dashboard-v3/package*.json ./
+RUN npm install --no-audit --no-fund
+COPY dashboard-v3/ ./
+RUN npm run build
+
 FROM node:20-alpine
 
 ARG NODE_ENV=production
@@ -32,6 +40,8 @@ RUN mkdir -p ./data
 COPY --from=builder /app/assets ./assets
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/local_modules ./local_modules
+# Operations UI, served by the V3 API server when NODE_ENV runs the v3 entry
+COPY --from=dashboard-builder /dashboard/dist ./dashboard-v3/dist
 
 RUN chown -R kaoi:kaoi /app
 USER kaoi

@@ -13,6 +13,10 @@ const fakeOptions = {
   sessionCookie: { name: 'v3_session', ttlMs: 86_400_000, secure: false, sameSite: 'lax' as const, path: '/' },
 } as unknown as ApiServerOptions
 
+import { promises as fs } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 async function withServer(readiness: ApiServerOptions['readiness'], run: (port: number) => Promise<void>): Promise<void> {
   const app = createApiServer({ ...fakeOptions, readiness })
   const server: Server = await new Promise((resolve) => {
@@ -58,4 +62,40 @@ test('/health/live stays a static liveness probe', async () => {
     assert.equal(res.status, 200)
     assert.equal((await res.json()).status, 'ok')
   })
+})
+
+test('dashboard static mount serves index.html and leaves /health and /api untouched', async () => {
+  const dir = await fs.mkdtemp(join(tmpdir(), 'kaoi-dashboard-'))
+  await fs.writeFile(join(dir, 'index.html'), '<!doctype html><title>Kaoi</title><p>dashboard</p>', 'utf8')
+  const app = createApiServer({ ...fakeOptions, dashboardDir: dir })
+  const server: import('node:http').Server = await new Promise((resolve) => {
+    const s = app.listen(0, '127.0.0.1', () => resolve(s))
+  })
+  const port = (server.address() as { port: number }).port
+  try {
+    const index = await fetch(`http://127.0.0.1:${port}/instances/abc`)
+    assert.equal(index.status, 200)
+    assert.match(await index.text(), /dashboard/)
+    const health = await fetch(`http://127.0.0.1:${port}/health/live`)
+    assert.equal(health.status, 200)
+    assert.equal((await health.json()).status, 'ok')
+  } finally {
+    server.closeAllConnections()
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
+test('no dashboardDir means no static mount (unknown paths 404)', async () => {
+  const app = createApiServer({ ...fakeOptions })
+  const server: import('node:http').Server = await new Promise((resolve) => {
+    const s = app.listen(0, '127.0.0.1', () => resolve(s))
+  })
+  const port = (server.address() as { port: number }).port
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/instances/abc`)
+    assert.equal(res.status, 404)
+  } finally {
+    server.closeAllConnections()
+    await new Promise((resolve) => server.close(resolve))
+  }
 })

@@ -8,3 +8,5 @@ data/
 *.log
 .DS_Store
 Thumbs.db
+dashboard-v3/node_modules/
+dashboard-v3/dist/

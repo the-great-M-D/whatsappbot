@@ -113,6 +113,7 @@ export function createV3Application(env: NodeJS.ProcessEnv = process.env): V3App
     debug: { mockIncoming: async (instanceId, message) => { workers.mockIncoming(instanceId, message) } },
     csrfSecret: config.value.CSRF_SECRET,
     sessionCookie: { name: config.value.SESSION_COOKIE_NAME, ttlMs: config.value.SESSION_TTL_MS, secure: config.value.SESSION_SECURE, sameSite: 'lax', path: '/' },
+    dashboardDir: env.DASHBOARD_DIR && env.DASHBOARD_DIR !== '0' ? env.DASHBOARD_DIR : 'dashboard-v3/dist',
     readiness: async () => {
       const checks: Record<string, { ok: boolean; detail?: string }> = {}
       try {

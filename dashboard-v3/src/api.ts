@@ -19,6 +19,17 @@ export interface InstanceList {
   nextCursor: string | null
 }
 
+export interface PairingSnapshot {
+  instanceId: string
+  state: string
+  qr: string | null
+  pairingCode: string | null
+  updatedAt: string
+}
+
+export const slugify = (name: string): string =>
+  name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100) || 'instance'
+
 function csrfToken(): string | undefined {
   const match = document.cookie.split(';').map((v) => v.trim()).find((v) => v.startsWith('v3_csrf='))
   return match ? decodeURIComponent(match.slice('v3_csrf='.length)) : undefined
@@ -51,4 +62,8 @@ export const api = {
   logout: () => request<void>('/api/v1/auth/logout', { method: 'POST' }),
   instances: () => request<InstanceList>('/api/v1/instances?limit=100'),
   lifecycle: (id: string, action: 'start' | 'stop' | 'restart' | 'reconnect') => request<Instance>(`/api/v1/instances/${id}/${action}`, { method: 'POST' }),
+  createInstance: (name: string, slug: string) => request<Instance>('/api/v1/instances', { method: 'POST', body: JSON.stringify({ name, slug }) }),
+  pairing: (id: string) => request<PairingSnapshot>(`/api/v1/instances/${id}/pairing`),
+  requestPairingCode: (id: string, phoneNumber: string) =>
+    request<{ accepted: boolean }>(`/api/v1/instances/${id}/pairing`, { method: 'POST', body: JSON.stringify({ method: 'phone', phoneNumber }) }),
 }

@@ -1,5 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { z } from 'zod'
 import type { InstanceService } from '../../application/instances/InstanceService'
 import type { CreateInstanceInput } from '../../application/instances/InstanceRepository'
@@ -61,6 +63,12 @@ export interface ApiServerOptions {
   debug?: ApiDebugHooks
   /** Optional deep checks for /health/ready (DB pool, downstream services). */
   readiness?: ReadinessChecks
+  /**
+   * Optional dashboard build directory (e.g. dashboard-v3/dist). When it
+   * exists, its assets are served statically with an SPA fallback so the
+   * operations UI is reachable from the same origin as the API.
+   */
+  dashboardDir?: string
 }
 
 export function createApiServer(options: ApiServerOptions) {
@@ -278,6 +286,15 @@ export function createApiServer(options: ApiServerOptions) {
         await options.debug!.mockIncoming(id, body)
         res.status(202).json({ accepted: true })
       } catch (e) { next(e) }
+    })
+  }
+
+  if (options.dashboardDir && existsSync(options.dashboardDir)) {
+    const dashboardRoot = resolve(options.dashboardDir)
+    app.use(express.static(dashboardRoot, { index: false, maxAge: '1h', setHeaders: (res2, filePath) => { if (filePath.endsWith('index.html')) res2.setHeader('cache-control', 'no-cache') } }))
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/') || req.path.startsWith('/health')) return next()
+      res.sendFile(join(dashboardRoot, 'index.html'), (err) => { if (err) next(err) })
     })
   }
 
