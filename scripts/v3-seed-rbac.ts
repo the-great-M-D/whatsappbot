@@ -5,12 +5,12 @@ import { seedDefaultRbac } from '../src/v3/infrastructure/database/SeedDefaults'
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL is required')
-  const db = createDatabase(url, Number(process.env.DATABASE_POOL_MAX || 5))
+  const { db, pool } = createDatabase(url, Number(process.env.DATABASE_POOL_MAX || 5))
   try {
     await seedDefaultRbac(db)
     console.log('V3 RBAC defaults seeded.')
   } finally {
-    await db.pool.end()
+    await pool.end()
   }
 }
 

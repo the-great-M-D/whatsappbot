@@ -13,7 +13,10 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:check": "drizzle-kit check",
-    "test:unit": "npm run build && node --test dist/v3/testing/unit/"
+    "test:unit": "npm run build && node --test dist/v3/testing/unit/",
+    "v3:seed:rbac": "tsx scripts/v3-seed-rbac.ts",
+    "v3:seed:admin": "tsx scripts/v3-seed-admin.ts",
+    "v3:bootstrap": "bash scripts/v3-migrate.sh && tsx scripts/v3-seed-rbac.ts && tsx scripts/v3-seed-admin.ts"
   },
   "repository": {
     "type": "git",

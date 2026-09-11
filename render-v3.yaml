@@ -1,0 +1,31 @@
+services:
+  - type: postgres
+    name: M-D-v3-db
+    plan: free
+    database: kaoi
+    user: kaoi
+
+  - type: web
+    name: M-D V3 Dashboard
+    runtime: node
+    plan: free
+    buildCommand: ./build.sh && (cd dashboard-v3 && npm install && npm run build)
+    startCommand: bash scripts/v3-migrate.sh && npx tsx scripts/v3-seed-rbac.ts && npx tsx scripts/v3-seed-admin.ts && npm run v3:start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: M-D-v3-db
+          property: connectionString
+      - key: SESSION_SECURE
+        value: "true"
+      - key: CSRF_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DASHBOARD_DIR
+        value: dashboard-v3/dist
