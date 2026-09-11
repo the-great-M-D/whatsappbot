@@ -1,5 +1,6 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
+import { F } from '../../lib/Formatter'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
 
@@ -32,7 +33,7 @@ export default class Command extends BaseCommand {
                 await M.reply(`❌ Skipped *${username}* — can't demote myself`)
             } else {
                 await this.client.groupDemoteAdmin(M.from, [user]).catch(() => null)
-                await M.reply(`➰ Demoted *${username}*`)
+                await M.reply(`🔻 Demoted *${username}*`)
             }
         }
     }

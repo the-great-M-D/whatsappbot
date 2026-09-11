@@ -1,6 +1,7 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
+import { F } from '../../lib/Formatter'
 import { ICommand, IParsedArgs, ISimplifiedMessage } from '../../typings'
 
 export default class Command extends BaseCommand {
@@ -29,34 +30,29 @@ export default class Command extends BaseCommand {
                     categories[info.config.category].push(info)
                 }
             }
-            let text = `🤹 *M_D's Bot Command List* 🤹\n\n *Prefix* !\n\n*Support Group*\n The Coding Famliy 🤹\n\n `
             const keys = Object.keys(categories).sort((a, b) => a.localeCompare(b))
+            const body: string[] = [F.field('Prefix', this.client.config.prefix)]
             for (const key of keys)
-                text += `${this.emojis[keys.indexOf(key)]} *${this.client.util.capitalize(key)}*\n❐ \`\`\`${categories[
-                    key
-                ]
-                    .map((command) => command.config?.command)
-                    .join(', ')}\`\`\`\n\n`
-            return void M.reply(
-                `${text} 🗃️ *Note: Use ${this.client.config.prefix}help <command_name> to view the command info*`
-            )
+                body.push(
+                    '',
+                    `▸ *${this.client.util.capitalize(key)}* _(${categories[key].length})_`,
+                    `${categories[key].map((command) => command.config?.command).join(' ')}`
+                )
+            return void M.reply(F.frame('Help', body, `${this.client.config.prefix}help <name> for a command's details`))
         }
         const key = parsedArgs.joined.toLowerCase()
         const command = this.handler.commands.get(key) || this.handler.aliases.get(key)
-        if (!command) return void M.reply(`No Command of Alias Found | "${key}"`)
+        if (!command) return void M.reply(F.err(`No command or alias found for "${key}"`))
         const state = await this.client.DB.disabledcommands.findOne({ command: command.config.command })
-        M.reply(
-            `🎫 *Command:* ${this.client.util.capitalize(command.config?.command)}\n🎗️ *Status:* ${
-                state ? 'Disabled' : 'Available'
-            }\n🀄 *Category:* ${this.client.util.capitalize(command.config?.category || '')}${
-                command.config.aliases && command.config.command !== 'react'
-                    ? `\n🍥 *Aliases:* ${command.config.aliases.map(this.client.util.capitalize).join(', ')}`
-                    : ''
-            }\n🃏 *Group Only:* ${this.client.util.capitalize(
-                JSON.stringify(!(command.config.dm ?? true))
-            )}\n🎀 *Usage:* ${command.config?.usage || ''}\n\n🔖 *Description:* ${command.config?.description || ''}`
-        )
+        const fields: string[] = [
+            F.field('Status', state ? 'Disabled' : 'Available'),
+            F.field('Category', this.client.util.capitalize(command.config?.category || '')),
+            F.field('Group only', JSON.stringify(!(command.config.dm ?? true))),
+            F.field('Usage', command.config?.usage || ''),
+            F.field('Description', command.config?.description || '')
+        ]
+        if (command.config.aliases?.length && command.config.command !== 'react')
+            fields.splice(2, 0, F.field('Aliases', command.config.aliases.map(this.client.util.capitalize).join(', ')))
+        return void M.reply(F.frame(command.config?.command || 'command', fields, `${this.client.config.prefix}${command.config?.command}`))
     }
-
-    emojis = ['📺', '🤖', '⚙️', '👨‍💻', '📚', '👻', '🎲', '😶‍🌫️', '📼', '🦉', '🪜','🤹']
 }

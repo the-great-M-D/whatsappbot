@@ -1,5 +1,6 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
+import { F } from '../../lib/Formatter'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
 
@@ -15,6 +16,6 @@ export default class Command extends BaseCommand {
     }
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
-        return void (await M.reply(`🤹‍♂️ Hi there I'm still alive, I give special thanks to 🤹 The Great M_D 🤹   🥃 ${M.sender.username}!`))
+        return void (await M.reply(`Hey ${M.sender.username} 👋 M_D Bot is alive and running.`))
     }
 }

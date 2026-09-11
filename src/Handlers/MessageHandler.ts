@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import { F } from '../lib/Formatter'
 import { join } from 'path'
 import BaseCommand from '../lib/BaseCommand'
 import WAClient from '../lib/WAClient'
@@ -69,26 +70,26 @@ export default class MessageHandler {
                 sender.username
             )} in ${chalk.cyanBright(groupMetadata?.subject || 'DM')}`
         )
-        if (!command) return void M.reply('No Command Found! Try using one from the help list.')
+        if (!command) return void M.reply(`${F.err(`Unknown command \`!${cmd}\`. Try the list with *!help*`)}`)
         // Run user lookup and disabled-command check in parallel
         const [user, state] = await Promise.all([
             this.client.getUser(M.sender.jid),
             this.client.DB.disabledcommands.findOne({ command: command.config.command })
         ])
-        if (user.ban) return void M.reply("You're Banned from using commands.")
-        if (state) return void M.reply(`❌ This command is disabled${state.reason ? ` for ${state.reason}` : ''}`)
-        if (!command.config?.dm && M.chat === 'dm') return void M.reply('This command can only be used in groups')
+        if (user.ban) return void M.reply(F.err('You are banned from using commands'))
+        if (state) return void M.reply(F.warn(`This command is disabled${state.reason ? ` — ${state.reason}` : ''}`))
+        if (!command.config?.dm && M.chat === 'dm') return void M.reply(F.info('This command only works in groups'))
         if (command.config?.devOnly) {
             if (!this.client.config.mods?.includes(M.sender.jid))
-                return void M.reply(`Only the bot developer can use this command`)
+                return void M.reply(F.err('Only the bot developer can use this command'))
         }
         if (command.config?.modsOnly) {
             if (!this.client.config.mods?.includes(M.sender.jid))
-                return void M.reply(`Only MODS are allowed to use this command`)
+                return void M.reply(F.err('Only mods are allowed to use this command'))
         }
         if (command.config?.adminOnly) {
             if (!M.sender.isAdmin)
-                return void M.reply(`Only admins are allowed to use this command`)
+                return void M.reply(F.err('Only admins are allowed to use this command'))
         }
         try {
             await command.run(M, this.parseArgs(args))
@@ -103,7 +104,7 @@ export default class MessageHandler {
         } catch (err: any) {
             this.client.log(`[CMD ERROR] ${command.config.command}: ${err.message}`, true)
             console.error('[CMD ERROR STACK]', err)
-            try { await M.reply(`❌ Error: ${err.message}`) } catch { /* ignore */ }
+            try { await M.reply(F.err(err.message || 'Something went wrong')) } catch { /* ignore */ }
         }
     }
 

@@ -1,5 +1,6 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
+import { F } from '../../lib/Formatter'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
 
@@ -24,6 +25,6 @@ export default class Command extends BaseCommand {
             // username = contact.notify || contact.vname || contact.name || user.split('@')[0]
             username = user.split('@')[0]
         }
-        return void (await M.reply(`${username} XP: ${(await this.client.getUser(user)).Xp || 0}`))
+        return void (await M.reply(F.frame('XP', [F.field('User', username), F.field('XP', (await this.client.getUser(user)).Xp || 0)])))
     }
 }

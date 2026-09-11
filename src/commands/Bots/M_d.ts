@@ -1,6 +1,7 @@
 
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
+import { F } from '../../lib/Formatter'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
 
@@ -17,7 +18,12 @@ export default class Command extends BaseCommand {
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
         return void M.reply(
-            `🤹 *M_D Bot*🤹\n\n🍀 *Description:* The Great M_D WhatsApp Bot \n\n🤹 *Prefix:* Use ! \n\n🤹 *Example:* !help \n\n🌐 *URL:* https://https://github.com/the-great-M-D \n*🧑‍💻 Group:* https://chat.whatsapp.com/Feu778o8LHhKswRVZXsuvO 🤹\n`
-        ).catch((reason: Error) => M.reply(`an error occurred, Reason: ${reason}`))
+            F.frame('About', [
+            F.field('Description', 'The Great M_D WhatsApp Bot'),
+            F.field('Prefix', this.client.config.prefix),
+            F.field('Example', this.client.config.prefix + 'help'),
+            F.field('Repo', 'https://github.com/the-great-M-D')
+        ], 'M_D Bot 🤹')
+        ).catch((reason: Error) => M.reply(F.err(reason.message)))
     }
 }

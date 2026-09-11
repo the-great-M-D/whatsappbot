@@ -1,5 +1,6 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
+import { F } from '../../lib/Formatter'
 import WAClient from '../../lib/WAClient'
 import { IParsedArgs, ISimplifiedMessage } from '../../typings'
 
@@ -23,17 +24,17 @@ export default class Command extends BaseCommand {
         const feature = key === 'chatbot' ? key : ''
         if (feature) {
             const data = await this.client.getFeatures(feature)
-            if (!(data as any)) return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* is already *inactive*`)
+            if (!(data as any)) return void M.reply(F.warn(`${this.client.util.capitalize(feature)} is already inactive`))
             await this.client.DB.feature.updateOne({ feature: feature }, { $set: { ['state']: false } }).catch(() => {
-                return void M.reply(`🟨 *${this.client.util.capitalize(feature)}* could not be disabled`)
+                return void M.reply(F.err(`Failed to disable ${this.client.util.capitalize(feature)}`))
             })
             this.client.features.set('chatbot', false)
-            return void M.reply(`🟩 *${this.client.util.capitalize(feature)}* is now inactive`)
+            return void M.reply(F.ok(`${this.client.util.capitalize(feature)} is now inactive`))
         }
         const command = this.handler.commands.get(key) || this.handler.aliases.get(key)
         if (!command) return void (await M.reply(`No command found`))
         if (await this.client.DB.disabledcommands.findOne({ command: command.config.command }))
-            return void M.reply(`${command.config.command} is already disabled`)
+            return void M.reply(F.warn(`${command.config.command} is already disabled`))
         await new this.client.DB.disabledcommands({
             command: command.config.command,
             reason: (split[1] || '').trim() || ''

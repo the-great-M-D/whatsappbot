@@ -1,5 +1,6 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
+import { F } from '../../lib/Formatter'
 import WAClient from '../../lib/WAClient'
 import { ISimplifiedMessage } from '../../typings'
 
@@ -18,11 +19,11 @@ export default class Command extends BaseCommand {
 
     run = async (M: ISimplifiedMessage): Promise<void> => {
         return void (await M.reply(
-            `${M.groupMetadata?.subject || '*EVERYONE*'}\n*🤹‍♂️ READ QUOTED MESSAGE 🤹‍♂️*\n*[TAGGED MAGICALLY]* \n*M_D BOT 🤹‍♂️*`,
+            `${M.groupMetadata?.subject || 'EVERYONE'}\n📢 *Read the quoted message* — tagged by M_D Bot`,
             undefined,
             undefined,
             M.groupMetadata?.participants.map((user) => user.jid)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ).catch((reason: any) => M.reply(`an error occurred, Reason: ${reason}`)))
+        ).catch((reason: any) => M.reply(F.err(String(reason)))))
     }
 }

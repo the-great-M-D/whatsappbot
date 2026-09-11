@@ -1,6 +1,7 @@
 import MessageHandler from '../../Handlers/MessageHandler'
 import BaseCommand from '../../lib/BaseCommand'
 import WAClient from '../../lib/WAClient'
+import { F } from '../../lib/Formatter'
 import { ISimplifiedMessage } from '../../typings'
 
 export default class Command extends BaseCommand {
@@ -21,7 +22,7 @@ export default class Command extends BaseCommand {
             : [M.sender.jid, this.client.botJid]
 
         if (M.quoted?.sender) M.mentioned.push(M.quoted.sender)
-        if (!M.mentioned.length || !M.mentioned[0]) return void M.reply('Mention the user whom you want to ban')
+        if (!M.mentioned.length || !M.mentioned[0]) return void M.reply(F.info('Mention the user you want to ban'))
         let text = '*STATE*\n\n'
         // declare tagged as (string | undefined) []
         // const tagged : (string | undefined)[] = []
@@ -40,7 +41,7 @@ export default class Command extends BaseCommand {
                 continue
             }
             await this.client.banUser(user)
-            text += `🟥 @${user.split('@')[0]}: Banned 🤹‍♂️\n`
+            text += `⛔ @${user.split('@')[0]} — banned\n`
         }
         await M.reply(
             `${text}`,
