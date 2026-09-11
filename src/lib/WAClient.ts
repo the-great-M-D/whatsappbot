@@ -4,7 +4,7 @@ import makeWASocket, {
     downloadMediaMessage
 } from '@whiskeysockets/baileys'
 import { backupAuthToDB, restoreAuthFromDB, clearAuthFromDB } from './MongoAuthState'
-import { remove as fsRemove, pathExists } from 'fs-extra'
+import { remove as fsRemove, pathExists, readFile as fsReadFile } from 'fs-extra'
 import { join } from 'path'
 
 import P from 'pino'
@@ -40,6 +40,7 @@ export default class WAClient extends EventEmitter {
     public connectedAt: number | null = null
     private intentionalStop: boolean = false
     private reconnectAttempts: number = 0
+    private hardFails: number = 0
     private readonly MAX_RECONNECTS = 5
     private needsRepair: boolean = false
 
@@ -140,10 +141,12 @@ export default class WAClient extends EventEmitter {
 
         // Wrap saveCreds to also back up to MongoDB after every credentials update
         const saveAndBackup = async () => {
-            await saveCreds()
-            if (this.DB.connected) {
-                await backupAuthToDB(this.DB.session, authDir)
-            }
+            try {
+                await saveCreds()
+                if (this.DB.connected) {
+                    await backupAuthToDB(this.DB.session, authDir)
+                }
+            } catch { /* auth dir may have been cleared mid-wipe — ignore */ }
         }
         this.sock.ev.on('creds.update', saveAndBackup)
 
@@ -163,10 +166,11 @@ export default class WAClient extends EventEmitter {
             }, 2000)
         }
 
-        this.sock.ev.on('connection.update', ({ connection, lastDisconnect }: any) => {
+        this.sock.ev.on('connection.update', async ({ connection, lastDisconnect }: any) => {
             if (connection === 'open') {
                 this.state = 'open'
                 this.reconnectAttempts = 0
+                this.hardFails = 0
                 this.needsRepair = false
                 this.pairCode = null
                 this.pairCodePhone = null
@@ -187,20 +191,47 @@ export default class WAClient extends EventEmitter {
                 }
                 const statusCode = (lastDisconnect?.error as any)?.output?.statusCode
 
-                // 401 = logged out, 440 = session replaced by another device
+                // 401 = logged out, 440 = session replaced by another device.
+                // Transient 440s can occur during device races — wiping creds on the
+                // first hit destroys a session that may still be valid. Retry once with
+                // the saved credentials; only wipe after two consecutive hard failures.
                 if (statusCode === 401 || statusCode === 440) {
+                    this.hardFails++
+                    if (this.hardFails < 2) {
+                        this.reconnectAttempts = 0
+                        this.log(`Connection hard-closed (${statusCode}). Retrying with saved credentials (attempt ${this.hardFails})...`)
+                        setTimeout(() => this.connect(), 3000)
+                        return
+                    }
                     const reason = statusCode === 440
                         ? 'session was replaced by another device'
                         : 'logged out by WhatsApp'
                     this.log(`Disconnected: ${reason}. Clearing credentials and resetting to QR...`, true)
+                    this.hardFails = 0
                     this.reconnectAttempts = 0
                     this.needsRepair = false
-                    this.clearAuth().then(() => setTimeout(() => this.connect(), 3000))
+                    // Let any in-flight creds.update writes settle before wiping, so a
+                    // late save cannot resurrect stale files after the wipe (ENOENT race).
+                    setTimeout(() => { this.clearAuth().then(() => setTimeout(() => this.connect(), 2000)) }, 2500)
                     return
                 }
 
-                // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action
+                // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action.
+                // Guard against the ENOENT race: if registered creds appeared on disk after the
+                // wipe decided "no auth", retry the connection instead of parking forever.
                 if (statusCode === 408 && this.needsRepair) {
+                    const credsPath = join(authDir, 'creds.json')
+                    let revived = false
+                    try {
+                        revived = !!JSON.parse(await fsReadFile(credsPath, 'utf8')).registered
+                    } catch { /* no creds — park */ }
+                    if (revived) {
+                        this.log('Valid credentials found on disk — retrying connection')
+                        this.needsRepair = false
+                        this.reconnectAttempts = 0
+                        setTimeout(() => this.connect(), 2000)
+                        return
+                    }
                     this.log('Waiting for pairing — use the dashboard to pair via phone number')
                     return
                 }

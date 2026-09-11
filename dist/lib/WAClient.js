@@ -80,6 +80,7 @@ class WAClient extends events_1.default {
         this.connectedAt = null;
         this.intentionalStop = false;
         this.reconnectAttempts = 0;
+        this.hardFails = 0;
         this.MAX_RECONNECTS = 5;
         this.needsRepair = false;
         this.config = config;
@@ -173,10 +174,13 @@ class WAClient extends events_1.default {
             });
             // Wrap saveCreds to also back up to MongoDB after every credentials update
             const saveAndBackup = () => __awaiter(this, void 0, void 0, function* () {
-                yield saveCreds();
-                if (this.DB.connected) {
-                    yield (0, MongoAuthState_1.backupAuthToDB)(this.DB.session, authDir);
+                try {
+                    yield saveCreds();
+                    if (this.DB.connected) {
+                        yield (0, MongoAuthState_1.backupAuthToDB)(this.DB.session, authDir);
+                    }
                 }
+                catch ( /* auth dir may have been cleared mid-wipe — ignore */_a) { /* auth dir may have been cleared mid-wipe — ignore */ }
             });
             this.sock.ev.on('creds.update', saveAndBackup);
             if (pairingPhone && !isRegistered) {
@@ -195,17 +199,18 @@ class WAClient extends events_1.default {
                     }
                 }), 2000);
             }
-            this.sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
-                var _a, _b, _c, _d;
+            this.sock.ev.on('connection.update', (_a) => __awaiter(this, [_a], void 0, function* ({ connection, lastDisconnect }) {
+                var _b, _c, _d, _e;
                 if (connection === 'open') {
                     this.state = 'open';
                     this.reconnectAttempts = 0;
+                    this.hardFails = 0;
                     this.needsRepair = false;
                     this.pairCode = null;
                     this.pairCodePhone = null;
                     this.user = this.sock.user;
                     this.connectedAt = Date.now();
-                    this.log(`Connected as ${((_a = this.user) === null || _a === void 0 ? void 0 : _a.name) || ((_b = this.user) === null || _b === void 0 ? void 0 : _b.id) || 'unknown'}`);
+                    this.log(`Connected as ${((_b = this.user) === null || _b === void 0 ? void 0 : _b.name) || ((_c = this.user) === null || _c === void 0 ? void 0 : _c.id) || 'unknown'}`);
                     this.emit('open');
                 }
                 if (connection === 'close') {
@@ -217,20 +222,48 @@ class WAClient extends events_1.default {
                         this.reconnectAttempts = 0;
                         return;
                     }
-                    const statusCode = (_d = (_c = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _c === void 0 ? void 0 : _c.output) === null || _d === void 0 ? void 0 : _d.statusCode;
-                    // 401 = logged out, 440 = session replaced by another device
+                    const statusCode = (_e = (_d = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _d === void 0 ? void 0 : _d.output) === null || _e === void 0 ? void 0 : _e.statusCode;
+                    // 401 = logged out, 440 = session replaced by another device.
+                    // Transient 440s can occur during device races — wiping creds on the
+                    // first hit destroys a session that may still be valid. Retry once with
+                    // the saved credentials; only wipe after two consecutive hard failures.
                     if (statusCode === 401 || statusCode === 440) {
+                        this.hardFails++;
+                        if (this.hardFails < 2) {
+                            this.reconnectAttempts = 0;
+                            this.log(`Connection hard-closed (${statusCode}). Retrying with saved credentials (attempt ${this.hardFails})...`);
+                            setTimeout(() => this.connect(), 3000);
+                            return;
+                        }
                         const reason = statusCode === 440
                             ? 'session was replaced by another device'
                             : 'logged out by WhatsApp';
                         this.log(`Disconnected: ${reason}. Clearing credentials and resetting to QR...`, true);
+                        this.hardFails = 0;
                         this.reconnectAttempts = 0;
                         this.needsRepair = false;
-                        this.clearAuth().then(() => setTimeout(() => this.connect(), 3000));
+                        // Let any in-flight creds.update writes settle before wiping, so a
+                        // late save cannot resurrect stale files after the wipe (ENOENT race).
+                        setTimeout(() => { this.clearAuth().then(() => setTimeout(() => this.connect(), 2000)); }, 2500);
                         return;
                     }
-                    // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action
+                    // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action.
+                    // Guard against the ENOENT race: if registered creds appeared on disk after the
+                    // wipe decided "no auth", retry the connection instead of parking forever.
                     if (statusCode === 408 && this.needsRepair) {
+                        const credsPath = (0, path_1.join)(authDir, 'creds.json');
+                        let revived = false;
+                        try {
+                            revived = !!JSON.parse(yield (0, fs_extra_1.readFile)(credsPath, 'utf8')).registered;
+                        }
+                        catch ( /* no creds — park */_f) { /* no creds — park */ }
+                        if (revived) {
+                            this.log('Valid credentials found on disk — retrying connection');
+                            this.needsRepair = false;
+                            this.reconnectAttempts = 0;
+                            setTimeout(() => this.connect(), 2000);
+                            return;
+                        }
                         this.log('Waiting for pairing — use the dashboard to pair via phone number');
                         return;
                     }
@@ -245,7 +278,7 @@ class WAClient extends events_1.default {
                     this.log(`Connection closed (${statusCode !== null && statusCode !== void 0 ? statusCode : 'unknown'}), reconnecting in ${delay / 1000}s... (attempt ${this.reconnectAttempts})`);
                     setTimeout(() => this.connect(), delay);
                 }
-            });
+            }));
             this.sock.ev.on('messages.upsert', (_a) => __awaiter(this, [_a], void 0, function* ({ messages, type }) {
                 var _b, _c, _d, _e, _f, _g, _h;
                 for (const msg of messages) {
