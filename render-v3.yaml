@@ -1,12 +1,12 @@
-services:
-  - type: postgres
-    name: M-D-v3-db
-    plan: free
-    database: kaoi
+databases:
+  - name: M-D-v3-db
+    databaseName: kaoi
     user: kaoi
+    plan: free
 
+services:
   - type: web
-    name: M-D V3 Dashboard
+    name: m-d-v3-dashboard
     runtime: node
     plan: free
     buildCommand: ./build.sh && (cd dashboard-v3 && npm install && npm run build)
