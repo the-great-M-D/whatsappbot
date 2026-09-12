@@ -1,9 +1,3 @@
-databases:
-  - name: M-D-v3-db
-    databaseName: kaoi
-    user: kaoi
-    plan: free
-
 services:
   - type: web
     name: m-d-v3-dashboard
@@ -16,9 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: M-D-v3-db
-          property: connectionString
+        sync: false
       - key: SESSION_SECURE
         value: "true"
       - key: CSRF_SECRET
