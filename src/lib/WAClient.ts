@@ -92,14 +92,19 @@ export default class WAClient extends EventEmitter {
         this.pairCode = null
         this.pairCodePhone = cleaned
 
-        const code = await new Promise<string>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (60s). Please try again.')), 60000)
-            this.once('pair-code', (c: string) => { clearTimeout(timeout); resolve(c) })
-            this.once('pair-error', (e: string) => { clearTimeout(timeout); reject(new Error(e)) })
-            this.connect(cleaned)
-        })
-
-        return code
+        try {
+            const code = await new Promise<string>((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (60s). Please try again.')), 60000)
+                this.once('pair-code', (c: string) => { clearTimeout(timeout); resolve(c) })
+                this.once('pair-error', (e: string) => { clearTimeout(timeout); reject(new Error(e)) })
+                this.connect(cleaned)
+            })
+            return code
+        } catch (err: any) {
+            this.pairingInProgress = false
+            this.pairingError = err.message || 'Pairing failed'
+            throw err
+        }
     }
 
     async connect(pairingPhone?: string) {
