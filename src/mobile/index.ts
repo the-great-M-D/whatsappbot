@@ -23,6 +23,7 @@ function ensureMobileDirs() {
 const norm = (n:string) => n.replace(/[^0-9]/g, '');
 let sock: any;
 let pairing = false;
+let waState = 'starting';
 const discord = new DiscordBridge(async (jid, text) => sock.sendMessage(jid, { text }));
 
 const errorAlertAt = new Map<string, number>();
@@ -51,11 +52,13 @@ async function connect() {
     if (u.qr) console.log(chalk.yellow('[AUTH] QR received but QR is disabled.'));
     if (connection === 'open') {
       pairing = false;
+      waState = 'connected';
       console.log(chalk.green('[WA] Connected as ' + (sock.user?.id || 'unknown')));
       await discord.start();
     }
     if (connection === 'close') {
       const code = (lastDisconnect?.error as any)?.output?.statusCode;
+      waState = 'disconnected';
       console.log(chalk.red('[WA] Disconnected code=' + code));
       if (code === DisconnectReason.loggedOut) {
         console.log(chalk.red('[AUTH] Logged out. Remove the auth directory before re-pairing.'));
@@ -67,12 +70,13 @@ async function connect() {
   });
   if (!state.creds.registered && config.phone && !pairing) {
     pairing = true;
+    waState = 'pairing';
     await sleep(1500);
     try {
       const code = await sock.requestPairingCode(norm(config.phone));
       console.log(chalk.cyan('[AUTH] Pairing code: ' + code));
       console.log(chalk.gray('[AUTH] WhatsApp > Linked devices > Link with phone number.'));
-    } catch (e) { void reportError('Pairing failed', e); pairing = false; }
+    } catch (e) { void reportError('Pairing failed', e); pairing = false; waState = 'disconnected'; }
   }
   sock.ev.on('messages.upsert', async ({ messages, type }:any) => {
     if (type !== 'notify') return;
@@ -101,7 +105,12 @@ async function connect() {
           await M.reply(cmd + ' done.');
         } else if (['dev','sh','py','status','logs'].includes(cmd)) {
           if (!config.owners.includes(sender)) { await M.reply('Owner only.'); continue; }
-          await dev(M, cmd === 'dev' ? args : [cmd, ...args]);
+          await dev(M, cmd === 'dev' ? args : [cmd, ...args], {
+            waState,
+            discordState: discord.client?.isReady() ? 'connected' : (config.discordToken ? 'disconnected' : 'disabled'),
+            pairing,
+            discordTarget: config.discordTarget
+          });
         } else if (cmd === 'config') {
           if (!config.owners.includes(sender)) { await M.reply('Owner only.'); continue; }
           await configCommand(M, args);
