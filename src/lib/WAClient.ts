@@ -30,8 +30,6 @@ export default class WAClient extends EventEmitter {
     public chats: Record<string, any> = {}
     public groupMetadataCache: Map<string, { data: any; ts: number }> = new Map()
     private cachedBaileysVersion: [number, number, number] | null = null
-    public QR: Buffer | null = null
-    public QRText: string | null = null
     public pairCode: string | null = null
     public pairCodePhone: string | null = null
     public botLid: string | null = null
@@ -149,6 +147,7 @@ export default class WAClient extends EventEmitter {
             auth: state,
             printQRInTerminal: false
         })
+        const pairingSocket = this.sock
 
         // Wrap saveCreds to also back up to MongoDB after every credentials update
         const saveAndBackup = async () => {
@@ -166,11 +165,11 @@ export default class WAClient extends EventEmitter {
             if (connection === 'connecting' && pairingPhone && !isRegistered && !pairingRequested) {
                 pairingRequested = true
                 setTimeout(async () => {
-                    if (this.sock === null || this.state === 'open' || !this.pairingInProgress) return
+                    if (this.sock !== pairingSocket || this.state === 'open' || !this.pairingInProgress) return
                     try {
                         this.log(`Requesting pairing code for ${pairingPhone}...`)
-                        const code = await this.sock.requestPairingCode(pairingPhone)
-                        if (this.state === 'open' || !this.pairingInProgress) return
+                        const code = await pairingSocket.requestPairingCode(pairingPhone)
+                        if (this.sock !== pairingSocket || this.state === 'open' || !this.pairingInProgress) return
                         this.pairCode = code
                         this.pairCodePhone = pairingPhone
                         this.pairingError = null
@@ -227,7 +226,10 @@ export default class WAClient extends EventEmitter {
                     this.clearAuth().then(() => {
                         if (wasPairing) {
                             this.pairingInProgress = false
+                            this.pairCode = null
+                            this.pairCodePhone = null
                             this.pairingError = `WhatsApp closed the pairing session (${statusCode}). Generate a new code.`
+                            this.emit('pair-error', this.pairingError)
                             return
                         }
                         this.pairingPhone = null
