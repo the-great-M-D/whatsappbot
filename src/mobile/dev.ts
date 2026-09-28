@@ -26,9 +26,8 @@ export async function dev(M: any, args: string[]) {
     return;
   }
   if (cmd === 'sh') {
-    const bin = args.shift();
-    if (!bin || !config.allowedCommands.includes(bin)) return void M.reply('Command not allowlisted.');
-    return void M.reply(await run(bin, args));
+    if (args.length !== 1 || !config.allowedCommands.includes(args[0])) return void M.reply('Command not allowlisted. Use !py for approved Python scripts.');
+    return void M.reply(await run(args[0], []));
   }
   if (cmd === 'py') {
     const script = args.shift() || '';
