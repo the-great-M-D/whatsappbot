@@ -98,4 +98,6 @@ ensureMobileDirs();
 console.log('[BOOT] Auth: ' + config.authDir);
 console.log('[BOOT] Data: ' + config.dataDir);
 console.log('[BOOT] Discord target: ' + (config.discordTarget || 'not set'));
+console.log('[DEV] Allowed shell commands: ' + (config.allowedCommands.length ? config.allowedCommands.join(', ') : 'none'));
+console.log('[DEV] Allowed Python scripts: ' + (config.allowedScripts.length ? config.allowedScripts.join(', ') : 'none'));
 connect().catch(e => console.error('[FATAL]', e));
