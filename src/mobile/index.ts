@@ -25,6 +25,9 @@ let sock: any;
 let pairing = false;
 const discord = new DiscordBridge(async (jid, text) => sock.sendMessage(jid, { text }));
 
+const errorAlertAt = new Map<string, number>();
+const ERROR_ALERT_COOLDOWN = 5 * 60 * 1000;
+
 async function reportError(label: string, error: unknown) {
   appendError(error);
   const raw = error instanceof Error ? error.message : String(error);
