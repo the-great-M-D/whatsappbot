@@ -42,6 +42,7 @@ export default class WAClient extends EventEmitter {
     private reconnectAttempts: number = 0
     private readonly MAX_RECONNECTS = 5
     private needsRepair: boolean = false
+    private pairingPhone: string | null = null
     public pairingInProgress: boolean = false
     public pairingError: string | null = null
 
@@ -71,7 +72,7 @@ export default class WAClient extends EventEmitter {
     forceReconnect() {
         this.stopSocket()
         this.reconnectAttempts = 0
-        setTimeout(() => this.connect(), 1000)
+        setTimeout(() => this.connect(this.pairingInProgress ? this.pairingPhone ?? undefined : undefined), 1000)
     }
 
     private async clearAuth() {
@@ -87,6 +88,7 @@ export default class WAClient extends EventEmitter {
 
         this.stopSocket()
         await this.clearAuth()
+        this.pairingPhone = cleaned
         this.pairingInProgress = true
         this.pairingError = null
         this.pairCode = null
@@ -120,8 +122,7 @@ export default class WAClient extends EventEmitter {
             if (this.DB.connected) {
                 restoredFromDB = await restoreAuthFromDB(this.DB.session, authDir)
             }
-            if (!restoredFromDB && !this.needsRepair) {
-                // Only log and emit once — not on every reconnect attempt
+            if (!restoredFromDB && !this.needsRepair && !pairingPhone && !this.pairingInProgress) {
                 this.needsRepair = true
                 const reason = this.DB.connected
                     ? 'No auth found in database'
@@ -158,27 +159,32 @@ export default class WAClient extends EventEmitter {
         }
         this.sock.ev.on('creds.update', saveAndBackup)
 
-        if (pairingPhone && !isRegistered) {
-            setTimeout(async () => {
-                try {
-                    this.log(`Requesting pairing code for +${pairingPhone}...`)
-                    const code = await this.sock.requestPairingCode(pairingPhone)
-                    this.pairCode = code
-                    this.pairCodePhone = pairingPhone
-                    this.pairingInProgress = true
-                    this.pairingError = null
-                    this.log(`Pairing code ready: ${code}`)
-                    this.emit('pair-code', code)
-                } catch (err: any) {
-                    this.pairingError = err.message || 'Failed to get pairing code'
-                    this.pairingInProgress = false
-                    this.log(`Failed to get pairing code: ${err.message}`, true)
-                    this.emit('pair-error', err.message)
-                }
-            }, 2000)
-        }
+        // Phone-number pairing only. QR is never exposed or rendered.
+        let pairingRequested = false
 
         this.sock.ev.on('connection.update', ({ connection, lastDisconnect }: any) => {
+            if (connection === 'connecting' && pairingPhone && !isRegistered && !pairingRequested) {
+                pairingRequested = true
+                setTimeout(async () => {
+                    if (this.sock === null || this.state === 'open' || !this.pairingInProgress) return
+                    try {
+                        this.log(`Requesting pairing code for ${pairingPhone}...`)
+                        const code = await this.sock.requestPairingCode(pairingPhone)
+                        if (this.state === 'open' || !this.pairingInProgress) return
+                        this.pairCode = code
+                        this.pairCodePhone = pairingPhone
+                        this.pairingError = null
+                        this.log(`Pairing code ready: ${code}`)
+                        this.emit('pair-code', code)
+                    } catch (err: any) {
+                        const message = err?.message || 'Failed to get pairing code'
+                        this.pairingError = message
+                        this.pairingInProgress = false
+                        this.log(`Failed to get pairing code: ${message}`, true)
+                        this.emit('pair-error', message)
+                    }
+                }, 1200)
+            }
             if (connection === 'open') {
                 this.state = 'open'
                 this.reconnectAttempts = 0
@@ -187,6 +193,7 @@ export default class WAClient extends EventEmitter {
                 this.pairCodePhone = null
                 this.pairingInProgress = false
                 this.pairingError = null
+                this.pairingPhone = null
                 this.user = this.sock.user
                 this.connectedAt = Date.now()
                 this.log(`Connected as ${this.user?.name || this.user?.id || 'unknown'}`)
@@ -195,8 +202,6 @@ export default class WAClient extends EventEmitter {
 
             if (connection === 'close') {
                 this.state = 'close'
-                this.QR = null
-                this.QRText = null
                 if (this.intentionalStop) {
                     this.intentionalStop = false
                     this.reconnectAttempts = 0
@@ -204,19 +209,56 @@ export default class WAClient extends EventEmitter {
                 }
                 const statusCode = (lastDisconnect?.error as any)?.output?.statusCode
 
-                // 401 = logged out, 440 = session replaced by another device
+                // 401/440 are terminal authentication events.
+                // During pairing, stop cleanly and keep the dashboard in phone-code mode.
                 if (statusCode === 401 || statusCode === 440) {
                     const reason = statusCode === 440
                         ? 'session was replaced by another device'
                         : 'logged out by WhatsApp'
-                    this.log(`Disconnected: ${reason}. Clearing credentials and resetting to QR...`, true)
+                    const wasPairing = this.pairingInProgress
+                    this.log(
+                        wasPairing
+                            ? `Pairing session closed: ${reason}. Generate a new phone pairing code.`
+                            : `Disconnected: ${reason}. Clearing saved credentials.`,
+                        true
+                    )
                     this.reconnectAttempts = 0
                     this.needsRepair = false
-                    this.clearAuth().then(() => setTimeout(() => this.connect(), 3000))
+                    this.clearAuth().then(() => {
+                        if (wasPairing) {
+                            this.pairingInProgress = false
+                            this.pairingError = `WhatsApp closed the pairing session (${statusCode}). Generate a new code.`
+                            return
+                        }
+                        this.pairingPhone = null
+                        this.pairCode = null
+                        this.pairCodePhone = null
+                    })
                     return
                 }
 
-                // 408 = timed out waiting for pairing — if no auth, stop looping and wait for user action
+                // 515 = restart required. Preserve phone pairing and request a fresh code.
+                if (statusCode === 515 && this.pairingInProgress && this.pairingPhone) {
+                    const phone = this.pairingPhone
+                    this.log('WhatsApp requested a pairing restart (515). Reconnecting and requesting a fresh code...')
+                    setTimeout(() => {
+                        if (this.pairingInProgress && this.pairingPhone === phone) this.connect(phone)
+                    }, 1000)
+                    return
+                }
+
+                // 408 during pairing: reconnect using the same phone number.
+                if (statusCode === 408 && this.pairingInProgress) {
+                    this.log('Pairing connection timed out. Reconnecting with the same phone number...')
+                    const phone = this.pairingPhone
+                    if (phone) {
+                        setTimeout(() => {
+                            if (this.pairingInProgress && this.pairingPhone === phone) this.connect(phone)
+                        }, 2000)
+                    }
+                    return
+                }
+
                 if (statusCode === 408 && this.needsRepair) {
                     this.log('Waiting for pairing — use the dashboard to pair via phone number')
                     return
@@ -228,13 +270,13 @@ export default class WAClient extends EventEmitter {
                     // Only terminal auth errors (401/440 above) clear credentials.
                     this.log(`Too many reconnect attempts (${this.reconnectAttempts}). Keeping credentials and backing off...`, true)
                     this.reconnectAttempts = 0
-                    setTimeout(() => this.connect(), 30000)
+                    setTimeout(() => this.connect(this.pairingInProgress ? this.pairingPhone ?? undefined : undefined), 30000)
                     return
                 }
 
                 const delay = Math.min(5000 * this.reconnectAttempts, 30000)
                 this.log(`Connection closed (${statusCode ?? 'unknown'}), reconnecting in ${delay / 1000}s... (attempt ${this.reconnectAttempts})`)
-                setTimeout(() => this.connect(), delay)
+                setTimeout(() => this.connect(this.pairingInProgress ? this.pairingPhone ?? undefined : undefined), delay)
             }
         })
 
