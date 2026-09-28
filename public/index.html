@@ -40,6 +40,7 @@
             <div id="code-section" style="display:none">
                 <p class="section-label">Enter this code in WhatsApp</p>
                 <div id="code-display"></div>
+                <button class="try-again-btn" onclick="copyPairCode('code-display')">Copy Code</button>
                 <p class="code-hint">WhatsApp → <strong>Linked Devices</strong> → <strong>Link with phone number</strong></p>
                 <button class="try-again-btn" onclick="resetPairing()">Use a different number</button>
             </div>
@@ -242,6 +243,7 @@
                 Open WhatsApp on the target phone and enter this code:
             </p>
             <div id="modal-code-display" class="modal-code-display"></div>
+            <button class="try-again-btn" onclick="copyPairCode('modal-code-display')">Copy Code</button>
             <p class="code-hint" style="text-align:left; margin-top:12px">
                 WhatsApp → <strong>Linked Devices</strong> → <strong>Link with phone number</strong>
             </p>
@@ -313,6 +315,7 @@ function showError(msg) {
 }
 
 function showPairCode(code) {
+    if (!code) return
     document.getElementById('phone-section').style.display = 'none'
     document.getElementById('code-section').style.display = 'block'
     const clean = code.replace(/-/g, '')
@@ -320,6 +323,17 @@ function showPairCode(code) {
     const display = document.getElementById('code-display')
     display.innerHTML = parts.map(p => `<span class="code-chunk">${p}</span>`).join('<span class="code-sep">-</span>')
     startPolling()
+}
+
+function copyPairCode(elementId) {
+    const el = document.getElementById(elementId)
+    const text = el?.textContent?.replace(/\s+/g, '') || ''
+    if (!text) return
+    navigator.clipboard?.writeText(text).then(() => {
+        const old = el.dataset.copied || ''
+        el.dataset.copied = 'Copied ✓'
+        setTimeout(() => { el.dataset.copied = old }, 1500)
+    }).catch(() => {})
 }
 
 function resetPairing() {
@@ -349,13 +363,19 @@ async function poll() {
             return
         }
 
-        if (status.needsRepair) {
+        if (status.pairCode || status.pairingInProgress) {
+            // Pairing is active: NEVER hide the code because a transient status
+            // update/reconnect occurred. Keep it visible until connection succeeds.
+            badge.className = 'badge badge-waiting'
+            stText.textContent = 'Pairing — enter the code in WhatsApp'
+            if (status.pairCode && document.getElementById('code-section').style.display === 'none') {
+                showPairCode(status.pairCode)
+            }
+            if (status.pairingError) showError(status.pairingError)
+        } else if (status.needsRepair) {
             // No auth at all — show pairing UI
             badge.className = 'badge badge-waiting'
             stText.textContent = 'Waiting for pairing...'
-            if (status.pairCode && document.getElementById('phone-section').style.display !== 'none') {
-                showPairCode(status.pairCode)
-            }
         } else {
             // Has auth files, just not connected yet
             badge.className = 'badge badge-waiting'
@@ -680,6 +700,8 @@ async function modalPoll() {
             stopModalPoll()
             modalShowSuccess({ title: status.user ? 'Connected as ' + status.user : 'Connected' })
             loadStats()
+        } else if (status.pairCode && document.getElementById('modal-code-section').style.display === 'none') {
+            modalShowPairCode(status.pairCode)
         }
     } catch (e) { /* ignore */ }
 }
