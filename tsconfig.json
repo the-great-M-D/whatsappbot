@@ -1,21 +1,14 @@
 {
-  "compilerOptions": {            
-    "target": "ES6",                                
-    "module": "commonjs",                           
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],                                   
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": false,                                
-    "esModuleInterop": true,                        
-    "skipLibCheck": true,                          
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictNullChecks": false
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/mobile/**/*.ts"]
 }

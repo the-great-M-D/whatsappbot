@@ -1,16 +1,6 @@
-#!/usr/bin/env bash
-# exit on error
-set -o errexit
-
-echo "--- Starting Build Process ---"
-
-echo "Cleaning up old build..."
-rm -rf dist
-
-echo "Installing dependencies..."
-npm install --production=false
-
-echo "Compiling TypeScript..."
-npx tsc
-
-echo "--- Build Completed Successfully! ---"
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+cd "$(dirname "$0")"
+npm install
+npm run build
+echo "[OK] Mobile Termux build complete."
