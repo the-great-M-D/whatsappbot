@@ -15,10 +15,19 @@ function run(bin: string, args: string[]) {
     p.on('error', e => { clearTimeout(timer); resolve('error: ' + e.message); });
   });
 }
-export async function dev(M: any, args: string[]) {
+export async function dev(M: any, args: string[], runtime?: { waState?: string; discordState?: string; pairing?: boolean; discordTarget?: string }) {
   if (!args.length) return void M.reply('Dev: !dev status|logs|sh|py|restart');
   const cmd = args.shift()!.toLowerCase();
-  if (cmd === 'status') return void M.reply('Uptime: ' + Math.floor(process.uptime()) + 's\nNode: ' + process.version + '\nPID: ' + process.pid);
+  if (cmd === 'status') return void M.reply([
+    'Bot status',
+    'Uptime: ' + Math.floor(process.uptime()) + 's',
+    'Node: ' + process.version,
+    'PID: ' + process.pid,
+    'WhatsApp: ' + (runtime?.waState || 'unknown'),
+    'Discord: ' + (runtime?.discordState || 'disabled'),
+    'Pairing: ' + (runtime?.pairing ? 'waiting' : 'idle'),
+    'Discord target: ' + (runtime?.discordTarget || 'not set')
+  ].join('\n'));
   if (cmd === 'logs') return void M.reply(readHistory(Number(args[0]) || 20).join('\n') || 'No bridge history.');
   if (cmd === 'errors') return void M.reply(readErrors(Number(args[0]) || 50).join('\n') || 'No errors recorded.');
   if (cmd === 'clearerrors') { clearErrors(); return void M.reply('Error log cleared.'); }
