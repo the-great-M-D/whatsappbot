@@ -42,6 +42,8 @@ export default class WAClient extends EventEmitter {
     private reconnectAttempts: number = 0
     private readonly MAX_RECONNECTS = 5
     private needsRepair: boolean = false
+    public pairingInProgress: boolean = false
+    public pairingError: string | null = null
 
     constructor(config: any) {
         super()
@@ -85,9 +87,13 @@ export default class WAClient extends EventEmitter {
 
         this.stopSocket()
         await this.clearAuth()
+        this.pairingInProgress = true
+        this.pairingError = null
+        this.pairCode = null
+        this.pairCodePhone = cleaned
 
         const code = await new Promise<string>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (30s). Please try again.')), 30000)
+            const timeout = setTimeout(() => reject(new Error('Timed out waiting for pairing code (60s). Please try again.')), 60000)
             this.once('pair-code', (c: string) => { clearTimeout(timeout); resolve(c) })
             this.once('pair-error', (e: string) => { clearTimeout(timeout); reject(new Error(e)) })
             this.connect(cleaned)
@@ -154,9 +160,13 @@ export default class WAClient extends EventEmitter {
                     const code = await this.sock.requestPairingCode(pairingPhone)
                     this.pairCode = code
                     this.pairCodePhone = pairingPhone
+                    this.pairingInProgress = true
+                    this.pairingError = null
                     this.log(`Pairing code ready: ${code}`)
                     this.emit('pair-code', code)
                 } catch (err: any) {
+                    this.pairingError = err.message || 'Failed to get pairing code'
+                    this.pairingInProgress = false
                     this.log(`Failed to get pairing code: ${err.message}`, true)
                     this.emit('pair-error', err.message)
                 }
@@ -170,6 +180,8 @@ export default class WAClient extends EventEmitter {
                 this.needsRepair = false
                 this.pairCode = null
                 this.pairCodePhone = null
+                this.pairingInProgress = false
+                this.pairingError = null
                 this.user = this.sock.user
                 this.connectedAt = Date.now()
                 this.log(`Connected as ${this.user?.name || this.user?.id || 'unknown'}`)
@@ -207,9 +219,11 @@ export default class WAClient extends EventEmitter {
 
                 this.reconnectAttempts++
                 if (this.reconnectAttempts > this.MAX_RECONNECTS) {
-                    this.log(`Too many reconnect attempts (${this.reconnectAttempts}). Clearing credentials and resetting to QR...`, true)
+                    // Never delete valid auth on a transient/network failure.
+                    // Only terminal auth errors (401/440 above) clear credentials.
+                    this.log(`Too many reconnect attempts (${this.reconnectAttempts}). Keeping credentials and backing off...`, true)
                     this.reconnectAttempts = 0
-                    this.clearAuth().then(() => setTimeout(() => this.connect(), 5000))
+                    setTimeout(() => this.connect(), 30000)
                     return
                 }
 
