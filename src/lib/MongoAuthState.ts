@@ -12,7 +12,8 @@ export const backupAuthToDB = async (model: any, authDir: string): Promise<void>
             files.map(async (file) => {
                 const id = file.replace(/\.json$/, '')
                 const raw = await readFile(join(authDir, file), 'utf8')
-                await model.updateOne({ ID: id }, { $set: { session: raw } }, { upsert: true })
+                const session = JSON.parse(raw)
+                await model.updateOne({ ID: id }, { $set: { session } }, { upsert: true })
             })
         )
     } catch (err: any) {
