@@ -25,6 +25,19 @@ let sock: any;
 let pairing = false;
 const discord = new DiscordBridge(async (jid, text) => sock.sendMessage(jid, { text }));
 
+async function reportError(label: string, error: unknown) {
+  appendError(error);
+  const raw = error instanceof Error ? error.message : String(error);
+  const detail = raw.length > 1500 ? raw.slice(0, 1500) + '…' : raw;
+  console.error('[ERROR] ' + label + ':', error);
+  if (!sock || !config.owners.length) return;
+  const alert = '[BOT ERROR] ' + label + '\\n' + detail;
+  for (const owner of config.owners) {
+    try { await sock.sendMessage(owner, { text: alert }); }
+    catch (sendError) { console.error('[ERROR] Could not send owner alert:', sendError); }
+  }
+}
+
 async function connect() {
   const { state, saveCreds } = await useMultiFileAuthState(config.authDir);
   const { version } = await fetchLatestBaileysVersion();
@@ -46,7 +59,7 @@ async function connect() {
         return;
       }
       await sleep(3000);
-      connect().catch(e => { appendError(e); console.error('[WA] reconnect error', e); });
+      connect().catch(e => { void reportError('WA reconnect', e); });
     }
   });
   if (!state.creds.registered && config.phone && !pairing) {
@@ -56,7 +69,7 @@ async function connect() {
       const code = await sock.requestPairingCode(norm(config.phone));
       console.log(chalk.cyan('[AUTH] Pairing code: ' + code));
       console.log(chalk.gray('[AUTH] WhatsApp > Linked devices > Link with phone number.'));
-    } catch (e) { appendError(e); console.error('[AUTH] Pairing failed:', e); pairing = false; }
+    } catch (e) { void reportError('Pairing failed', e); pairing = false; }
   }
   sock.ev.on('messages.upsert', async ({ messages, type }:any) => {
     if (type !== 'notify') return;
@@ -90,7 +103,7 @@ async function connect() {
           if (!config.owners.includes(sender)) { await M.reply('Owner only.'); continue; }
           await configCommand(M, args);
         }
-      } catch (e) { appendError(e); console.error('[MESSAGE] handler error:', e); }
+      } catch (e) { void reportError('Message handler', e); }
     }
   });
 }
@@ -101,4 +114,4 @@ console.log('[BOOT] Data: ' + config.dataDir);
 console.log('[BOOT] Discord target: ' + (config.discordTarget || 'not set'));
 console.log('[DEV] Allowed shell commands: ' + (config.allowedCommands.length ? config.allowedCommands.join(', ') : 'none'));
 console.log('[DEV] Allowed Python scripts: ' + (config.allowedScripts.length ? config.allowedScripts.join(', ') : 'none'));
-connect().catch(e => { appendError(e); console.error('[FATAL]', e); });
+connect().catch(e => { void reportError('Fatal startup', e); });
