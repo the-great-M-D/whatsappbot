@@ -24,6 +24,9 @@ const norm = (n:string) => n.replace(/[^0-9]/g, '');
 let sock: any;
 let pairing = false;
 let waState = 'starting';
+let reconnectAttempt = 0;
+let lastDisconnectCode = '';
+let lastDisconnectReason = '';
 const discord = new DiscordBridge(async (jid, text) => sock.sendMessage(jid, { text }));
 
 const errorAlertAt = new Map<string, number>();
@@ -52,12 +55,16 @@ async function connect() {
     if (u.qr) console.log(chalk.yellow('[AUTH] QR received but QR is disabled.'));
     if (connection === 'open') {
       pairing = false;
+      reconnectAttempt = 0;
       waState = 'connected';
       console.log(chalk.green('[WA] Connected as ' + (sock.user?.id || 'unknown')));
       await discord.start();
     }
     if (connection === 'close') {
       const code = (lastDisconnect?.error as any)?.output?.statusCode;
+      lastDisconnectCode = code != null ? String(code) : 'unknown';
+      lastDisconnectReason = (lastDisconnect?.error as any)?.message || '';
+      reconnectAttempt += 1;
       waState = 'disconnected';
       console.log(chalk.red('[WA] Disconnected code=' + code));
       if (code === DisconnectReason.loggedOut) {
@@ -109,7 +116,10 @@ async function connect() {
             waState,
             discordState: discord.client?.isReady() ? 'connected' : (config.discordToken ? 'disconnected' : 'disabled'),
             pairing,
-            discordTarget: config.discordTarget
+            discordTarget: config.discordTarget,
+            reconnectAttempt,
+            lastDisconnectCode,
+            lastDisconnectReason
           });
         } else if (cmd === 'config') {
           if (!config.owners.includes(sender)) { await M.reply('Owner only.'); continue; }
