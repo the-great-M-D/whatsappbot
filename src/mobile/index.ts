@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import makeWASocket, { DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import chalk from 'chalk';
 import { config } from './config.js';
@@ -7,6 +8,17 @@ import { dev } from './dev.js';
 import { configCommand } from './config-command.js';
 
 const sleep = (ms:number) => new Promise(r => setTimeout(r, ms));
+
+function ensureMobileDirs() {
+  const dirs = [config.authDir, config.dataDir, 'scripts'];
+  for (const dir of dirs) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch (e) {
+      console.error('[BOOT] Could not create directory ' + dir + ':', e);
+    }
+  }
+}
 const norm = (n:string) => n.replace(/[^0-9]/g, '');
 let sock: any;
 let pairing = false;
@@ -82,6 +94,7 @@ async function connect() {
   });
 }
 console.log(chalk.cyan('=== Mobile Termux WhatsApp Bot ==='));
+ensureMobileDirs();
 console.log('[BOOT] Auth: ' + config.authDir);
 console.log('[BOOT] Data: ' + config.dataDir);
 console.log('[BOOT] Discord target: ' + (config.discordTarget || 'not set'));
