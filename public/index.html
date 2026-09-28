@@ -364,14 +364,27 @@ async function poll() {
         }
 
         if (status.pairCode || status.pairingInProgress) {
-            // Pairing is active: NEVER hide the code because a transient status
-            // update/reconnect occurred. Keep it visible until connection succeeds.
+            // Phone-number pairing is the only authentication flow.
             badge.className = 'badge badge-waiting'
-            stText.textContent = 'Pairing — enter the code in WhatsApp'
+            stText.textContent = status.pairCode
+                ? 'Pairing — enter the code in WhatsApp'
+                : 'Preparing phone pairing code...'
             if (status.pairCode && document.getElementById('code-section').style.display === 'none') {
                 showPairCode(status.pairCode)
             }
             if (status.pairingError) showError(status.pairingError)
+        } else if (status.pairingError) {
+            // A terminal pairing error must return to the phone-number form.
+            // Never fall back to QR.
+            badge.className = 'badge badge-waiting'
+            stText.textContent = 'Pairing needs a new code'
+            document.getElementById('code-section').style.display = 'none'
+            document.getElementById('phone-section').style.display = 'block'
+            document.getElementById('connected-section').style.display = 'none'
+            showError(status.pairingError)
+            const btn = document.getElementById('pair-btn')
+            btn.disabled = false
+            btn.textContent = 'Get New Code'
         } else if (status.needsRepair) {
             // No auth at all — show pairing UI
             badge.className = 'badge badge-waiting'
