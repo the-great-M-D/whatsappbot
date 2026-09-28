@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { config } from './config.js';
-import { readHistory, readErrors } from './state.js';
+import { readHistory, readErrors, clearErrors } from './state.js';
 
 const clip = (s: string) => s.length > config.maxOutput ? s.slice(0, config.maxOutput) + '\n...[truncated]' : s;
 function run(bin: string, args: string[]) {
@@ -21,6 +21,7 @@ export async function dev(M: any, args: string[]) {
   if (cmd === 'status') return void M.reply('Uptime: ' + Math.floor(process.uptime()) + 's\nNode: ' + process.version + '\nPID: ' + process.pid);
   if (cmd === 'logs') return void M.reply(readHistory(Number(args[0]) || 20).join('\n') || 'No bridge history.');
   if (cmd === 'errors') return void M.reply(readErrors(Number(args[0]) || 50).join('\n') || 'No errors recorded.');
+  if (cmd === 'clearerrors') { clearErrors(); return void M.reply('Error log cleared.'); }
   if (cmd === 'restart') {
     await M.reply('Restarting...');
     setTimeout(() => process.exit(0), 500);
