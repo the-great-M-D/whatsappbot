@@ -37,6 +37,10 @@ export function appendError(error: unknown) {
   fs.appendFileSync(ERROR_FILE, JSON.stringify({ ts: Date.now(), message }) + '\\n');
   pruneErrors();
 }
+export function clearErrors() {
+  ensure();
+  fs.writeFileSync(ERROR_FILE, '');
+}
 export function readErrors(limit = 50): string[] {
   ensure(); pruneErrors();
   if (!fs.existsSync(ERROR_FILE)) return [];
