@@ -15,7 +15,7 @@ function run(bin: string, args: string[]) {
     p.on('error', e => { clearTimeout(timer); resolve('error: ' + e.message); });
   });
 }
-export async function dev(M: any, args: string[], runtime?: { waState?: string; discordState?: string; pairing?: boolean; discordTarget?: string }) {
+export async function dev(M: any, args: string[], runtime?: { waState?: string; discordState?: string; pairing?: boolean; discordTarget?: string; reconnectAttempt?: number; lastDisconnectCode?: string; lastDisconnectReason?: string }) {
   if (!args.length) return void M.reply('Dev: !dev status|logs|sh|py|restart');
   const cmd = args.shift()!.toLowerCase();
   if (cmd === 'status') return void M.reply([
@@ -26,7 +26,9 @@ export async function dev(M: any, args: string[], runtime?: { waState?: string; 
     'WhatsApp: ' + (runtime?.waState || 'unknown'),
     'Discord: ' + (runtime?.discordState || 'disabled'),
     'Pairing: ' + (runtime?.pairing ? 'waiting' : 'idle'),
-    'Discord target: ' + (runtime?.discordTarget || 'not set')
+    'Discord target: ' + (runtime?.discordTarget || 'not set'),
+    'Reconnect attempt: ' + (runtime?.reconnectAttempt ?? 0),
+    'Last disconnect: ' + (runtime?.lastDisconnectCode || 'none') + (runtime?.lastDisconnectReason ? ' (' + runtime.lastDisconnectReason + ')' : '')
   ].join('\n'));
   if (cmd === 'logs') return void M.reply(readHistory(Number(args[0]) || 20).join('\n') || 'No bridge history.');
   if (cmd === 'errors') return void M.reply(readErrors(Number(args[0]) || 50).join('\n') || 'No errors recorded.');
