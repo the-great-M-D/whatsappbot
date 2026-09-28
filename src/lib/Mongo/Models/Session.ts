@@ -8,9 +8,8 @@ const SessionSchema = new Schema({
         unique: true
     },
     session: {
-        type: Object,
-        required: false,
-        unique: true
+        type: Schema.Types.Mixed,
+        required: false
     }
 })
 
