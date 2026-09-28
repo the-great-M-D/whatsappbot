@@ -36,6 +36,8 @@ export default class Server extends EventEmitter {
                 needsRepair: (this.client as any).needsRepair || false,
                 pairCode: this.client.pairCode || null,
                 pairCodePhone: this.client.pairCodePhone || null,
+                pairingInProgress: (this.client as any).pairingInProgress || false,
+                pairingError: (this.client as any).pairingError || null,
                 user: this.client.state === 'open'
                     ? (this.client.user?.name || this.client.user?.notify || this.client.user?.id?.split(':')[0] || 'Connected')
                     : null
@@ -46,8 +48,19 @@ export default class Server extends EventEmitter {
             try {
                 const { phone } = req.body
                 if (!phone) return void res.status(400).json({ error: 'Phone number is required' })
-                const code = await this.client.connectWithPhone(phone)
-                res.json({ code })
+                const cleaned = String(phone).replace(/\D/g, '')
+                if (!cleaned) return void res.status(400).json({ error: 'Invalid phone number' })
+
+                // If a code is already active for this number, return it instead of
+                // tearing down the socket and generating a second pairing session.
+                const activeCode = this.client.pairCode
+                const activePhone = this.client.pairCodePhone
+                if (activeCode && activePhone === cleaned && (this.client as any).pairingInProgress) {
+                    return void res.json({ code: activeCode, pairingInProgress: true, reused: true })
+                }
+
+                const code = await this.client.connectWithPhone(cleaned)
+                res.json({ code, pairingInProgress: true })
             } catch (err: any) {
                 res.status(500).json({ error: err.message || 'Failed to generate pairing code' })
             }
