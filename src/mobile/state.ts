@@ -6,10 +6,7 @@ const MOD_FILE = path.join(ROOT, 'moderation.json');
 const HISTORY_FILE = path.join(ROOT, 'bridge-history.jsonl');
 const ERROR_FILE = path.join(ROOT, 'errors.jsonl');
 
-export type ModState = {
-  warnings: Record<string, number>;
-  muted: Record<string, string[]>;
-};
+export type ModState = { warnings: Record<string, number>; muted: Record<string, string[]>; };
 
 function ensure() { fs.mkdirSync(ROOT, { recursive: true }); }
 
@@ -31,29 +28,26 @@ export function appendHistory(entry: Record<string, unknown>) {
   fs.appendFileSync(HISTORY_FILE, JSON.stringify(entry) + '\n');
   pruneHistory();
 }
-export function appendError(error: unknown) {
+export function appendError(label: string, error: unknown) {
   ensure();
   const message = error instanceof Error ? error.stack || error.message : String(error);
-  fs.appendFileSync(ERROR_FILE, JSON.stringify({ ts: Date.now(), message }) + '\\n');
+  fs.appendFileSync(ERROR_FILE, JSON.stringify({ ts: Date.now(), label, message }) + '\n');
   pruneErrors();
 }
-export function clearErrors() {
-  ensure();
-  fs.writeFileSync(ERROR_FILE, '');
-}
+export function clearErrors() { ensure(); fs.writeFileSync(ERROR_FILE, ''); }
 export function readErrors(limit = 50): string[] {
   ensure(); pruneErrors();
   if (!fs.existsSync(ERROR_FILE)) return [];
-  return fs.readFileSync(ERROR_FILE, 'utf8').trim().split('\\n').filter(Boolean).slice(-Math.min(limit, 50));
+  return fs.readFileSync(ERROR_FILE, 'utf8').trim().split('\n').filter(Boolean).slice(-Math.min(limit, 50));
 }
 function pruneErrors() {
   if (!fs.existsSync(ERROR_FILE)) return;
   const cutoff = Date.now() - 48 * 60 * 60 * 1000;
-  const lines = fs.readFileSync(ERROR_FILE, 'utf8').split('\\n').filter(Boolean);
+  const lines = fs.readFileSync(ERROR_FILE, 'utf8').split('\n').filter(Boolean);
   const kept = lines.filter(line => { try { return Number(JSON.parse(line).ts) >= cutoff; } catch { return false; } }).slice(-50);
-  fs.writeFileSync(ERROR_FILE, kept.length ? kept.join('\\n') + '\\n' : '');
+  fs.writeFileSync(ERROR_FILE, kept.length ? kept.join('\n') + '\n' : '');
 }
-export function readHistory(limit = 50) {
+export function readHistory(limit = 50): string[] {
   ensure(); pruneHistory();
   if (!fs.existsSync(HISTORY_FILE)) return [];
   return fs.readFileSync(HISTORY_FILE, 'utf8').trim().split('\n').filter(Boolean).slice(-limit);
